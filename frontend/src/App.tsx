@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { createMatch, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
+import { createMatch, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, recordWorkspaceChanges, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
 import type { CategoryEntry, CategoryKind, Match, PageId, Player, Standing, TeamSystem, Tournament, TournamentCategory, Workspace } from './types';
 import { Overview } from './views/Overview';
 import { MatchCenter, LiveScoring } from './views/MatchCenter';
@@ -50,6 +50,7 @@ export default function App() {
   const [workspaceRole, setWorkspaceRole] = useState<'organiser' | 'referee'>(() => { try { return localStorage.getItem('rallydesk-view') === 'referee' ? 'referee' : 'organiser'; } catch { return 'organiser'; } });
   const setRole = (role: 'organiser' | 'referee') => { setWorkspaceRole(role); try { localStorage.setItem('rallydesk-view', role); } catch { /* The view remains usable when storage is unavailable. */ } };
   const visibleNav = workspaceRole === 'referee' ? mainNav.filter((item) => item.id === 'matches' || item.id === 'statistics') : mainNav;
+  const activePlayers = workspace.players.filter((player) => !player.archivedAt);
 
   useEffect(() => { if (!saveWorkspace(workspace)) setToast('This browser blocked workspace storage. Changes may not persist after reload.'); }, [workspace]);
   useEffect(() => {
@@ -85,7 +86,7 @@ export default function App() {
     document.title = activeMatch ? 'Live scoring — Rallydesk' : page === 'overview' ? 'Rallydesk — Table Tennis Manager' : `${pageTitles[page]} — Rallydesk`;
   }, [activeMatch?.id, page]);
 
-  const update = (mutator: (current: Workspace) => Workspace) => setWorkspace((current) => mutator(structuredClone(current)));
+  const update = (mutator: (current: Workspace) => Workspace) => setWorkspace((current) => recordWorkspaceChanges(current, mutator(structuredClone(current))));
   const saveScoredMatch = (next: Match) => update((current) => {
     let matches = current.matches.map((match) => match.id === next.id ? next : match);
     if (next.teamTieId) {
@@ -166,11 +167,11 @@ export default function App() {
     return { ...current, matches, players, tournaments };
   });
   const openMatchSetup = () => {
-    if (workspace.players.length < 2) { setPage('players'); setToast('Add at least two players before setting up a match'); return; }
+    if (activePlayers.length < 2) { setPage('players'); setToast('Add at least two active players before setting up a match'); return; }
     setCreateDialog('match');
   };
   const openTournamentSetup = () => {
-    if (workspace.players.length < 2) { setPage('players'); setToast('Add at least two players before creating a tournament'); return; }
+    if (activePlayers.length < 2) { setPage('players'); setToast('Add at least two active players before creating a tournament'); return; }
     setCreateDialog('tournament');
   };
   const createNewPlayer = (name: string, hand: Player['hand'], grip: Player['grip'], style: string) => {
@@ -201,8 +202,8 @@ export default function App() {
     setPage('tournaments');
     setToast(`${tournament.name} created · ${fixtures.length} opening fixtures generated`);
   };
-  const replaceWorkspace = (next: Workspace) => { setWorkspace(normalizeWorkspace(next)); setToast('Workspace updated'); };
-  const reset = () => { setWorkspace(resetWorkspace()); setPage('overview'); setSelectedPlayerId(null); setSelectedTournamentId(null); setToast('Workspace cleared'); };
+  const replaceWorkspace = (next: Workspace) => { setWorkspace((current) => recordWorkspaceChanges(current, normalizeWorkspace(next))); setToast('Workspace updated'); };
+  const reset = () => { setWorkspace((current) => recordWorkspaceChanges(current, resetWorkspace())); setPage('overview'); setSelectedPlayerId(null); setSelectedTournamentId(null); setToast('Workspace cleared · recovery history retained'); };
 
   if (activeMatch) {
     const canNominateDoubles = !activeMatch.doublesNominationPending || workspace.matches.filter((match) => match.teamTieId === activeMatch.teamTieId && (match.teamTieOrder ?? 0) < (activeMatch.teamTieOrder ?? 0)).every((match) => match.status === 'Completed');
@@ -249,7 +250,7 @@ export default function App() {
 
           {page === 'overview' && <Overview workspace={workspace} players={playerById} onOpenMatch={setActiveMatchId} onPage={setPage} onNewMatch={openMatchSetup} onNewTournament={openTournamentSetup} onNewPlayer={() => setCreateDialog('player')} />}
           {page === 'matches' && <MatchCenter workspace={workspace} players={playerById} referees={workspace.referees ?? []} refereeDesk={workspaceRole === 'referee'} query={query} onQuery={setQuery} onOpenMatch={setActiveMatchId} onCreate={openMatchSetup} />}
-          {page === 'players' && <PlayersView workspace={workspace} query={query} onQuery={setQuery} selectedId={selectedPlayerId} onSelect={setSelectedPlayerId} onAdd={() => setCreateDialog('player')} onMatch={(id) => { setSelectedPlayerId(null); setCreateDialog('match'); if (id) setToast('Choose this player in the match setup.'); }} />}
+          {page === 'players' && <PlayersView workspace={workspace} query={query} onQuery={setQuery} selectedId={selectedPlayerId} onSelect={setSelectedPlayerId} onAdd={() => setCreateDialog('player')} onMatch={(id) => { setSelectedPlayerId(null); setCreateDialog('match'); if (id) setToast('Choose this player in the match setup.'); }} onUpdatePlayer={(id, changes) => update((current) => ({ ...current, players: current.players.map((player) => player.id === id ? { ...player, ...changes } : player) }))} />}
           {page === 'referees' && <RefereesView workspace={workspace} onChange={replaceWorkspace} toast={setToast} />}
           {page === 'tournaments' && <TournamentsView workspace={workspace} players={playerById} selectedId={selectedTournamentId} onSelect={setSelectedTournamentId} onCreate={openTournamentSetup} onOpenMatch={setActiveMatchId} onChange={(next) => replaceWorkspace(next)} toast={setToast} />}
           {page === 'statistics' && <StatisticsView workspace={workspace} />}
@@ -261,8 +262,8 @@ export default function App() {
       </div>
 
       {createDialog === 'player' && <PlayerDialog onClose={() => setCreateDialog(null)} onCreate={createNewPlayer} />}
-      {createDialog === 'match' && <MatchDialog players={workspace.players} tournaments={workspace.tournaments} onClose={() => setCreateDialog(null)} onCreate={createNewMatch} />}
-      {createDialog === 'tournament' && <TournamentDialog players={workspace.players} onClose={() => setCreateDialog(null)} onCreate={createNewTournament} />}
+      {createDialog === 'match' && <MatchDialog players={activePlayers} tournaments={workspace.tournaments} onClose={() => setCreateDialog(null)} onCreate={createNewMatch} />}
+      {createDialog === 'tournament' && <TournamentDialog players={activePlayers} onClose={() => setCreateDialog(null)} onCreate={createNewTournament} />}
       {toast && <div className="toast" role="status"><span className="toast-dot" />{toast}</div>}
     </div>
   );

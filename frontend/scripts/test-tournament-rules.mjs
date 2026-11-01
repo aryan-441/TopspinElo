@@ -16,6 +16,14 @@ try {
   await writeFile(rulesPath, rules.outputFiles[0].contents);
   const tableRules = createRequire(import.meta.url)(rulesPath);
   const players = Array.from({ length: 13 }, (_, index) => ({ id: `p${index}`, name: `Player ${index}`, initials: `P${index}`, hand: 'Right', grip: 'Shakehand', style: 'All-round', rating: 1000, wins: 0, losses: 0, pointsWon: 0, recent: [] }));
+  const workspaceBefore = { clubName: 'Test club', players: [players[0]], matches: [], tournaments: [], referees: [], activityLog: [] };
+  const workspaceEdited = store.recordWorkspaceChanges(workspaceBefore, { ...workspaceBefore, players: [{ ...players[0], name: 'Updated name' }] });
+  assert.equal(workspaceEdited.activityLog[0].action, 'updated', 'profile edits enter the activity journal');
+  assert.equal(workspaceEdited.activityLog[0].before.name, 'Player 0', 'journal retains the previous profile');
+  assert.equal(workspaceEdited.activityLog[0].after.name, 'Updated name', 'journal retains the updated profile');
+  const workspaceDeleted = store.recordWorkspaceChanges(workspaceEdited, { ...workspaceEdited, players: [] });
+  assert.equal(workspaceDeleted.activityLog[0].action, 'deleted', 'removed records enter the activity journal');
+  assert.equal(workspaceDeleted.activityLog[0].before.id, 'p0', 'journal retains deleted record details');
   const systems = [
     ['new_swaythling', [[[0],[0]],[[1],[1]],[[2],[2]],[[0],[1]],[[1],[0]]]],
     ['corbillon', [[[0],[0]],[[1],[1]],[[0,1],[0,1]],[[0],[1]],[[1],[0]]]],
@@ -56,7 +64,7 @@ try {
   assert.equal(firstRound[0].categoryId, 'singles', 'fixtures retain their category identity');
   assert.ok(firstRound[0].table, 'fixtures receive a configured venue table');
 
-  console.log('Tournament rules checks passed: five ITTF team orders, tie majorities, doubles service rotation, seeded byes, and category/table assignment.');
+  console.log('Tournament rules checks passed: five ITTF team orders, tie majorities, doubles service rotation, seeded byes, category/table assignment, and before/after activity journal.');
 } finally {
   await rm(tempDir, { recursive: true, force: true });
 }

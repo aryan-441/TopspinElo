@@ -32,7 +32,7 @@ Run the backend test suite:
 
 ## Frontend preview
 
-The React, TypeScript, and Vite frontend lives in `frontend/`. It provides the Rallydesk workspace, player directory, single-match setup and scoring, round-robin and knockout tournaments, statistics, imports/exports, settings, and About/support pages. New workspaces are empty; organisers add their own names and club details.
+The React, TypeScript, and Vite frontend lives in `frontend/`. It provides organiser and referee views, player profiles, match scoring, category draws for singles/doubles/teams, seeded brackets, referee assignment, statistics, imports/exports, settings, and About/support pages. New workspaces are empty; organisers add their own names and club details. Organiser edits are recorded in an exportable activity journal with before/after snapshots. Player profiles can be edited, removed from the active roster, and restored while their old match IDs remain valid.
 
 Run the browser preview from the frontend directory:
 
@@ -41,4 +41,4 @@ pnpm install
 pnpm run dev
 ```
 
-Create a production build with `pnpm run build`. The current frontend is a local browser preview stored in `localStorage`; Firebase Authentication, Firestore, legal/consent flows, and production hardening are not connected. See `frontend/UX-CONTRACT.md` for interaction rules and `frontend/QA_RESULTS.md` for the latest browser acceptance results and remaining checks.
+Create a production build with `pnpm run build` and run rule checks with `pnpm test`. The current frontend is a local browser preview stored in `localStorage`; it is not connected to the Python app or a shared backend. Direct editing/deletion for every fixture and tournament structure is still incomplete. Firebase Authentication, Firestore, legal/consent flows, and production hardening are not connected. See `frontend/UX-CONTRACT.md` for interaction rules and `frontend/QA_RESULTS.md` for browser acceptance limits.

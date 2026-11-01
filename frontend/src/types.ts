@@ -13,6 +13,7 @@ export type Player = {
   losses: number;
   pointsWon: number;
   recent: ('W' | 'L')[];
+  archivedAt?: string;
 };
 
 export type PointEvent = { id: string; winnerId: string; score: string; time: string; kind: 'Point' | 'Fault' | 'Let' | 'Correction' };
@@ -102,4 +103,5 @@ export type Tournament = {
 };
 
 export type Referee = { id: string; name: string; email?: string; active: boolean };
-export type Workspace = { clubName?: string; players: Player[]; matches: Match[]; tournaments: Tournament[]; referees: Referee[] };
+export type WorkspaceActivity = { id: string; at: string; entity: 'player' | 'match' | 'tournament' | 'referee' | 'workspace'; entityId: string; action: 'created' | 'updated' | 'deleted'; summary: string; before?: unknown; after?: unknown };
+export type Workspace = { clubName?: string; players: Player[]; matches: Match[]; tournaments: Tournament[]; referees: Referee[]; activityLog: WorkspaceActivity[] };

@@ -27,7 +27,42 @@ export function normalizeWorkspace(parsed: Workspace): Workspace {
       const category = tournament?.categories.find((item) => item.id === match.categoryId || item.name === match.category) ?? (tournament?.categories.length === 1 ? tournament.categories[0] : undefined);
       return { ...match, categoryId: match.categoryId ?? category?.id, sideOneId: match.sideOneId ?? match.playerOneId, sideTwoId: match.sideTwoId ?? match.playerTwoId, sideOnePlayerIds: match.sideOnePlayerIds ?? [match.playerOneId], sideTwoPlayerIds: match.sideTwoPlayerIds ?? [match.playerTwoId] };
     });
-    return { ...parsed, matches, referees: parsed.referees ?? [], tournaments };
+    return { ...parsed, matches, referees: parsed.referees ?? [], tournaments, activityLog: Array.isArray(parsed.activityLog) ? parsed.activityLog : [] };
+}
+
+export function recordWorkspaceChanges(before: Workspace, after: Workspace): Workspace {
+  const knownActivity = new Map([...(before.activityLog ?? []), ...(after.activityLog ?? [])].map((entry) => [entry.id, entry]));
+  const activityLog = [...knownActivity.values()];
+  const collections = [
+    ['player', before.players, after.players], ['match', before.matches, after.matches],
+    ['tournament', before.tournaments, after.tournaments], ['referee', before.referees ?? [], after.referees ?? []],
+  ] as const;
+  const now = new Date().toISOString();
+  for (const [entity, oldRows, newRows] of collections) {
+    const oldMap = new Map(oldRows.map((row) => [row.id, row]));
+    const newMap = new Map(newRows.map((row) => [row.id, row]));
+    for (const id of new Set([...oldMap.keys(), ...newMap.keys()])) {
+      const oldRow = oldMap.get(id); const newRow = newMap.get(id);
+      if (JSON.stringify(oldRow) === JSON.stringify(newRow)) continue;
+      const action = !oldRow ? 'created' : !newRow ? 'deleted' : 'updated';
+      let beforeSnapshot: unknown = oldRow; let afterSnapshot: unknown = newRow;
+      let summary = `${entity[0].toUpperCase()}${entity.slice(1)} ${action}`;
+      if (entity === 'match' && oldRow && newRow) {
+        const matchBefore = oldRow as Match; const matchAfter = newRow as Match;
+        const omitScoring = ({ events: _events, score: _score, gamesWon: _gamesWon, winnerId: _winnerId, gameResults: _gameResults, serverId: _serverId, status: _status, doublesOrder: _doublesOrder, ...rest }: Match) => rest;
+        const eventsById = new Set(matchBefore.events.map((event) => event.id));
+        const newEvents = matchAfter.events.filter((event) => !eventsById.has(event.id));
+        if (JSON.stringify(omitScoring(matchBefore)) === JSON.stringify(omitScoring(matchAfter))) {
+          beforeSnapshot = { status: matchBefore.status, score: matchBefore.score, gamesWon: matchBefore.gamesWon, winnerId: matchBefore.winnerId, gameResults: matchBefore.gameResults, serverId: matchBefore.serverId };
+          afterSnapshot = { status: matchAfter.status, score: matchAfter.score, gamesWon: matchAfter.gamesWon, winnerId: matchAfter.winnerId, gameResults: matchAfter.gameResults, serverId: matchAfter.serverId, eventsAdded: newEvents, removedEventIds: matchBefore.events.filter((event) => !matchAfter.events.some((next) => next.id === event.id)).map((event) => event.id) };
+        }
+        summary = newEvents.length ? `Match scoring updated · ${newEvents.length} event(s) recorded` : 'Match setup or schedule updated';
+      }
+      activityLog.unshift({ id: crypto.randomUUID(), at: now, entity, entityId: id, action, summary, before: beforeSnapshot, after: afterSnapshot });
+    }
+  }
+  if (before.clubName !== after.clubName) activityLog.unshift({ id: crypto.randomUUID(), at: now, entity: 'workspace', entityId: 'clubName', action: 'updated', summary: 'Workspace name changed', before: before.clubName, after: after.clubName });
+  return { ...after, activityLog };
 }
 
 export function saveWorkspace(workspace: Workspace): boolean {

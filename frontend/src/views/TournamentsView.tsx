@@ -235,7 +235,9 @@ function EditFieldDialog({ tournament, players, pendingFixtureCount, onClose, on
 
 function exportTournamentPackage(tournament: Tournament, workspace: Workspace, players: Map<string, Player>) {
   const matches = workspace.matches.filter((match) => match.tournamentId === tournament.id || tournament.matchIds.includes(match.id));
-  const packageData = { schemaVersion: 1, exportedAt: new Date().toISOString(), source: 'Rallydesk local preview', tournament, entrants: tournament.entrantIds.map((id) => players.get(id)).filter(Boolean), matches };
+  const matchIds = new Set(matches.map((match) => match.id));
+  const activityLog = workspace.activityLog.filter((event) => event.entityId === tournament.id || matchIds.has(event.entityId));
+  const packageData = { schemaVersion: 2, exportedAt: new Date().toISOString(), source: 'Rallydesk local preview', tournament, entrants: tournament.entrantIds.map((id) => players.get(id)).filter(Boolean), matches, activityLog };
   const url = URL.createObjectURL(new Blob([JSON.stringify(packageData, null, 2)], { type: 'application/json' }));
   const link = document.createElement('a'); link.href = url; link.download = `rallydesk-${slug(tournament.name)}-tournament.json`; link.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
