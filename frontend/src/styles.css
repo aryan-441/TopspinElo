@@ -1177,6 +1177,11 @@ main.page-wrap .page-content .stat-cell > b i { color: var(--text-positive); }
 .entrant-entry-mode .button { min-height: 34px; font-size: 11px; }
 .manual-entrant-list { display: grid; gap: 9px; }
 .manual-entrant-help { margin: 0; font-size: 11px; line-height: 1.5; }
+.cv-beta-tools { display: flex; align-items: center; gap: 8px; }
+.cv-beta-tools .button { gap: 7px; }
+.beta-tag,.bye-tag { display: inline-flex; align-items: center; padding: 2px 5px; border: 1px solid #e0c78d; border-radius: 999px; color: #765819; background: #fff6dd; font-size: 8px; font-weight: 700; letter-spacing: .05em; }
+.bye-tag { margin-left: auto; border-color: #d6e4d5; color: #41634a; background: #eef6ed; }
+.cv-beta-note { margin: 0; padding: 8px 10px; border: 1px solid #e4d4a6; border-radius: 7px; color: #6c571c; background: #fffae9; font-size: 10px; line-height: 1.45; }
 .manual-entrant-row { display: grid; grid-template-columns: minmax(180px, 1fr) 90px 30px; align-items: end; gap: 9px; }
 .manual-entrant-row .field { min-width: 0; }
 .manual-entrant-row .field > span { display: flex; gap: 5px; align-items: baseline; }

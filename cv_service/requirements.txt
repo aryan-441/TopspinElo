@@ -1,0 +1,6 @@
+paddleocr>=3.7,<4
+pymupdf>=1.25
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.20
+opencv-python-headless>=4.10

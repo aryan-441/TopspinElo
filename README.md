@@ -42,3 +42,24 @@ pnpm run dev
 ```
 
 Create a production build with `pnpm run build` and run rule checks with `pnpm test`. The current frontend is a local browser preview stored in `localStorage`; it is not connected to the Python app or a shared backend. Organisers can edit or remove fixture records and edit/remove tournament records; advanced event edits use the full JSON model and are journaled. Firebase Authentication, Firestore, legal/consent flows, and production hardening are not connected. See `frontend/UX-CONTRACT.md` for interaction rules and `frontend/QA_RESULTS.md` for browser acceptance limits.
+
+### CV draw import beta
+
+The optional local CV service recognizes a numbered entrant list and printed BYE labels in PDF/image scans. It does not yet reconstruct bracket connector lines; treat its output as a draft and review names, seed order, and byes before creating a draw. PaddleOCR downloads its Marathi/Devanagari recognition models at first use.
+
+Install the service dependencies once:
+
+```powershell
+python -m pip install -r cv_service/requirements.txt
+```
+
+Run the local CV service in one terminal and the frontend in another:
+
+```powershell
+python -m uvicorn cv_service.app:app --host 127.0.0.1 --port 8765
+```
+
+```powershell
+cd frontend
+pnpm run dev
+```
