@@ -1,14 +1,17 @@
 import { useMemo, useRef, useState } from 'react';
 import { Activity, AlertTriangle, ArrowRight, CalendarClock, CalendarDays, Check, ChevronRight, CircleHelp, Download, FileJson2, FileSpreadsheet, Pause, Play, Plus, ShieldCheck, Trophy, Undo2, Users } from 'lucide-react';
-import type { Match, Player, Tournament, Workspace } from '../types';
+import type { CategoryEntry, Match, Player, Tournament, TournamentCategory, Workspace } from '../types';
 import { Dialog } from '../components/Dialog';
 import { StatusPill } from './MatchCenter';
-import { createMatch, createTournament, generateKnockoutRoundFixtures, generateTournamentFixtures } from '../services/store';
+import { createMatch, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, resolveTeamTie } from '../services/store';
 
 type Props = { workspace: Workspace; players: Map<string, Player>; selectedId: string | null; onSelect: (id: string | null) => void; onCreate: () => void; onOpenMatch: (id: string) => void; onChange: (next: Workspace) => void; toast: (message: string) => void };
 type TournamentTab = 'Overview' | 'Draw & matches' | 'Standings' | 'Audit log';
 type ImportRow = { rowNumber: number; sourceId: string; playerOneId: string; playerTwoId: string; round: string; table: string; category: string; startsAt: string; oneMatch: string; twoMatch: string };
 type ImportPreview = { fileName: string; rows: ImportRow[] };
+type DrawEntrant = { id: string; name: string; categoryId: string; categoryName: string; kind: TournamentCategory['kind']; playerIds: string[] };
+const categoryNames = (tournament: Tournament) => (tournament.categories ?? []).map((category) => typeof category === 'string' ? category : category.name);
+const entryLabel = (entry: CategoryEntry, players: Map<string, Player>) => entry.name || entry.playerIds.map((id) => players.get(id)?.name ?? 'Unknown').join(' & ');
 
 export function TournamentsView({ workspace, players, selectedId, onSelect, onCreate, onOpenMatch, onChange, toast }: Props) {
   const selected = workspace.tournaments.find((item) => item.id === selectedId);
@@ -28,27 +31,30 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
         : parseDrawCsv(contents);
       if (!Array.isArray(rows)) throw new Error('Choose a CSV or JSON file containing match rows.');
       if (!rows.length) throw new Error('The file has no match rows to review.');
-      const entrantPlayers = selected.entrantIds.map((id) => players.get(id)).filter((player): player is Player => Boolean(player));
-      const matchEntrant = (value: string) => {
+      const entrants: DrawEntrant[] = selected.categories.flatMap((category) => category.entries.map((entry) => ({ id: entry.id, name: entryLabel(entry, players), categoryId: category.id, categoryName: category.name, kind: category.kind, playerIds: entry.playerIds })));
+      const matchEntrant = (value: string, categoryName: string) => {
         const normalized = value.trim().toLocaleLowerCase();
-        const exactId = entrantPlayers.find((player) => player.id.toLocaleLowerCase() === normalized);
-        const exactNames = entrantPlayers.filter((player) => player.name.trim().toLocaleLowerCase() === normalized);
-        return { playerId: exactId?.id ?? (exactNames.length === 1 ? exactNames[0].id : ''), match: exactId ? 'id' : exactNames.length === 1 ? 'name' : exactNames.length > 1 ? 'ambiguous' : 'missing' };
+        const pool = categoryName ? entrants.filter((entrant) => entrant.categoryName.toLocaleLowerCase() === categoryName.toLocaleLowerCase()) : entrants;
+        const exactId = pool.find((entrant) => entrant.id.toLocaleLowerCase() === normalized);
+        const exactNames = pool.filter((entrant) => entrant.name.trim().toLocaleLowerCase() === normalized);
+        return { entryId: exactId?.id ?? (exactNames.length === 1 ? exactNames[0].id : ''), matched: exactId ?? (exactNames.length === 1 ? exactNames[0] : undefined), match: exactId ? 'id' : exactNames.length === 1 ? 'name' : exactNames.length > 1 ? 'ambiguous' : 'missing' };
       };
       const mappedRows: ImportRow[] = rows.map((raw, index) => {
         if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error(`Row ${index + 2} must be an object with player_one, player_two, and round fields.`);
         const row = Object.fromEntries(Object.entries(raw as Record<string, unknown>).map(([key, value]) => [key.toLowerCase().replace(/[^a-z0-9]/g, ''), String(value ?? '').trim()]));
         const firstRaw = row.playerone ?? row.playeronename ?? row.playeroneid ?? row.player1 ?? row.player1name ?? row.playera ?? row.home ?? '';
         const secondRaw = row.playertwo ?? row.playertwoname ?? row.playertwoid ?? row.player2 ?? row.player2name ?? row.playerb ?? row.away ?? '';
-        const first = matchEntrant(firstRaw); const second = matchEntrant(secondRaw);
+        const category = row.category || row.division || '';
+        const first = matchEntrant(firstRaw, category); const second = matchEntrant(secondRaw, category);
+        const inferredCategory = category || (first.matched?.categoryId === second.matched?.categoryId ? first.matched?.categoryName ?? '' : '');
         return {
           rowNumber: index + 2,
           sourceId: row.matchid || row.id || '',
-          playerOneId: first.playerId,
-          playerTwoId: second.playerId,
+          playerOneId: first.entryId,
+          playerTwoId: second.entryId,
           round: row.round || row.roundname || '',
           table: row.table || '',
-          category: row.category || row.division || '',
+          category: inferredCategory,
           startsAt: row.starttime || row.startsat || row.time || 'TBD',
           oneMatch: first.match,
           twoMatch: second.match,
@@ -61,8 +67,12 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
   const applyImport = () => {
     if (!selected || !importPreview || importErrors.length) return;
     const imported = importPreview.rows.map((row) => {
-      const match = createMatch({ playerOneId: row.playerOneId, playerTwoId: row.playerTwoId, format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3, tournamentId: selected.id, table: row.table || undefined }, workspace.players);
-      match.tournamentName = selected.name; match.round = row.round.trim(); match.category = row.category.trim() || selected.categories[0]; match.startsAt = row.startsAt.trim() || 'TBD';
+      const category = selected.categories.find((item) => item.name === row.category)!;
+      const one = category.entries.find((entry) => entry.id === row.playerOneId)!;
+      const two = category.entries.find((entry) => entry.id === row.playerTwoId)!;
+      const match = createMatch({ playerOneId: one.playerIds[0], playerTwoId: two.playerIds[0], format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3, tournamentId: selected.id, table: row.table || undefined }, workspace.players);
+      match.sideOneId = one.id; match.sideTwoId = two.id; match.sideOnePlayerIds = one.playerIds; match.sideTwoPlayerIds = two.playerIds; match.sideOneLabel = entryLabel(one, players); match.sideTwoLabel = entryLabel(two, players); match.gamesWon = { [one.id]: 0, [two.id]: 0 }; match.score = { [one.id]: 0, [two.id]: 0 }; match.tossWinnerId = one.id; match.categoryId = category.id;
+      match.tournamentName = selected.name; match.round = row.round.trim(); match.category = category.name; match.startsAt = row.startsAt.trim() || 'TBD';
       return match;
     });
     const audit = { id: crypto.randomUUID(), action: 'Draw imported', target: `${imported.length} fixtures`, reason: `Imported from ${importPreview.fileName}`, at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
@@ -78,15 +88,17 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
     setScheduleEdit(null); toast('Match schedule updated and recorded');
   };
   const selectedMatches = selected ? workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id)) : [];
-  const canEditField = Boolean(selected && selected.status === 'Upcoming' && selectedMatches.every((match) => match.status === 'Scheduled' && !match.winnerId && !match.events.length && !match.gameResults?.length));
+  const canEditField = Boolean(selected && selected.status === 'Upcoming' && selected.categories.length === 1 && selected.categories[0].kind === 'Singles' && selectedMatches.every((match) => match.status === 'Scheduled' && !match.winnerId && !match.events.length && !match.gameResults?.length));
   const saveField = (entrantIds: string[], reason: string) => {
     if (!selected || !canEditField || entrantIds.length < 2 || new Set(entrantIds).size !== entrantIds.length || entrantIds.some((id) => !workspace.players.some((player) => player.id === id))) return;
-    const seeds = Object.fromEntries(Object.entries(selected.seeds ?? {}).filter(([id]) => entrantIds.includes(id)));
-    const rebuilt = createTournament({ name: selected.name, format: selected.format, date: selected.date, venue: selected.venue, tableCount: selected.tableCount, categories: selected.categories, entrantIds, seeds });
+    const oldCategory = selected.categories[0];
+    const categories = [{ ...oldCategory, entries: entrantIds.map((id) => ({ id, name: '', playerIds: [id], seed: oldCategory.entries.find((entry) => entry.id === id)?.seed })) }];
+    const seeds = Object.fromEntries(categories[0].entries.filter((entry) => entry.seed).map((entry) => [entry.id, entry.seed!]));
+    const rebuilt = createTournament({ name: selected.name, format: selected.format, date: selected.date, venue: selected.venue, tableCount: selected.tableCount, categories, entrantIds, seeds });
     const fixtures = generateTournamentFixtures(rebuilt, workspace.players).map((match) => ({ ...match, tournamentId: selected.id, tournamentName: selected.name }));
     const oldIds = new Set(selectedMatches.map((match) => match.id));
     const audit = { id: crypto.randomUUID(), action: 'Entrants and draw updated', target: `${selected.entrantIds.length} → ${entrantIds.length} entrants · ${oldIds.size} pending fixtures replaced`, reason, at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-    const updatedTournament: Tournament = { ...selected, entrantIds, seeds: rebuilt.seeds, byePlayerIds: rebuilt.byePlayerIds, bracketSlots: rebuilt.bracketSlots, rounds: rebuilt.rounds, matchIds: fixtures.map((match) => match.id), completed: 0, status: 'Upcoming', standings: rebuilt.standings, audit: [audit, ...selected.audit] };
+    const updatedTournament: Tournament = { ...selected, categories: rebuilt.categories, entrantIds, seeds: rebuilt.seeds, byePlayerIds: rebuilt.byePlayerIds, bracketSlots: rebuilt.bracketSlots, rounds: rebuilt.rounds, matchIds: fixtures.map((match) => match.id), completed: 0, status: 'Upcoming', standings: rebuilt.standings, audit: [audit, ...selected.audit] };
     onChange({ ...workspace, matches: [...fixtures, ...workspace.matches.filter((match) => !oldIds.has(match.id))], tournaments: workspace.tournaments.map((item) => item.id === selected.id ? updatedTournament : item) });
     setFieldEditOpen(false); toast('Entrants and pending draw updated and recorded');
   };
@@ -98,26 +110,40 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
     if (paused) update({ ...selected, progressPaused: true, status: 'Paused', audit: [audit, ...selected.audit] });
     else {
       let matches = workspace.matches;
-      let matchIds = selected.matchIds;
       let auditEntries = [audit, ...selected.audit];
-      const eventMatches = workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id));
-      const completed = eventMatches.filter((match) => match.status === 'Completed' && match.winnerId);
-      const currentRound = Math.max(0, ...eventMatches.map((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 0)));
-      const finalRoundComplete = eventMatches.length > 0 && completed.length === eventMatches.length && currentRound >= selected.rounds;
       let generatedCount = 0;
-      if (selected.format === 'Knockout' && !finalRoundComplete && currentRound > 0 && currentRound < selected.rounds) {
-        const roundMatches = eventMatches.filter((match) => match.round === `Round ${currentRound}`);
-        const hasNextRound = eventMatches.some((match) => match.round === `Round ${currentRound + 1}`);
-        if (roundMatches.length && roundMatches.every((match) => match.status === 'Completed' && match.winnerId) && !hasNextRound) {
-          const qualifiers = [...(currentRound === 1 ? selected.byePlayerIds ?? [] : []), ...roundMatches.map((match) => match.winnerId!)].sort((one, two) => selected.entrantIds.indexOf(one) - selected.entrantIds.indexOf(two));
-          const fixtures = generateKnockoutRoundFixtures(selected, qualifiers, currentRound + 1);
-          matches = [...fixtures, ...matches]; matchIds = [...selected.matchIds, ...fixtures.map((match) => match.id)]; generatedCount = fixtures.length;
-          const roundAudit = { id: crypto.randomUUID(), action: 'Knockout round generated', target: `Round ${currentRound + 1} · ${fixtures.length} fixtures`, reason: 'Completed round advanced after progression resumed', at };
-          auditEntries = [roundAudit, ...auditEntries];
+      for (const category of selected.categories.filter((item) => item.format === 'Knockout')) {
+        const fixtures = matches.filter((match) => match.tournamentId === selected.id && match.categoryId === category.id);
+        const roundNumber = Math.max(1, ...fixtures.map((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1)));
+        const roundMatches = fixtures.filter((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1) === roundNumber);
+        const hasNext = fixtures.some((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1) > roundNumber);
+        const finalRound = roundNumber >= Math.ceil(Math.log2(Math.max(2, category.entries.length)));
+        if (hasNext || finalRound || !roundMatches.length) continue;
+        const qualifiers = new Map<number, string>();
+        if (roundNumber === 1) for (const entryId of category.byeEntryIds ?? []) { const slot = (category.bracketSlots ?? []).indexOf(entryId); if (slot >= 0) qualifiers.set(Math.floor(slot / 2), entryId); }
+        if (category.kind === 'Team') {
+          const ties = new Map<string, Match[]>();
+          for (const match of roundMatches) if (match.teamTieId) ties.set(match.teamTieId, [...(ties.get(match.teamTieId) ?? []), match]);
+          if (!ties.size || [...ties.values()].some((tie) => !resolveTeamTie(tie, category.teamSystem ?? 'new_swaythling').winnerId)) continue;
+          for (const tie of ties.values()) { const winner = resolveTeamTie(tie, category.teamSystem ?? 'new_swaythling').winnerId; if (winner) qualifiers.set(tie[0].bracketOrder ?? 0, winner); }
+        } else {
+          if (roundMatches.some((match) => match.status !== 'Completed' || !match.winnerId)) continue;
+          for (const match of roundMatches) qualifiers.set(match.bracketOrder ?? 0, match.winnerId === match.sideOneId ? match.sideOneId! : match.sideTwoId!);
         }
+        const next = generateCategoryRoundFixtures(selected, category, [...qualifiers.entries()].sort((a, b) => a[0] - b[0]).map(([, id]) => id), roundNumber + 1, workspace.players);
+        if (next.length) { matches = [...next, ...matches]; generatedCount += next.length; auditEntries.unshift({ id: crypto.randomUUID(), action: 'Category round generated', target: `${category.name} · Round ${roundNumber + 1} · ${next.length} fixtures`, reason: 'Completed category round advanced after progression resumed', at }); }
       }
+      const matchIds = [...selected.matchIds, ...matches.filter((match) => match.tournamentId === selected.id && !selected.matchIds.includes(match.id)).map((match) => match.id)];
+      const eventMatches = matches.filter((match) => match.tournamentId === selected.id);
       const hasStarted = eventMatches.some((match) => match.status !== 'Scheduled' || match.events.length > 0);
-      const status = finalRoundComplete ? 'Completed' : hasStarted ? 'Running' : 'Upcoming';
+      const allDone = selected.categories.every((category) => {
+        const categoryFixtures = eventMatches.filter((match) => match.categoryId === category.id);
+        if (!categoryFixtures.length) return false;
+        if (category.format === 'Round robin') return categoryFixtures.every((match) => match.status === 'Completed' || match.status === 'Not played');
+        const lastRound = Math.max(...categoryFixtures.map((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1)));
+        return lastRound >= Math.ceil(Math.log2(Math.max(2, category.entries.length))) && categoryFixtures.filter((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1) === lastRound).every((match) => match.status === 'Completed' || match.status === 'Not played');
+      });
+      const status = allDone ? 'Completed' : hasStarted ? 'Running' : 'Upcoming';
       onChange({ ...workspace, matches, tournaments: workspace.tournaments.map((item) => item.id === selected.id ? { ...selected, matchIds, progressPaused: false, status, audit: auditEntries } : item) });
       setReasonAction(null); toast(generatedCount ? `Progression resumed · ${generatedCount} next-round ${generatedCount === 1 ? 'fixture' : 'fixtures'} created` : 'Automatic progression resumed');
       return;
@@ -133,15 +159,15 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       <div className="organiser-note"><ShieldCheck size={17} /><span><b>Organiser control stays with you.</b> Draws can be changed, progression paused and results corrected with a reason kept in the audit history.</span></div>
     </> : <>
       <div className="tournament-detail-top"><button className="back-link" onClick={() => onSelect(null)}><Undo2 size={14} /> All tournaments</button><div className="detail-actions"><button className="button button-outline" onClick={() => exportTournamentPackage(selected, workspace, players)}><Download size={15} /> Export package</button><button className="button button-outline" onClick={() => setReasonAction(selected.progressPaused ? 'resume' : 'pause')}>{selected.progressPaused ? <Play size={15} /> : <Pause size={15} />}{selected.progressPaused ? 'Resume progression' : 'Pause progression'}</button><button className="button button-primary" onClick={() => { const nextMatch = selected.matchIds.map((id) => workspace.matches.find((match) => match.id === id)).filter((match): match is Match => Boolean(match && match.status !== 'Completed')).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0]; if (nextMatch) onOpenMatch(nextMatch.id); else toast('No playable match is scheduled yet'); }}><CircleHelp size={15} /> Open next match</button></div></div>
-      <section className="tournament-detail-hero"><div className="detail-emblem"><Trophy size={22} /></div><div className="detail-title"><div className="detail-title-top"><TournamentStatus status={selected.status} /><span className="format-tag">{selected.format}</span><span className="detail-created">Created {selected.date}</span></div><h2>{selected.name}</h2><p><CalendarDays size={14} /> {selected.date}<i /> <Users size={14} /> {selected.entrantIds.length} entrants<i />{selected.venue}</p><div className="category-chip-row">{(selected.categories ?? ['Open singles']).map((category) => <span className="category-chip" key={category}>{category}</span>)}<span className="category-chip category-chip--tables">{selected.tableCount ?? 1} tables</span></div></div><div className="detail-progress"><span>EVENT PROGRESS</span><b>{selected.completed}<small> / {selected.matchIds.length || selected.rounds}</small></b><div className="mini-progress"><i style={{ width: `${selected.matchIds.length ? Math.min(100, selected.completed / selected.matchIds.length * 100) : 0}%` }} /></div><small>{selected.matchIds.length ? 'matches complete' : 'rounds to play'}</small></div></section>
+      <section className="tournament-detail-hero"><div className="detail-emblem"><Trophy size={22} /></div><div className="detail-title"><div className="detail-title-top"><TournamentStatus status={selected.status} /><span className="format-tag">{selected.format}</span><span className="detail-created">Created {selected.date}</span></div><h2>{selected.name}</h2><p><CalendarDays size={14} /> {selected.date}<i /> <Users size={14} /> {selected.entrantIds.length} entrants<i />{selected.venue}</p><div className="category-chip-row">{categoryNames(selected).map((category) => <span className="category-chip" key={category}>{category}</span>)}<span className="category-chip category-chip--tables">{selected.tableCount ?? 1} tables</span></div></div><div className="detail-progress"><span>EVENT PROGRESS</span><b>{selected.completed}<small> / {selected.matchIds.length || selected.rounds}</small></b><div className="mini-progress"><i style={{ width: `${selected.matchIds.length ? Math.min(100, selected.completed / selected.matchIds.length * 100) : 0}%` }} /></div><small>{selected.matchIds.length ? 'matches complete' : 'rounds to play'}</small></div></section>
       <div className="tournament-tabs" role="tablist" aria-label="Tournament sections">{(['Overview', 'Draw & matches', 'Standings', 'Audit log'] as TournamentTab[]).map((item) => <button key={item} role="tab" aria-selected={tab === item} className={tab === item ? 'tournament-tab tournament-tab--active' : 'tournament-tab'} onClick={() => setTab(item)}>{item}{item === 'Audit log' && <span>{selected.audit.length}</span>}</button>)}</div>
       {tab === 'Overview' && <TournamentOverview tournament={selected} matches={selectedMatches} players={players} onOpenMatch={onOpenMatch} onTab={setTab} onEditField={() => setFieldEditOpen(true)} canEditField={canEditField} />}
-      {tab === 'Draw & matches' && <TournamentDraw tournament={selected} matches={workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id))} players={players} onOpenMatch={onOpenMatch} onImport={importDraw} onReschedule={setScheduleEdit} onCategoryChange={(matchId, category) => onChange({ ...workspace, matches: workspace.matches.map((match) => match.id === matchId ? { ...match, category } : match) })} />}
+      {tab === 'Draw & matches' && <TournamentDraw matches={workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id))} players={players} onOpenMatch={onOpenMatch} onImport={importDraw} onReschedule={setScheduleEdit} />}
       {tab === 'Standings' && <TournamentStandings tournament={selected} players={players} matches={workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id))} />}
       {tab === 'Audit log' && <TournamentAudit tournament={selected} />}
     </>}
-    {importPreview && selected && <ImportDrawDialog preview={importPreview} entrants={selected.entrantIds.map((id) => players.get(id)).filter((player): player is Player => Boolean(player))} categories={selected.categories ?? ['Open singles']} errors={importErrors} onChange={(rowIndex, key, value) => setImportPreview((current) => current ? { ...current, rows: current.rows.map((row, index) => index === rowIndex ? { ...row, [key]: value, ...(key === 'playerOneId' ? { oneMatch: 'manual' } : key === 'playerTwoId' ? { twoMatch: 'manual' } : {}) } : row) } : current)} onClose={() => setImportPreview(null)} onApply={applyImport} />}
-    {scheduleEdit && <ScheduleDialog match={scheduleEdit} tableCount={selected.tableCount ?? 1} onClose={() => setScheduleEdit(null)} onSave={saveSchedule} />}
+    {importPreview && selected && <ImportDrawDialog preview={importPreview} entrants={selected.categories.flatMap((category) => category.entries.map((entry) => ({ id: entry.id, name: entryLabel(entry, players), categoryId: category.id, categoryName: category.name, kind: category.kind, playerIds: entry.playerIds })))} categories={categoryNames(selected)} errors={importErrors} onChange={(rowIndex, key, value) => setImportPreview((current) => current ? { ...current, rows: current.rows.map((row, index) => rowIndex === index ? { ...row, [key]: value, ...(key === 'playerOneId' ? { oneMatch: 'manual' } : key === 'playerTwoId' ? { twoMatch: 'manual' } : {}) } : row) } : current)} onClose={() => setImportPreview(null)} onApply={applyImport} />}
+    {scheduleEdit && selected && <ScheduleDialog match={scheduleEdit} tableCount={selected.tableCount ?? 1} onClose={() => setScheduleEdit(null)} onSave={saveSchedule} />}
     {fieldEditOpen && selected && <EditFieldDialog tournament={selected} players={workspace.players} pendingFixtureCount={selectedMatches.length} onClose={() => setFieldEditOpen(false)} onSave={saveField} />}
     {reasonAction && <ReasonDialog action={reasonAction} onClose={() => setReasonAction(null)} onConfirm={commitProgression} />}
   </div>;
@@ -150,23 +176,23 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
 function TournamentOverview({ tournament, matches, players, onOpenMatch, onTab, onEditField, canEditField }: { tournament: Tournament; matches: Match[]; players: Map<string, Player>; onOpenMatch: (id: string) => void; onTab: (tab: TournamentTab) => void; onEditField: () => void; canEditField: boolean }) {
   const nextMatches = [...matches].sort((a, b) => a.startsAt.localeCompare(b.startsAt)).slice(0, 4);
   return <div className="tournament-overview-grid"><section className="tournament-section"><div className="section-head"><div><p className="eyebrow">ON THE TABLE</p><h3>Next matches</h3></div><button className="quiet-link" onClick={() => onTab('Draw & matches')}>Full draw <ArrowRight size={14} /></button></div>{nextMatches.length ? <div className="tournament-match-list">{nextMatches.map((match) => <TournamentMatchRow key={match.id} match={match} players={players} onClick={() => onOpenMatch(match.id)} />)}</div> : <div className="empty-draw"><span className="empty-mark"><Activity size={18} /></span><div><b>No fixtures yet</b><span>Add a draw or create a match for this event.</span></div></div>}</section>
-    <section className="tournament-section control-section"><div className="section-head"><div><p className="eyebrow">ORGANISER CONTROL</p><h3>Event settings</h3></div><span className="settings-symbol"><Activity size={15} /></span></div><div className="setting-line"><span>Format</span><b>{tournament.format}</b></div><div className="setting-line"><span>Venue tables</span><b>{tournament.tableCount ?? 1}</b></div><div className="setting-line"><span>Categories</span><b>{(tournament.categories ?? []).length}</b></div><div className="setting-line"><span>Automatic progression</span><b className={tournament.progressPaused ? 'state-off' : 'state-on'}><i />{tournament.progressPaused ? 'Paused' : 'Available'}</b></div><div className="setting-line"><span>Entrants</span><b>{tournament.entrantIds.length} players</b></div>{tournament.tieBreaks.length > 0 && <div className="tie-break-box"><span>STANDINGS ORDER</span><p>{tournament.tieBreaks.join(' < ')} <ChevronRight size={13} /></p></div>}<button className="control-audit-link" onClick={() => onTab('Audit log')}>Review change history <ArrowRight size={14} /></button></section>
+    <section className="tournament-section control-section"><div className="section-head"><div><p className="eyebrow">ORGANISER CONTROL</p><h3>Event settings</h3></div><span className="settings-symbol"><Activity size={15} /></span></div><div className="setting-line"><span>Format</span><b>{tournament.format}</b></div><div className="setting-line"><span>Venue tables</span><b>{tournament.tableCount ?? 1}</b></div><div className="setting-line"><span>Categories</span><b>{categoryNames(tournament).length}</b></div><div className="setting-line"><span>Automatic progression</span><b className={tournament.progressPaused ? 'state-off' : 'state-on'}><i />{tournament.progressPaused ? 'Paused' : 'Available'}</b></div><div className="setting-line"><span>Entrants</span><b>{tournament.entrantIds.length} players</b></div>{tournament.tieBreaks.length > 0 && <div className="tie-break-box"><span>STANDINGS ORDER</span><p>{tournament.tieBreaks.join(' < ')} <ChevronRight size={13} /></p></div>}<button className="control-audit-link" onClick={() => onTab('Audit log')}>Review change history <ArrowRight size={14} /></button></section>
     <section className="entrant-strip"><div><p className="eyebrow">THE FIELD</p><h3>{tournament.entrantIds.length} entrants</h3><small className="field-edit-hint">{canEditField ? 'Pending draw can be safely rebuilt' : 'Field locks when a match starts'}</small></div><div className="entrant-avatars">{tournament.entrantIds.slice(0, 6).map((id) => <span className="avatar avatar--tiny" key={id}>{players.get(id)?.initials ?? '?'}</span>)}{tournament.entrantIds.length > 6 && <span className="avatar avatar--tiny entrant-more">+{tournament.entrantIds.length - 6}</span>}</div><span className="entrant-strip-spacer" /><button className="button button-outline field-edit-button" onClick={onEditField} disabled={!canEditField}>Edit entrants</button><button className="quiet-link" onClick={() => onTab('Standings')}>Standings <ArrowRight size={14} /></button></section>
   </div>;
 }
 
-function TournamentDraw({ tournament, matches, players, onOpenMatch, onImport, onReschedule, onCategoryChange }: { tournament: Tournament; matches: Match[]; players: Map<string, Player>; onOpenMatch: (id: string) => void; onImport: (file?: File) => void; onReschedule: (match: Match) => void; onCategoryChange: (matchId: string, category: string) => void }) {
+function TournamentDraw({ matches, players, onOpenMatch, onImport, onReschedule }: { matches: Match[]; players: Map<string, Player>; onOpenMatch: (id: string) => void; onImport: (file?: File) => void; onReschedule: (match: Match) => void }) {
   const [roundFilter, setRoundFilter] = useState('All rounds');
   const importRef = useRef<HTMLInputElement>(null);
   const rounds = [...new Set(matches.map((match) => match.round ?? 'Unassigned'))];
   const filtered = matches.filter((match) => roundFilter === 'All rounds' || match.round === roundFilter);
   const grouped = filtered.reduce<Record<string, Match[]>>((groups, match) => { const key = match.round ?? 'Unassigned'; (groups[key] ??= []).push(match); return groups; }, {});
   return <section className="tournament-section draw-section"><div className="section-head"><div><p className="eyebrow">DRAW CONTROL</p><h3>Draw & matches</h3><p className="section-caption">Review each fixture. Open a match to score, reschedule or record a result.</p></div><div className="draw-toolbar"><select value={roundFilter} onChange={(event) => setRoundFilter(event.target.value)} aria-label="Filter by round"><option>All rounds</option>{rounds.map((round) => <option key={round}>{round}</option>)}</select><button className="button button-outline template-button" onClick={() => downloadDrawTemplate('csv')}><FileSpreadsheet size={14} /><span>CSV template</span></button><button className="button button-outline template-button" onClick={() => downloadDrawTemplate('json')}><FileJson2 size={14} /><span>JSON template</span></button><button className="button button-outline" onClick={() => importRef.current?.click()}><Plus size={15} /> Import draw</button><input ref={importRef} type="file" className="sr-only" accept=".csv,.json,text/csv,application/json" onChange={(event) => { onImport(event.target.files?.[0]); event.target.value = ''; }} /></div></div>
-    {Object.keys(grouped).length ? <div className="draw-groups">{Object.entries(grouped).map(([round, items]) => <div className="draw-group" key={round}><div className="draw-group-title"><span>{round}</span><i /><small>{items.length} matches</small></div>{items.map((match) => <div className="tournament-match-shell" key={match.id}><TournamentMatchRow match={match} players={players} onClick={() => onOpenMatch(match.id)} expanded /><label className="match-category-select"><span className="sr-only">Category for match</span><select aria-label={`Category for ${players.get(match.playerOneId)?.name} versus ${players.get(match.playerTwoId)?.name}`} value={match.category ?? ''} onChange={(event) => onCategoryChange(match.id, event.target.value)}><option value="">Choose category</option>{(tournament.categories ?? ['Open singles']).map((category) => <option key={category}>{category}</option>)}</select></label><button className="reschedule-button" onClick={() => onReschedule(match)} disabled={match.status === 'Completed'} aria-label={`Reschedule ${players.get(match.playerOneId)?.name} versus ${players.get(match.playerTwoId)?.name}`}><CalendarClock size={14} /><span>Reschedule</span></button></div>)}</div>)}</div> : tournament.format === 'Knockout' ? <KnockoutPreview tournament={tournament} players={players} /> : <div className="empty-draw"><span className="empty-mark"><Trophy size={18} /></span><div><b>No matches in this draw</b><span>Import a CSV or JSON draw, or add matches to the event.</span></div><button className="button button-outline" onClick={() => importRef.current?.click()}><Plus size={14} /> Import draw</button></div>}
+    {Object.keys(grouped).length ? <div className="draw-groups">{Object.entries(grouped).map(([round, items]) => <div className="draw-group" key={round}><div className="draw-group-title"><span>{round}</span><i /><small>{items.length} matches</small></div>{items.map((match) => <div className="tournament-match-shell" key={match.id}><TournamentMatchRow match={match} players={players} onClick={() => onOpenMatch(match.id)} expanded /><span className="match-category-badge">{match.category ?? 'Unassigned'}</span><button className="reschedule-button" onClick={() => onReschedule(match)} disabled={match.status === 'Completed' || match.status === 'Not played'} aria-label={`Reschedule ${players.get(match.playerOneId)?.name} versus ${players.get(match.playerTwoId)?.name}`}><CalendarClock size={14} /><span>Reschedule</span></button></div>)}</div>)}</div> : <div className="empty-draw"><span className="empty-mark"><Trophy size={18} /></span><div><b>No matches in this draw</b><span>Import a CSV or JSON draw, or create category entrants to generate fixtures.</span></div><button className="button button-outline" onClick={() => importRef.current?.click()}><Plus size={14} /> Import draw</button></div>}
   </section>;
 }
 
-function ImportDrawDialog({ preview, entrants, categories, errors, onChange, onClose, onApply }: { preview: ImportPreview; entrants: Player[]; categories: string[]; errors: string[]; onChange: (rowIndex: number, key: 'playerOneId' | 'playerTwoId' | 'category', value: string) => void; onClose: () => void; onApply: () => void }) {
+function ImportDrawDialog({ preview, entrants, categories, errors, onChange, onClose, onApply }: { preview: ImportPreview; entrants: DrawEntrant[]; categories: string[]; errors: string[]; onChange: (rowIndex: number, key: 'playerOneId' | 'playerTwoId' | 'category', value: string) => void; onClose: () => void; onApply: () => void }) {
   return <Dialog title="Review imported draw" eyebrow="NON-DESTRUCTIVE PREVIEW" onClose={onClose} size="wide">
     <div className="import-review-summary"><FileSpreadsheet size={17} /><span><b>{preview.fileName}</b><small>{preview.rows.length} fixtures found · nothing has been added yet</small></span></div>
     {errors.length > 0 && <div className="import-review-errors" role="alert"><AlertTriangle size={16} /><div><b>Resolve these issues before importing</b><ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul></div></div>}
@@ -217,30 +243,30 @@ function exportTournamentPackage(tournament: Tournament, workspace: Workspace, p
 function slug(value: string) { return value.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'event'; }
 
 function validateImportPreview(rows: ImportRow[], tournament: Tournament, workspace: Workspace, players: Map<string, Player>): string[] {
-  const errors: string[] = []; const entrants = new Set(tournament.entrantIds); const sourceIds = new Set<string>();
+  const errors: string[] = []; const sourceIds = new Set<string>();
   const pairs = new Set<string>(); const playedByRound = new Set<string>();
   const existing = workspace.matches.filter((match) => match.tournamentId === tournament.id || tournament.matchIds.includes(match.id));
   for (const row of rows) {
-    const round = row.round.trim();
-    if ((tournament.categories ?? ['Open singles']).length > 1 && !row.category) errors.push(`Row ${row.rowNumber}: choose a category for this fixture.`);
+    const round = row.round.trim(); const category = tournament.categories.find((item) => item.name === row.category);
+    if (categoryNames(tournament).length > 1 && !row.category) errors.push(`Row ${row.rowNumber}: choose a category for this fixture.`);
     if (row.sourceId) {
       if (sourceIds.has(row.sourceId)) errors.push(`Row ${row.rowNumber}: source match ID ${row.sourceId} is duplicated in this file.`);
       else sourceIds.add(row.sourceId);
       if (workspace.matches.some((match) => match.id === row.sourceId)) errors.push(`Row ${row.rowNumber}: source match ID ${row.sourceId} already exists in this workspace.`);
     }
-    if (row.category && !(tournament.categories ?? ['Open singles']).includes(row.category)) errors.push(`Row ${row.rowNumber}: choose a category from this tournament.`);
-    if (!row.playerOneId) errors.push(`Row ${row.rowNumber}: map player one to a roster player (${row.oneMatch === 'ambiguous' ? 'the name is duplicated' : 'no exact roster match was found'}).`);
-    if (!row.playerTwoId) errors.push(`Row ${row.rowNumber}: map player two to a roster player (${row.twoMatch === 'ambiguous' ? 'the name is duplicated' : 'no exact roster match was found'}).`);
-    if (row.playerOneId && !entrants.has(row.playerOneId)) errors.push(`Row ${row.rowNumber}: player one is not a tournament entrant.`);
-    if (row.playerTwoId && !entrants.has(row.playerTwoId)) errors.push(`Row ${row.rowNumber}: player two is not a tournament entrant.`);
+    if (row.category && !category) errors.push(`Row ${row.rowNumber}: choose a category from this tournament.`);
+    if (category?.kind === 'Team') errors.push(`Row ${row.rowNumber}: import each team tie through the team draw template; individual team lineup fixtures are generated by the selected ITTF system.`);
+    const one = category?.entries.find((entry) => entry.id === row.playerOneId), two = category?.entries.find((entry) => entry.id === row.playerTwoId);
+    if (!row.playerOneId || !one) errors.push(`Row ${row.rowNumber}: map side one to an entrant registered in this category (${row.oneMatch === 'ambiguous' ? 'the name is duplicated' : 'no exact category entrant match was found'}).`);
+    if (!row.playerTwoId || !two) errors.push(`Row ${row.rowNumber}: map side two to an entrant registered in this category (${row.twoMatch === 'ambiguous' ? 'the name is duplicated' : 'no exact category entrant match was found'}).`);
     if (row.playerOneId && row.playerOneId === row.playerTwoId) errors.push(`Row ${row.rowNumber}: choose two different players.`);
     if (!round) errors.push(`Row ${row.rowNumber}: add a round name.`);
-    if (!round || !row.playerOneId || !row.playerTwoId || row.playerOneId === row.playerTwoId) continue;
+    if (!round || !category || !one || !two || row.playerOneId === row.playerTwoId) continue;
     const pair = [row.playerOneId, row.playerTwoId].sort().join('|'); const pairKey = `${round.toLocaleLowerCase()}|${pair}`;
     if (pairs.has(pairKey)) errors.push(`Round ${round}: the same fixture appears more than once in this file.`);
     pairs.add(pairKey);
-    if (existing.some((match) => (match.round ?? '').toLocaleLowerCase() === round.toLocaleLowerCase() && [match.playerOneId, match.playerTwoId].sort().join('|') === pair)) errors.push(`Round ${round}: ${players.get(row.playerOneId)?.name} vs ${players.get(row.playerTwoId)?.name} already exists in this tournament.`);
-    for (const playerId of [row.playerOneId, row.playerTwoId]) {
+    if (existing.some((match) => match.categoryId === category.id && (match.round ?? '').toLocaleLowerCase() === round.toLocaleLowerCase() && [match.sideOneId ?? match.playerOneId, match.sideTwoId ?? match.playerTwoId].sort().join('|') === pair)) errors.push(`Round ${round}: ${entryLabel(one, players)} vs ${entryLabel(two, players)} already exists in this tournament.`);
+    for (const playerId of [...one.playerIds, ...two.playerIds]) {
       const key = `${round.toLocaleLowerCase()}|${playerId}`;
       if (playedByRound.has(key)) errors.push(`Round ${round}: ${players.get(playerId)?.name} appears in more than one fixture.`);
       playedByRound.add(key);
@@ -256,25 +282,22 @@ function downloadDrawTemplate(type: 'csv' | 'json') {
   const link = document.createElement('a'); link.href = url; link.download = `rallydesk-draw-template.${type}`; link.click(); URL.revokeObjectURL(url);
 }
 
-function KnockoutPreview({ tournament, players }: { tournament: Tournament; players: Map<string, Player> }) {
-  const entrants = tournament.entrantIds.map((id) => players.get(id)).filter((item): item is Player => Boolean(item));
-  const stageCount = Math.max(1, Math.ceil(Math.log2(Math.max(entrants.length, 2))));
-  const bracketSize = 2 ** stageCount;
-  return <div className="bracket-preview">{Array.from({ length: stageCount }, (_, stage) => {
-    const matchesInStage = bracketSize / (2 ** (stage + 1));
-    const label = stage === 0 ? `ROUND OF ${bracketSize}` : stage === stageCount - 1 ? 'FINAL' : stage === stageCount - 2 ? 'SEMI-FINALS' : `ROUND ${stage + 1}`;
-    return <div className={stage === 0 ? 'bracket-round' : `bracket-next${stage === stageCount - 1 ? ' bracket-next--final' : ''}`} key={label}><span className="bracket-round-label">{label}</span>{Array.from({ length: matchesInStage }, (_, index) => {
-      const first = stage === 0 ? entrants[index * 2]?.name ?? 'BYE' : `Winner · Match ${String(index * 2 + 1).padStart(2, '0')}`;
-      const second = stage === 0 ? entrants[index * 2 + 1]?.name ?? 'BYE' : `Winner · Match ${String(index * 2 + 2).padStart(2, '0')}`;
-      return <div className={`bracket-match ${stage > 0 ? 'bracket-match--empty' : ''}`} key={index}><span>{first}</span><span>{second}</span></div>;
-    })}{stage === stageCount - 1 && <span className="bracket-trophy"><Trophy size={19} /> Champion</span>}</div>;
-  })}</div>;
-}
-
 function TournamentStandings({ tournament, players, matches }: { tournament: Tournament; players: Map<string, Player>; matches: Match[] }) {
-  if (tournament.format === 'Knockout') return <section className="tournament-section standings-section"><div className="section-head"><div><p className="eyebrow">KNOCKOUT</p><h3>Progression</h3></div><span className="small-meta">Automatic round advancement</span></div><div className="progression-note"><ShieldCheck size={17} /><span>Winners advance after every match in a round is confirmed. The organiser can pause progression from the event overview.</span></div><div className="progression-entrants">{tournament.entrantIds.map((id, index) => { const firstRound = matches.find((match) => match.round === 'Round 1' && (match.playerOneId === id || match.playerTwoId === id)); const laterRound = matches.find((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1) > 1 && (match.playerOneId === id || match.playerTwoId === id)); const state = tournament.byePlayerIds?.includes(id) ? 'Bye · advances' : laterRound ? laterRound.round : firstRound ? firstRound.status : 'Awaiting draw'; return <div className="progression-entrant" key={id}><span className="seed-number">{String(index + 1).padStart(2, '0')}</span><span className="avatar avatar--tiny">{players.get(id)?.initials}</span><b>{players.get(id)?.name ?? 'Unknown player'}</b><span className="entrant-rating">{tournament.seeds?.[id] ? `Seed ${tournament.seeds[id]}` : 'Unseeded'}</span><span className="progression-status">{state}</span></div>; })}</div></section>;
-  const rows = [...tournament.standings].sort((a, b) => b.wins - a.wins || (b.gamesWon - b.gamesLost) - (a.gamesWon - a.gamesLost) || b.gamesWon - a.gamesWon);
-  return <section className="tournament-section standings-section"><div className="section-head"><div><p className="eyebrow">ROUND ROBIN</p><h3>Current standings</h3><p className="section-caption">Ranked by {tournament.tieBreaks.join(', ').toLowerCase()}.</p></div><button className="button button-outline" onClick={() => downloadStandings(tournament, players)}><Download size={14} /> Export table</button></div><p className="table-scroll-hint"><ArrowRight size={13} /> Swipe or use arrow keys to view all columns</p><div className="standings-table-wrap" role="region" aria-label="Scrollable tournament standings" tabIndex={0}><table className="data-table standings-table"><thead><tr><th>POS</th><th>PLAYER</th><th>PLAYED</th><th>W</th><th>L</th><th>GAMES</th><th>DIFF</th><th>POINTS</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.playerId}><td><span className={`rank ${index === 0 ? 'rank--first' : ''}`}>{String(index + 1).padStart(2, '0')}</span></td><td><div className="standing-player"><span className="avatar avatar--tiny">{players.get(row.playerId)?.initials}</span><b>{players.get(row.playerId)?.name ?? 'Unknown player'}</b>{index === 0 && <span className="leader-mark">LEADER</span>}</div></td><td>{row.played}</td><td className="win-cell">{row.wins}</td><td>{row.losses}</td><td>{row.gamesWon}–{row.gamesLost}</td><td>{row.gamesWon - row.gamesLost > 0 ? '+' : ''}{row.gamesWon - row.gamesLost}</td><td>{row.pointsFor}–{row.pointsAgainst}</td></tr>)}</tbody></table></div><p className="table-footnote"><span /> Rankings reflect completed results only. Tie-break settings remain visible to organisers.</p></section>;
+  return <>{tournament.categories.map((category) => {
+    const entries = new Map(category.entries.map((entry) => [entry.id, entry]));
+    const entryName = (id: string) => { const entry = entries.get(id); return entry?.name || entry?.playerIds.map((playerId) => players.get(playerId)?.name ?? 'Unknown').join(' & ') || 'Unknown entrant'; };
+    const rows = [...(category.standings ?? [])].sort((a, b) => b.wins - a.wins || (b.gamesWon - b.gamesLost) - (a.gamesWon - a.gamesLost) || b.gamesWon - a.gamesWon);
+    const fixtures = matches.filter((match) => match.categoryId === category.id);
+    const progression = category.entries.map((entry) => {
+      const entryMatches = fixtures.filter((match) => match.sideOneId === entry.id || match.sideTwoId === entry.id || match.teamOneId === entry.id || match.teamTwoId === entry.id);
+      const current = entryMatches.sort((a, b) => Number(a.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1) - Number(b.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1)).at(-1);
+      const bye = category.byeEntryIds?.includes(entry.id);
+      return { entry, state: bye && !current ? 'Bye · advances' : current?.round ?? 'Awaiting draw', status: current?.status ?? 'Scheduled' };
+    });
+    return <section className="tournament-section standings-section" key={category.id}><div className="section-head"><div><p className="eyebrow">{category.kind.toUpperCase()} · {category.format.toUpperCase()}</p><h3>{category.name}</h3><p className="section-caption">{category.kind === 'Team' ? `ITTF ${category.teamSystem?.replaceAll('_', ' ') ?? 'team'} system` : `${category.entries.length} registered entrants`}</p></div></div>
+      {category.format === 'Knockout' ? <><div className="progression-note"><ShieldCheck size={17} /><span>Advancement is tracked independently for this category. Team ties stop when a team wins the required majority of individual matches.</span></div><div className="progression-entrants">{progression.map(({ entry, state, status }, index) => <div className="progression-entrant" key={entry.id}><span className="seed-number">{String(index + 1).padStart(2, '0')}</span><span className="avatar avatar--tiny">{entry.playerIds.map((id) => players.get(id)?.initials).filter(Boolean).join('/') || entry.name.slice(0, 2).toUpperCase()}</span><b>{entryName(entry.id)}</b><span className="entrant-rating">{entry.seed ? `Seed ${entry.seed}` : 'Unseeded'}</span><span className="progression-status">{state} · {status}</span></div>)}</div></> : <><p className="table-scroll-hint"><ArrowRight size={13} /> Swipe or use arrow keys to view all columns</p><div className="standings-table-wrap" role="region" aria-label={`${category.name} standings`} tabIndex={0}><table className="data-table standings-table"><thead><tr><th>POS</th><th>ENTRY</th><th>PLAYED</th><th>W</th><th>L</th><th>GAMES</th><th>DIFF</th><th>POINTS</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.playerId}><td><span className={`rank ${index === 0 ? 'rank--first' : ''}`}>{String(index + 1).padStart(2, '0')}</span></td><td><div className="standing-player"><span className="avatar avatar--tiny">{entries.get(row.playerId)?.playerIds.map((id) => players.get(id)?.initials).filter(Boolean).join('/') || entryName(row.playerId).slice(0, 2).toUpperCase()}</span><b>{entryName(row.playerId)}</b>{index === 0 && row.played > 0 && <span className="leader-mark">LEADER</span>}</div></td><td>{row.played}</td><td className="win-cell">{row.wins}</td><td>{row.losses}</td><td>{row.gamesWon}–{row.gamesLost}</td><td>{row.gamesWon - row.gamesLost > 0 ? '+' : ''}{row.gamesWon - row.gamesLost}</td><td>{row.pointsFor}–{row.pointsAgainst}</td></tr>)}</tbody></table></div><p className="table-footnote"><span /> Rankings use match wins, game difference and games won.</p></>}
+    </section>;
+  })}</>;
 }
 
 function TournamentAudit({ tournament }: { tournament: Tournament }) {
@@ -283,7 +306,8 @@ function TournamentAudit({ tournament }: { tournament: Tournament }) {
 
 function TournamentMatchRow({ match, players, onClick, expanded = false }: { match: Match; players: Map<string, Player>; onClick: () => void; expanded?: boolean }) {
   const one = players.get(match.playerOneId); const two = players.get(match.playerTwoId);
-  return <button className={`tournament-match-row ${expanded ? 'tournament-match-row--expanded' : ''}`} onClick={onClick}><div className="tournament-match-time"><b>{match.startsAt}</b><small>{match.table ?? 'No table'}</small></div><div className="tournament-match-pair"><span><b className={match.winnerId === one?.id ? 'winner-name' : ''}>{one?.name ?? 'Player one'}</b><span>{match.gamesWon[match.playerOneId] ?? 0}</span></span><span><b className={match.winnerId === two?.id ? 'winner-name' : ''}>{two?.name ?? 'Player two'}</b><span>{match.gamesWon[match.playerTwoId] ?? 0}</span></span></div><StatusPill status={match.status} /><ArrowRight className="match-row-arrow" size={15} /></button>;
+  const oneId = match.sideOneId ?? match.playerOneId, twoId = match.sideTwoId ?? match.playerTwoId;
+  return <button className={`tournament-match-row ${expanded ? 'tournament-match-row--expanded' : ''}`} onClick={onClick}><div className="tournament-match-time"><b>{match.startsAt}</b><small>{match.table ?? 'No table'}{match.teamTieOrder !== undefined ? ` · Tie match ${match.teamTieOrder + 1}` : ''}</small></div><div className="tournament-match-pair"><span><b className={match.winnerId === oneId ? 'winner-name' : ''}>{match.sideOneLabel ?? one?.name ?? 'Player one'}{match.sideOneTeamName ? ` · ${match.sideOneTeamName}` : ''}</b><span>{match.gamesWon[oneId] ?? 0}</span></span><span><b className={match.winnerId === twoId ? 'winner-name' : ''}>{match.sideTwoLabel ?? two?.name ?? 'Player two'}{match.sideTwoTeamName ? ` · ${match.sideTwoTeamName}` : ''}</b><span>{match.gamesWon[twoId] ?? 0}</span></span></div><StatusPill status={match.status} /><ArrowRight className="match-row-arrow" size={15} /></button>;
 }
 
 function TournamentStatus({ status }: { status: Tournament['status'] }) {
@@ -316,12 +340,4 @@ function parseDrawCsv(source: string): Record<string, string>[] {
   };
   const headers = parseLine(lines[0]);
   return lines.slice(1).map((line) => Object.fromEntries(parseLine(line).map((value, index) => [headers[index] ?? `column_${index}`, value])));
-}
-
-
-function downloadStandings(tournament: Tournament, players: Map<string, Player>) {
-  const rows = [['position', 'player', 'played', 'wins', 'losses', 'games_won', 'games_lost', 'points_for', 'points_against'], ...tournament.standings.map((row, index) => [index + 1, players.get(row.playerId)?.name ?? '', row.played, row.wins, row.losses, row.gamesWon, row.gamesLost, row.pointsFor, row.pointsAgainst])];
-  const csv = rows.map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\n');
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  const link = document.createElement('a'); link.href = url; link.download = `${tournament.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-standings.csv`; link.click(); URL.revokeObjectURL(url);
 }

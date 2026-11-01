@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { createMatch, createPlayer, createTournament, generateKnockoutRoundFixtures, generateTournamentFixtures, loadWorkspace, resetWorkspace, saveWorkspace } from './services/store';
-import type { Match, PageId, Player, Tournament, Workspace } from './types';
+import { createMatch, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
+import type { CategoryEntry, CategoryKind, Match, PageId, Player, Standing, TeamSystem, Tournament, TournamentCategory, Workspace } from './types';
 import { Overview } from './views/Overview';
 import { MatchCenter, LiveScoring } from './views/MatchCenter';
 import { PlayersView } from './views/PlayersView';
@@ -88,53 +88,80 @@ export default function App() {
   const update = (mutator: (current: Workspace) => Workspace) => setWorkspace((current) => mutator(structuredClone(current)));
   const saveScoredMatch = (next: Match) => update((current) => {
     let matches = current.matches.map((match) => match.id === next.id ? next : match);
+    if (next.teamTieId) {
+      const event = current.tournaments.find((tournament) => tournament.id === next.tournamentId);
+      const category = event?.categories.find((item) => item.id === next.categoryId);
+      if (category?.kind === 'Team') {
+        const tied = matches.filter((match) => match.teamTieId === next.teamTieId);
+        const resolution = resolveTeamTie(tied, category.teamSystem ?? 'new_swaythling');
+        const resolvedById = new Map(resolution.matches.map((match) => [match.id, match]));
+        matches = matches.map((match) => resolvedById.get(match.id) ?? match);
+      }
+    }
     const finished = matches.filter((match) => match.status === 'Completed' && match.winnerId);
     const players = current.players.map((player) => {
-      const played = finished.filter((match) => match.playerOneId === player.id || match.playerTwoId === player.id);
+      const played = finished.filter((match) => (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id));
+      const wins = played.filter((match) => match.winnerId === match.sideOneId && (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || match.winnerId === match.sideTwoId && (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id));
       return {
         ...player,
-        wins: played.filter((match) => match.winnerId === player.id).length,
-        losses: played.filter((match) => match.winnerId !== player.id).length,
-        pointsWon: matches.flatMap((match) => match.events).filter((event) => event.winnerId === player.id && (event.kind === 'Point' || event.kind === 'Fault')).length,
-        recent: played.slice(0, 5).map((match) => match.winnerId === player.id ? 'W' as const : 'L' as const),
+        wins: wins.length,
+        losses: played.length - wins.length,
+        pointsWon: matches.filter((match) => (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id)).flatMap((match) => match.events.filter((event) => event.winnerId === match.sideOneId && (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || event.winnerId === match.sideTwoId && (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id))).filter((event) => event.kind === 'Point' || event.kind === 'Fault').length,
+        recent: played.slice(0, 5).map((match) => (wins.includes(match) ? 'W' as const : 'L' as const)),
       };
     });
     const tournaments = current.tournaments.map((tournament) => {
       let eventMatches = matches.filter((match) => match.tournamentId === tournament.id || tournament.matchIds.includes(match.id));
-      let completed = eventMatches.filter((match) => match.status === 'Completed' && match.winnerId);
-      let currentRound = Math.max(0, ...eventMatches.map((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 0)));
-      let updatedTournament = tournament;
-      if (tournament.format === 'Knockout' && !tournament.progressPaused && currentRound > 0 && currentRound < tournament.rounds) {
-        const roundMatches = eventMatches.filter((match) => match.round === `Round ${currentRound}`);
-        const hasNextRound = eventMatches.some((match) => match.round === `Round ${currentRound + 1}`);
-        if (roundMatches.length && roundMatches.every((match) => match.status === 'Completed' && match.winnerId) && !hasNextRound) {
-          const advancingByBracketPosition = new Map<number, string>();
-          if (currentRound === 1) for (const playerId of tournament.byePlayerIds ?? []) {
-            const slot = (tournament.bracketSlots ?? tournament.entrantIds).indexOf(playerId);
-            if (slot >= 0) advancingByBracketPosition.set(Math.floor(slot / 2), playerId);
+      const categories = tournament.categories.map((category) => {
+        let categoryMatches = eventMatches.filter((match) => match.categoryId === category.id);
+        if (category.format === 'Knockout' && !tournament.progressPaused) {
+          const rounds = Math.max(1, Math.ceil(Math.log2(Math.max(2, category.entries.length))));
+          const roundNumber = Math.max(1, ...categoryMatches.map((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1)));
+          const roundMatches = categoryMatches.filter((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1) === roundNumber);
+          const hasNext = categoryMatches.some((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1) > roundNumber);
+          let qualifiers = new Map<number, string>();
+          if (roundNumber === 1) {
+            for (const entryId of category.byeEntryIds ?? []) { const slot = (category.bracketSlots ?? []).indexOf(entryId); if (slot >= 0) qualifiers.set(Math.floor(slot / 2), entryId); }
           }
-          roundMatches.forEach((match, index) => advancingByBracketPosition.set(match.bracketOrder ?? index, match.winnerId!));
-          const qualifiers = [...advancingByBracketPosition.entries()].sort((a, b) => a[0] - b[0]).map(([, playerId]) => playerId);
-          const fixtures = generateKnockoutRoundFixtures(tournament, qualifiers, currentRound + 1);
-          matches = [...fixtures, ...matches];
-          updatedTournament = { ...tournament, matchIds: [...tournament.matchIds, ...fixtures.map((match) => match.id)] };
-          eventMatches = [...fixtures, ...eventMatches];
-          completed = eventMatches.filter((match) => match.status === 'Completed' && match.winnerId);
-          currentRound += 1;
+          if (category.kind === 'Team') {
+            const ties = new Map<string, Match[]>();
+            for (const fixture of roundMatches) if (fixture.teamTieId) ties.set(fixture.teamTieId, [...(ties.get(fixture.teamTieId) ?? []), fixture]);
+            const resolutions = [...ties.values()].map((tie) => resolveTeamTie(tie, category.teamSystem ?? 'new_swaythling'));
+            if (roundMatches.length && resolutions.every((result) => Boolean(result.winnerId))) {
+              [...ties.values()].forEach((tie) => {
+                const winner = resolveTeamTie(tie, category.teamSystem ?? 'new_swaythling').winnerId;
+                const bracketOrder = tie[0].bracketOrder ?? 0;
+                if (winner) qualifiers.set(bracketOrder, winner);
+              });
+              if (!hasNext && roundNumber < rounds) {
+                const next = generateCategoryRoundFixtures(tournament, category, [...qualifiers.entries()].sort((a, b) => a[0] - b[0]).map(([, id]) => id), roundNumber + 1, current.players);
+                matches = [...next, ...matches]; eventMatches = [...next, ...eventMatches]; categoryMatches = [...next, ...categoryMatches];
+                tournament.matchIds = [...tournament.matchIds, ...next.map((fixture) => fixture.id)];
+              }
+            }
+          } else if (roundMatches.length && roundMatches.every((match) => match.status === 'Completed' && match.winnerId)) {
+            roundMatches.forEach((match, index) => qualifiers.set(match.bracketOrder ?? index, match.winnerId === match.sideOneId ? match.sideOneId! : match.sideTwoId!));
+            if (!hasNext && roundNumber < rounds) {
+              const next = generateCategoryRoundFixtures(tournament, category, [...qualifiers.entries()].sort((a, b) => a[0] - b[0]).map(([, id]) => id), roundNumber + 1, current.players);
+              matches = [...next, ...matches]; eventMatches = [...next, ...eventMatches]; categoryMatches = [...next, ...categoryMatches];
+              tournament.matchIds = [...tournament.matchIds, ...next.map((fixture) => fixture.id)];
+            }
+          }
         }
-      }
-      const rows = new Map(tournament.entrantIds.map((playerId) => [playerId, { playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 }]));
-      for (const match of completed) {
-        const one = rows.get(match.playerOneId); const two = rows.get(match.playerTwoId);
-        if (!one || !two) continue;
-        one.played += 1; two.played += 1;
-        if (match.winnerId === one.playerId) { one.wins += 1; two.losses += 1; } else { two.wins += 1; one.losses += 1; }
-        one.gamesWon += match.gamesWon[match.playerOneId] ?? 0; one.gamesLost += match.gamesWon[match.playerTwoId] ?? 0;
-        two.gamesWon += match.gamesWon[match.playerTwoId] ?? 0; two.gamesLost += match.gamesWon[match.playerOneId] ?? 0;
-        for (const game of match.gameResults ?? []) { one.pointsFor += game.one; one.pointsAgainst += game.two; two.pointsFor += game.two; two.pointsAgainst += game.one; }
-      }
-      const complete = eventMatches.length > 0 && completed.length === eventMatches.length && (tournament.format !== 'Knockout' || currentRound >= tournament.rounds);
-      return { ...updatedTournament, standings: [...rows.values()], completed: completed.length, status: tournament.progressPaused ? 'Paused' as const : complete ? 'Completed' as const : completed.length ? 'Running' as const : tournament.status };
+        return { ...category, standings: calculateCategoryStandings(category, categoryMatches) };
+      });
+      eventMatches = matches.filter((match) => match.tournamentId === tournament.id || tournament.matchIds.includes(match.id));
+      const resolved = eventMatches.filter((match) => match.status === 'Completed' || match.status === 'Not played');
+      const complete = categories.every((category) => {
+        const rows = eventMatches.filter((match) => match.categoryId === category.id);
+        if (!rows.length) return false;
+        if (category.format === 'Round robin') return rows.every((match) => match.status === 'Completed' || match.status === 'Not played');
+        const maxRound = Math.max(...rows.map((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1)));
+        return rows.filter((match) => Number(match.round?.match(/Round\s+(\d+)/i)?.[1] ?? 1) === maxRound).every((match) => match.status === 'Completed' || match.status === 'Not played') && maxRound >= Math.ceil(Math.log2(Math.max(2, category.entries.length)));
+      });
+      const allRows = new Map(tournament.standings.map((standing) => [standing.playerId, standing]));
+      for (const category of categories) for (const row of category.standings ?? []) allRows.set(row.playerId, row);
+      return { ...tournament, categories, standings: [...allRows.values()], completed: resolved.length, status: tournament.progressPaused ? 'Paused' as const : complete ? 'Completed' as const : resolved.length ? 'Running' as const : tournament.status };
     });
     return { ...current, matches, players, tournaments };
   });
@@ -164,7 +191,7 @@ export default function App() {
     setActiveMatchId(match.id);
     setToast('Match created. Confirm the toss and first server to begin.');
   };
-  const createNewTournament = (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds: Record<string, number>; categories: string[]; tableCount: number }) => {
+  const createNewTournament = (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { categories: TournamentCategory[]; tableCount: number }) => {
     const tournament = createTournament(input);
     const fixtures = generateTournamentFixtures(tournament, workspace.players);
     tournament.matchIds = fixtures.map((match) => match.id);
@@ -174,11 +201,12 @@ export default function App() {
     setPage('tournaments');
     setToast(`${tournament.name} created · ${fixtures.length} opening fixtures generated`);
   };
-  const replaceWorkspace = (next: Workspace) => { setWorkspace({ ...next, referees: next.referees ?? [], tournaments: next.tournaments.map((tournament) => ({ ...tournament, categories: tournament.categories ?? ['Open singles'], tableCount: tournament.tableCount ?? 1 })) }); setToast('Workspace updated'); };
+  const replaceWorkspace = (next: Workspace) => { setWorkspace(normalizeWorkspace(next)); setToast('Workspace updated'); };
   const reset = () => { setWorkspace(resetWorkspace()); setPage('overview'); setSelectedPlayerId(null); setSelectedTournamentId(null); setToast('Workspace cleared'); };
 
   if (activeMatch) {
-    return <LiveScoring match={activeMatch} players={playerById} onBack={() => setActiveMatchId(null)} onChange={saveScoredMatch} toast={setToast} />;
+    const canNominateDoubles = !activeMatch.doublesNominationPending || workspace.matches.filter((match) => match.teamTieId === activeMatch.teamTieId && (match.teamTieOrder ?? 0) < (activeMatch.teamTieOrder ?? 0)).every((match) => match.status === 'Completed');
+    return <LiveScoring match={activeMatch} players={playerById} canNominateDoubles={canNominateDoubles} onBack={() => setActiveMatchId(null)} onChange={saveScoredMatch} toast={setToast} />;
   }
 
   return (
@@ -271,22 +299,95 @@ function MatchDialog({ players, tournaments, onClose, onCreate }: { players: Pla
   </form></Dialog>;
 }
 
-function TournamentDialog({ players, onClose, onCreate }: { players: Player[]; onClose: () => void; onCreate: (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds: Record<string, number>; categories: string[]; tableCount: number }) => void }) {
-  const [name, setName] = useState(''); const [format, setFormat] = useState<Tournament['format']>('Round robin'); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [venue, setVenue] = useState(''); const [tableCount, setTableCount] = useState('4'); const [categoryText, setCategoryText] = useState('Open singles'); const [entrants, setEntrants] = useState<string[]>([]); const [seeds, setSeeds] = useState<Record<string, string>>({});
-  const toggleEntrant = (id: string) => setEntrants((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
-  const seedValues = entrants.map((id) => seeds[id]).filter(Boolean);
-  const duplicateSeeds = seedValues.some((value, index) => seedValues.indexOf(value) !== index);
-  const invalidSeeds = seedValues.some((value) => !/^\d+$/.test(value) || Number(value) < 1 || Number(value) > entrants.length);
-  const categories = [...new Set(categoryText.split(/\r?\n/).map((value) => value.trim()).filter(Boolean))];
+function TournamentDialog({ players, onClose, onCreate }: { players: Player[]; onClose: () => void; onCreate: (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { categories: TournamentCategory[]; tableCount: number }) => void }) {
+  const newCategory = (name = 'Open singles', drawFormat: Tournament['format'] = 'Round robin'): TournamentCategory => ({ id: crypto.randomUUID(), name, kind: 'Singles', format: drawFormat, entries: [] });
+  const [name, setName] = useState(''); const [format, setFormat] = useState<Tournament['format']>('Round robin'); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [venue, setVenue] = useState(''); const [tableCount, setTableCount] = useState('4'); const [categories, setCategories] = useState<TournamentCategory[]>([newCategory()]);
   const invalidTables = !/^\d+$/.test(tableCount) || Number(tableCount) < 1 || Number(tableCount) > 100;
-  const updateSeed = (id: string, value: string) => setSeeds((current) => ({ ...current, [id]: value }));
-  const shuffle = <T,>(items: T[]) => { const result = [...items]; for (let index = result.length - 1; index > 0; index -= 1) { const swap = Math.floor(Math.random() * (index + 1)); [result[index], result[swap]] = [result[swap], result[index]]; } return result; };
-  return <Dialog title="Create a tournament" eyebrow="TOURNAMENT SETUP" onClose={onClose} size="wide"><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (name.trim() && date && entrants.length >= 2 && !duplicateSeeds && !invalidSeeds && !invalidTables && categories.length) { const seedMap = Object.fromEntries(entrants.filter((id) => seeds[id]).map((id) => [id, Number(seeds[id])])); const seededIds = Object.entries(seedMap).sort((a, b) => a[1] - b[1]).map(([id]) => id); const unseededIds = shuffle(entrants.filter((id) => !seedMap[id])); onCreate({ name: name.trim(), format, date: new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), venue, tableCount: Number(tableCount), categories, entrantIds: [...seededIds, ...unseededIds], seeds: seedMap }); } }}>
-    <div className="form-row"><label className="field"><span>Tournament name</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Winter Club Open" required maxLength={80} /></label><label className="field"><span>Format</span><select value={format} onChange={(event) => setFormat(event.target.value as Tournament['format'])}><option>Round robin</option><option>Knockout</option></select></label></div>
+  const entrantIds = [...new Set(categories.flatMap((category) => category.entries.flatMap((entry) => entry.playerIds)))];
+  const invalidCategories = categories.some((category) => {
+    const seeds = category.entries.map((entry) => entry.seed).filter((seed): seed is number => seed !== undefined);
+    const invalidSeeds = seeds.some((seed) => !Number.isInteger(seed) || seed < 1 || seed > category.entries.length) || new Set(seeds).size !== seeds.length;
+    const team = category.kind === 'Team' && category.entries.some((entry) => entry.playerIds.length < teamMinimum(category.teamSystem ?? 'new_swaythling') || entry.playerIds.length > teamLimit(category.teamSystem ?? 'new_swaythling'));
+    return !category.name.trim() || category.entries.length < 2 || invalidSeeds || (category.kind === 'Doubles' && category.entries.some((entry) => entry.playerIds.length !== 2)) || team;
+  });
+  const updateCategory = (index: number, next: TournamentCategory) => setCategories((items) => items.map((item, itemIndex) => itemIndex === index ? next : item));
+  return <Dialog title="Create a tournament" eyebrow="TOURNAMENT SETUP" onClose={onClose} size="wide"><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (name.trim() && date && !invalidCategories && !invalidTables) onCreate({ name: name.trim(), format: categories[0]?.format ?? format, date: new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), venue, tableCount: Number(tableCount), categories, entrantIds }); }}>
+    <div className="form-row"><label className="field"><span>Tournament name</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Winter Club Open" required maxLength={80} /></label><label className="field"><span>Default draw format</span><select value={format} onChange={(event) => { const next = event.target.value as Tournament['format']; setFormat(next); setCategories((current) => current.map((category) => ({ ...category, format: next }))); }}><option>Round robin</option><option>Knockout</option></select></label></div>
     <div className="form-row"><label className="field"><span>Start date</span><input type="date" value={date} onChange={(event) => setDate(event.target.value)} required /></label><label className="field"><span>Venue</span><input value={venue} onChange={(event) => setVenue(event.target.value)} placeholder="Add a venue (optional)" maxLength={90} /></label></div>
-    <div className="form-row"><label className="field"><span>Tables at venue</span><input type="number" min="1" max="100" step="1" value={tableCount} onChange={(event) => setTableCount(event.target.value)} required /><small>Opening fixtures will be distributed across these tables.</small></label><label className="field"><span>Categories <small>One per line</small></span><textarea value={categoryText} onChange={(event) => setCategoryText(event.target.value)} rows={3} maxLength={600} placeholder={'Open singles\nU19 singles\nU17 girls doubles'} required /><small>Assign categories to fixtures in Draw & matches. Doubles team entry is not part of this preview yet.</small></label></div>
-    <div className="entrant-picker"><div className="entrant-picker-head"><span>Entrants & seeds</span><small>{entrants.length} selected · choose at least 2</small></div><div className="entrant-list">{players.map((player) => <div className="entrant-option-wrap" key={player.id}><label className={`entrant-option ${entrants.includes(player.id) ? 'entrant-option--selected' : ''}`}><input type="checkbox" checked={entrants.includes(player.id)} onChange={() => toggleEntrant(player.id)} /><span className="avatar avatar--tiny">{player.initials}</span><span>{player.name}</span><span className="entrant-rating">{player.rating}</span></label>{entrants.includes(player.id) && <input aria-label={`Seed for ${player.name} (optional)`} className="seed-input" type="number" step="1" min="1" max={entrants.length} placeholder="Seed" value={seeds[player.id] ?? ''} onChange={(event) => updateSeed(player.id, event.target.value)} />}</div>)}</div>{(duplicateSeeds || invalidSeeds) && <p className="field-error" role="alert">Seeds must be unique whole numbers from 1 to the number of selected entrants.</p>}</div>
-    <p className="form-note"><ClipboardList size={15} /> Optional seeds shape the opening order; unseeded entrants are shuffled when the draw is created. Review the generated draw before play.</p>
-    <div className="dialog-actions"><button className="button button-quiet" type="button" onClick={onClose}>Cancel</button><button className="button button-primary" type="submit" disabled={!name.trim() || !date || entrants.length < 2 || duplicateSeeds || invalidSeeds || invalidTables || !categories.length}>Create tournament <ArrowRight size={15} /></button></div>
+    <label className="field"><span>Tables at venue</span><input type="number" min="1" max="100" step="1" value={tableCount} onChange={(event) => setTableCount(event.target.value)} required /><small>Opening fixtures are assigned across these tables.</small></label>
+    <div className="category-editors">{categories.map((category, index) => <CategoryRegistration key={category.id} category={category} players={players} defaultFormat={format} onChange={(next) => updateCategory(index, next)} onRemove={() => setCategories((items) => items.filter((_, itemIndex) => itemIndex !== index))} canRemove={categories.length > 1} />)}</div>
+    <button type="button" className="button button-outline" onClick={() => setCategories((items) => [...items, newCategory(`Category ${items.length + 1}`, format)])}><Plus size={15} /> Add category</button>
+    {invalidCategories && <p className="field-error" role="alert">Each category needs a name and at least two valid entrants. Doubles need registered pairs; team lineups must meet their format’s minimum.</p>}
+    <p className="form-note"><ClipboardList size={15} /> Each category has its own entrants, draw format and seed list. Unseeded entrants are shuffled within that category.</p>
+    <div className="dialog-actions"><button className="button button-quiet" type="button" onClick={onClose}>Cancel</button><button className="button button-primary" type="submit" disabled={!name.trim() || !date || invalidCategories || invalidTables}>Create tournament <ArrowRight size={15} /></button></div>
   </form></Dialog>;
+}
+
+function teamMinimum(system: TeamSystem) { return system === 'corbillon' ? 2 : 3; }
+function teamLimit(system: TeamSystem) { return system === 'corbillon' ? 4 : system === 'new_swaythling' || system === 'best_of_9' ? 3 : 5; }
+
+function CategoryRegistration({ category, players, defaultFormat, onChange, onRemove, canRemove }: { category: TournamentCategory; players: Player[]; defaultFormat: Tournament['format']; onChange: (category: TournamentCategory) => void; onRemove: () => void; canRemove: boolean }) {
+  const [pairOne, setPairOne] = useState(''); const [pairTwo, setPairTwo] = useState(''); const [teamName, setTeamName] = useState(''); const [lineup, setLineup] = useState<string[]>(['', '', '', '', '']);
+  const set = (changes: Partial<TournamentCategory>) => onChange({ ...category, ...changes });
+  const toggleSingles = (playerId: string) => {
+    const entries = category.entries.some((entry) => entry.playerIds[0] === playerId) ? category.entries.filter((entry) => entry.playerIds[0] !== playerId) : [...category.entries, { id: playerId, name: '', playerIds: [playerId] }];
+    set({ entries });
+  };
+  const addPair = () => {
+    if (!pairOne || !pairTwo || pairOne === pairTwo) return;
+    const memberIds = [pairOne, pairTwo];
+    if (category.entries.some((entry) => entry.playerIds.some((id) => memberIds.includes(id)))) return;
+    set({ entries: [...category.entries, { id: crypto.randomUUID(), name: memberIds.map((id) => players.find((player) => player.id === id)?.name).join(' & '), playerIds: memberIds }] });
+    setPairOne(''); setPairTwo('');
+  };
+  const system = category.teamSystem ?? 'new_swaythling';
+  const slots = teamLimit(system);
+  const addTeam = () => {
+    const playerIds = lineup.slice(0, slots).filter(Boolean);
+    if (!teamName.trim() || new Set(playerIds).size !== playerIds.length || playerIds.length < teamMinimum(system) || playerIds.some((id) => category.entries.some((entry) => entry.playerIds.includes(id)))) return;
+    set({ entries: [...category.entries, { id: crypto.randomUUID(), name: teamName.trim(), playerIds, doublesPlayerIds: playerIds.slice(0, 2) }] });
+    setTeamName(''); setLineup(['', '', '', '', '']);
+  };
+  const setTeamPlayer = (index: number, playerId: string) => setLineup((current) => { const next = [...current]; next[index] = playerId; return next; });
+  return <section className="category-editor"><div className="category-editor-head"><div><span className="eyebrow">EVENT CATEGORY</span><h3>{category.name || 'Untitled category'}</h3></div>{canRemove && <button className="icon-button" type="button" aria-label={`Remove ${category.name}`} onClick={onRemove}><X size={16} /></button>}</div>
+    <div className="form-row"><label className="field"><span>Category name</span><input value={category.name} onChange={(event) => set({ name: event.target.value })} placeholder="e.g. U17 Girls Doubles" /></label><label className="field"><span>Entry type</span><select value={category.kind} onChange={(event) => set({ kind: event.target.value as CategoryKind, entries: [], format: defaultFormat, teamSystem: event.target.value === 'Team' ? 'new_swaythling' : undefined })}><option>Singles</option><option>Doubles</option><option>Team</option></select></label><label className="field"><span>Draw format</span><select value={category.format} onChange={(event) => set({ format: event.target.value as Tournament['format'] })}><option>Round robin</option><option>Knockout</option></select></label></div>
+    {category.kind === 'Singles' && <div className="entrant-list">{players.map((player) => <label className={`entrant-option ${category.entries.some((entry) => entry.playerIds[0] === player.id) ? 'entrant-option--selected' : ''}`} key={player.id}><input type="checkbox" checked={category.entries.some((entry) => entry.playerIds[0] === player.id)} onChange={() => toggleSingles(player.id)} /><span className="avatar avatar--tiny">{player.initials}</span><span>{player.name}</span><span className="entrant-rating">{player.rating}</span></label>)}</div>}
+    {category.kind === 'Doubles' && <><div className="form-row"><label className="field"><span>Player one</span><select value={pairOne} onChange={(event) => setPairOne(event.target.value)}><option value="">Select a player</option>{players.filter((player) => !category.entries.some((entry) => entry.playerIds.includes(player.id)) || player.id === pairOne).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label><label className="field"><span>Player two</span><select value={pairTwo} onChange={(event) => setPairTwo(event.target.value)}><option value="">Select a partner</option>{players.filter((player) => player.id !== pairOne && (!category.entries.some((entry) => entry.playerIds.includes(player.id)) || player.id === pairTwo)).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label><button type="button" className="button button-outline category-add-entry" onClick={addPair} disabled={!pairOne || !pairTwo || pairOne === pairTwo}><Plus size={15} /> Register pair</button></div><EntryList entries={category.entries} players={players} onRemove={(id) => set({ entries: category.entries.filter((entry) => entry.id !== id) })} /></>}
+    {category.kind === 'Team' && <><div className="form-row"><label className="field"><span>Team championship format</span><select value={system} onChange={(event) => set({ teamSystem: event.target.value as TeamSystem, entries: [] })}><option value="new_swaythling">New Swaythling · 5 singles</option><option value="corbillon">Corbillon · 4 singles and doubles</option><option value="olympic">Olympic · doubles first, best of 5</option><option value="best_of_7">Best of 7 · 6 singles and doubles</option><option value="best_of_9">Best of 9 · singles</option></select></label><label className="field"><span>Team name</span><input value={teamName} onChange={(event) => setTeamName(event.target.value)} placeholder="e.g. Indus A" /></label></div><p className="team-lineup-note">Lineup order becomes A/B/C and X/Y/Z after the referee’s lot. {system === 'corbillon' ? 'Enter 2–4 players.' : system === 'new_swaythling' || system === 'best_of_9' ? 'Enter exactly three players.' : 'Enter 3–5 players.'}</p><div className="form-row team-lineup-slots">{Array.from({ length: slots }, (_, index) => <label className="field" key={index}><span>Player {String.fromCharCode(65 + index)}</span><select value={lineup[index]} onChange={(event) => setTeamPlayer(index, event.target.value)}><option value="">{index < teamMinimum(system) ? 'Choose player' : 'Optional reserve'}</option>{players.filter((player) => (!lineup.includes(player.id) || lineup[index] === player.id) && !category.entries.some((entry) => entry.playerIds.includes(player.id))).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label>)}</div><button type="button" className="button button-outline" onClick={addTeam} disabled={!teamName.trim() || new Set(lineup.filter(Boolean)).size !== lineup.filter(Boolean).length || lineup.filter(Boolean).length < teamMinimum(system) || lineup.filter(Boolean).some((id) => category.entries.some((entry) => entry.playerIds.includes(id)))}><Plus size={15} /> Register team</button><EntryList entries={category.entries} players={players} onRemove={(id) => set({ entries: category.entries.filter((entry) => entry.id !== id) })} /></>}
+    {category.entries.length > 0 && <div className="category-seeds"><span className="entrant-picker-head">Entrants & seeds <small>{category.entries.length} registered · seeds are unique in this category</small></span>{category.entries.map((entry) => <label className="seed-row" key={entry.id}><span>{entry.name || players.find((player) => player.id === entry.playerIds[0])?.name}</span><input aria-label={`Seed for ${entry.name || 'entrant'}`} className="seed-input" type="number" min="1" max={category.entries.length} placeholder="Seed" value={entry.seed ?? ''} onChange={(event) => set({ entries: category.entries.map((item) => item.id === entry.id ? { ...item, seed: event.target.value ? Number(event.target.value) : undefined } : item) })} /></label>)}</div>}
+  </section>;
+}
+
+function EntryList({ entries, players, onRemove }: { entries: CategoryEntry[]; players: Player[]; onRemove: (id: string) => void }) {
+  return <div className="registered-entries">{entries.map((entry) => <div className="registered-entry" key={entry.id}><span>{entry.name || entry.playerIds.map((id) => players.find((player) => player.id === id)?.name).filter(Boolean).join(' & ')}</span><small>{entry.playerIds.length} player{entry.playerIds.length === 1 ? '' : 's'}</small><button type="button" className="icon-button" onClick={() => onRemove(entry.id)} aria-label={`Remove ${entry.name || 'entry'}`}><X size={14} /></button></div>)}</div>;
+}
+
+function calculateCategoryStandings(category: TournamentCategory, matches: Match[]): Standing[] {
+  const rows = new Map(category.entries.map((entry) => [entry.id, { playerId: entry.id, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 } satisfies Standing]));
+  const apply = (oneId: string, twoId: string, winnerId: string, oneGames: number, twoGames: number, games: { one: number; two: number }[]) => {
+    const one = rows.get(oneId), two = rows.get(twoId); if (!one || !two) return;
+    one.played += 1; two.played += 1;
+    if (winnerId === oneId) { one.wins += 1; two.losses += 1; } else { two.wins += 1; one.losses += 1; }
+    one.gamesWon += oneGames; one.gamesLost += twoGames; two.gamesWon += twoGames; two.gamesLost += oneGames;
+    for (const game of games) { one.pointsFor += game.one; one.pointsAgainst += game.two; two.pointsFor += game.two; two.pointsAgainst += game.one; }
+  };
+  if (category.kind === 'Team') {
+    const ties = new Map<string, Match[]>();
+    matches.forEach((match) => { if (match.teamTieId) ties.set(match.teamTieId, [...(ties.get(match.teamTieId) ?? []), match]); });
+    for (const tie of ties.values()) {
+      const oneId = tie[0].teamOneId, twoId = tie[0].teamTwoId;
+      if (!oneId || !twoId) continue;
+      const oneWins = tie.filter((match) => match.status === 'Completed' && match.winnerId && match.winnerId === match.sideOneId).length;
+      const twoWins = tie.filter((match) => match.status === 'Completed' && match.winnerId && match.winnerId === match.sideTwoId).length;
+      const winnerId = tie.find((match) => match.status === 'Completed' && match.winnerId)?.teamOneId; // overwritten below when majority is reached
+      const majority = Math.ceil((tie.length) / 2);
+      const winningTeam = oneWins >= majority ? oneId : twoWins >= majority ? twoId : undefined;
+      if (winningTeam) apply(oneId, twoId, winningTeam, oneWins, twoWins, tie.flatMap((match) => match.gameResults ?? []));
+      void winnerId;
+    }
+  } else for (const match of matches) if (match.status === 'Completed' && match.winnerId) {
+    const oneId = match.sideOneId ?? match.playerOneId, twoId = match.sideTwoId ?? match.playerTwoId;
+    apply(oneId, twoId, match.winnerId, match.gamesWon[oneId] ?? 0, match.gamesWon[twoId] ?? 0, match.gameResults ?? []);
+  }
+  return [...rows.values()];
 }

@@ -1163,3 +1163,33 @@ main.page-wrap .page-content .stat-cell > b i { color: var(--text-positive); }
 .referee-self-select select { min-width: 150px; min-height: 32px; padding: 0 24px 0 9px; border: 1px solid var(--line); border-radius: 4px; color: #52665a; background: #fffefa; font-size: 10px; }
 @media (max-width: 900px) { .referee-layout { grid-template-columns: 1fr; } }
 @media (max-width: 620px) { .referee-add-form { grid-template-columns: 1fr 1fr; } .referee-add-form .button { grid-column: 1 / -1; } .referee-match-row { grid-template-columns: 30px minmax(0,1fr); } .referee-match-row select { grid-column: 2; } .tournament-match-shell { grid-template-columns: minmax(0,1fr) auto; } .match-category-select { grid-column: 1; } .reschedule-button { grid-column: 2; grid-row: 2; } }
+.category-editors { display: grid; gap: 12px; }
+.category-editor { display: grid; gap: 12px; padding: 15px; border: 1px solid #e2e8df; border-radius: 13px; background: #fbfcf9; }
+.category-editor-head { display: flex; align-items: center; justify-content: space-between; }
+.category-editor-head h3 { margin: 4px 0 0; color: #273b30; font-size: 15px; letter-spacing: -.02em; }
+.category-editor .form-row { align-items: end; }
+.category-editor .entrant-list { max-height: 190px; }
+.category-add-entry { align-self: end; margin-bottom: 1px; }
+.registered-entries { display: grid; gap: 6px; }
+.registered-entry { display: flex; align-items: center; gap: 10px; min-height: 38px; padding: 5px 8px; border: 1px solid #e7ebe4; border-radius: 8px; background: white; font-size: 11px; }
+.registered-entry span { flex: 1; font-weight: 600; }
+.registered-entry small { color: #849087; }
+.registered-entry .icon-button { width: 28px; height: 28px; }
+.category-seeds { display: grid; gap: 5px; padding-top: 8px; border-top: 1px solid #e6ebe4; }
+.seed-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; color: #58665d; font-size: 10px; }
+.seed-row .seed-input { width: 74px; }
+.team-lineup-note { margin: 0; color: #78847b; font-size: 10px; }
+.team-lineup-slots { grid-template-columns: repeat(auto-fit,minmax(112px,1fr)); }
+.doubles-nomination,.doubles-service-order { display: grid; grid-template-columns: repeat(2,minmax(150px,1fr)); gap: 9px; width: 100%; }
+.doubles-nomination { padding: 11px; border: 1px solid #e8e2d8; border-radius: 10px; background: #fffaf3; }
+.doubles-service-order { padding-top: 10px; border-top: 1px solid #e5e9e1; }
+.match-category-badge { align-self: center; padding: 5px 8px; border: 1px solid #dce5d8; border-radius: 999px; color: #526c59; background: #f3f7f0; font-size: 9px; white-space: nowrap; }
+.status-pill--not-played { color: #758078; border-color: #e2e6e1; background: #f0f2ef; }
+.not-played-banner { display: flex; align-items: center; gap: 12px; padding: 11px 15px; border: 1px solid #dfe5df; border-radius: 10px; color: #647068; background: #f3f5f2; font-size: 11px; }
+.not-played-banner b { color: #35453b; }
+@media (max-width: 620px) {
+  .category-editor { padding: 11px; }
+  .category-editor .form-row { grid-template-columns: 1fr; }
+  .doubles-nomination,.doubles-service-order { grid-template-columns: 1fr; }
+  .match-category-badge { display: none; }
+}

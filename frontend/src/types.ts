@@ -1,5 +1,5 @@
 export type PageId = 'overview' | 'matches' | 'tournaments' | 'players' | 'referees' | 'statistics' | 'exports' | 'settings' | 'about';
-export type MatchStatus = 'In progress' | 'Scheduled' | 'Completed' | 'Postponed';
+export type MatchStatus = 'In progress' | 'Scheduled' | 'Completed' | 'Postponed' | 'Not played';
 
 export type Player = {
   id: string;
@@ -27,6 +27,7 @@ export type Match = {
   round?: string;
   table?: string;
   category?: string;
+  categoryId?: string;
   refereeId?: string;
   startsAt: string;
   format: string;
@@ -40,9 +41,43 @@ export type Match = {
   winnerId?: string;
   gameResults?: { one: number; two: number; winnerId: string }[];
   bracketOrder?: number;
+  sideOneId?: string;
+  sideTwoId?: string;
+  sideOneLabel?: string;
+  sideTwoLabel?: string;
+  sideOneTeamName?: string;
+  sideTwoTeamName?: string;
+  sideOnePlayerIds?: string[];
+  sideTwoPlayerIds?: string[];
+  doublesOrder?: string[];
+  teamTieId?: string;
+  teamTieOrder?: number;
+  teamOneId?: string;
+  teamTwoId?: string;
+  sideOneTeamRosterIds?: string[];
+  sideTwoTeamRosterIds?: string[];
+  doublesNominationPending?: boolean;
+  awaitingDoublesServerChoice?: boolean;
 };
 
 export type Standing = { playerId: string; played: number; wins: number; losses: number; gamesWon: number; gamesLost: number; pointsFor: number; pointsAgainst: number };
+
+export type CategoryKind = 'Singles' | 'Doubles' | 'Team';
+export type TeamSystem = 'new_swaythling' | 'corbillon' | 'olympic' | 'best_of_7' | 'best_of_9';
+export type CategoryEntry = { id: string; name: string; playerIds: string[]; seed?: number; doublesPlayerIds?: string[] };
+export type TournamentCategory = {
+  id: string;
+  name: string;
+  kind: CategoryKind;
+  format: 'Round robin' | 'Knockout';
+  entries: CategoryEntry[];
+  seeds?: Record<string, number>;
+  bracketSlots?: (string | null)[];
+  byeEntryIds?: string[];
+  teamSystem?: TeamSystem;
+  standings?: Standing[];
+  tieBreaks?: string[];
+};
 
 export type Tournament = {
   id: string;
@@ -52,7 +87,7 @@ export type Tournament = {
   date: string;
   venue: string;
   tableCount: number;
-  categories: string[];
+  categories: TournamentCategory[];
   entrantIds: string[];
   seeds?: Record<string, number>;
   bracketSlots?: (string | null)[];

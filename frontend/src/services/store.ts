@@ -1,5 +1,6 @@
 import { initialWorkspace } from '../data/seed';
-import type { Match, Player, Tournament, Workspace } from '../types';
+import type { CategoryEntry, Match, Player, TeamSystem, Tournament, TournamentCategory, Workspace } from '../types';
+import { teamMatchSequence } from './tableTennisRules';
 
 const STORAGE_KEY = 'rallydesk-workspace-v2';
 
@@ -9,10 +10,24 @@ export function loadWorkspace(): Workspace {
     if (!saved) return structuredClone(initialWorkspace);
     const parsed = JSON.parse(saved) as Workspace;
     if (!parsed.players || !parsed.matches || !parsed.tournaments) return structuredClone(initialWorkspace);
-    return { ...parsed, referees: parsed.referees ?? [], tournaments: parsed.tournaments.map((tournament) => ({ ...tournament, categories: tournament.categories ?? ['Open singles'], tableCount: tournament.tableCount ?? 1 })) };
+    return normalizeWorkspace(parsed);
   } catch {
     return structuredClone(initialWorkspace);
   }
+}
+
+export function normalizeWorkspace(parsed: Workspace): Workspace {
+    const tournaments = parsed.tournaments.map((raw) => {
+      const tournament = raw as Tournament & { categories: (TournamentCategory | string)[] };
+      const categories = tournament.categories?.length ? tournament.categories.map((item, index) => typeof item === 'string' ? ({ id: `legacy-${index}`, name: item, kind: 'Singles' as const, format: tournament.format, entries: (tournament.entrantIds ?? []).map((playerId) => ({ id: playerId, name: '', playerIds: [playerId] })) }) : item) : [{ id: 'default-singles', name: 'Open singles', kind: 'Singles' as const, format: tournament.format, entries: (tournament.entrantIds ?? []).map((playerId) => ({ id: playerId, name: '', playerIds: [playerId] })) }];
+      return { ...tournament, categories, tableCount: tournament.tableCount ?? 1 };
+    });
+    const matches = parsed.matches.map((match) => {
+      const tournament = tournaments.find((item) => item.id === match.tournamentId);
+      const category = tournament?.categories.find((item) => item.id === match.categoryId || item.name === match.category) ?? (tournament?.categories.length === 1 ? tournament.categories[0] : undefined);
+      return { ...match, categoryId: match.categoryId ?? category?.id, sideOneId: match.sideOneId ?? match.playerOneId, sideTwoId: match.sideTwoId ?? match.playerTwoId, sideOnePlayerIds: match.sideOnePlayerIds ?? [match.playerOneId], sideTwoPlayerIds: match.sideTwoPlayerIds ?? [match.playerTwoId] };
+    });
+    return { ...parsed, matches, referees: parsed.referees ?? [], tournaments };
 }
 
 export function saveWorkspace(workspace: Workspace): boolean {
@@ -46,7 +61,13 @@ function seedRankOrder(size: number): number[] {
   return order;
 }
 
-export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds?: Record<string, number>; categories?: string[]; tableCount?: number }): Tournament {
+function shuffle<T>(values: T[]): T[] {
+  const result = [...values];
+  for (let index = result.length - 1; index > 0; index -= 1) { const swap = Math.floor(Math.random() * (index + 1)); [result[index], result[swap]] = [result[swap], result[index]]; }
+  return result;
+}
+
+export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds?: Record<string, number>; categories?: TournamentCategory[]; tableCount?: number }): Tournament {
   const entrantCount = input.entrantIds.length;
   const rounds = input.format === 'Knockout' ? Math.ceil(Math.log2(Math.max(2, entrantCount))) : Math.max(1, entrantCount % 2 ? entrantCount : entrantCount - 1);
   const bracketSize = 2 ** Math.ceil(Math.log2(Math.max(2, entrantCount)));
@@ -59,47 +80,126 @@ export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'da
   const remaining = orderedEntrants.filter((id) => !seededIds.includes(id));
   for (let rank = 1; rank <= bracketSize; rank += 1) if (!bracketSeedMap.has(rank) && remaining.length) bracketSeedMap.set(rank, remaining.shift()!);
   const bracketSlots = input.format === 'Knockout' ? seedRankOrder(bracketSize).map((rank) => bracketSeedMap.get(rank) ?? null) : undefined;
-  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, bracketSlots, tableCount: input.tableCount ?? 1, categories: input.categories?.length ? input.categories : ['Open singles'], id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format === 'Round robin' ? ['Match wins', 'Game difference', 'Games won'] : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
+  const categoryInput: TournamentCategory[] = input.categories?.length ? input.categories : [{ id: crypto.randomUUID(), name: 'Open singles', kind: 'Singles', format: input.format, entries: orderedEntrants.map((id) => ({ id, name: '', playerIds: [id] })) }];
+  const categories = categoryInput.map((category) => {
+    const entryCount = category.entries.length;
+    const size = 2 ** Math.ceil(Math.log2(Math.max(2, entryCount)));
+    const seeded = category.entries.filter((entry) => entry.seed).sort((a, b) => a.seed! - b.seed!);
+    const unseeded = shuffle(category.entries.filter((entry) => !entry.seed));
+    const sorted = [...seeded, ...unseeded];
+    const slotByRank = new Map<number, string>();
+    seeded.forEach((entry) => slotByRank.set(entry.seed!, entry.id));
+    const available = sorted.filter((entry) => !entry.seed);
+    for (let rank = 1; rank <= entryCount; rank += 1) if (!slotByRank.has(rank) && available.length) slotByRank.set(rank, available.shift()!.id);
+    const slots = category.format === 'Knockout' ? seedRankOrder(size).map((rank) => slotByRank.get(rank) ?? null) : undefined;
+    const byeEntryIds = category.format === 'Knockout' ? sorted.slice(0, size - entryCount).map((entry) => entry.id) : [];
+    return { ...category, entries: sorted, format: category.format ?? input.format, bracketSlots: slots, byeEntryIds, standings: sorted.map((entry) => ({ playerId: entry.id, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), tieBreaks: ['Match wins', 'Game difference', 'Games won'] };
+  });
+  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, bracketSlots, tableCount: input.tableCount ?? 1, categories, id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format === 'Round robin' ? ['Match wins', 'Game difference', 'Games won'] : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
 }
 
 
 
-export function generateTournamentFixtures(tournament: Tournament, players: Player[]): Match[] {
-  const entrants = tournament.entrantIds.filter((id) => players.some((player) => player.id === id));
-  const fixtures: Match[] = [];
-  const addFixture = (one: string, two: string, round: string, bracketOrder?: number) => {
-    const match: Match = {
-      id: crypto.randomUUID(), playerOneId: one, playerTwoId: two, status: 'Scheduled',
-      tournamentId: tournament.id, tournamentName: tournament.name, round, startsAt: 'TBD',
-      format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3,
-      gamesWon: { [one]: 0, [two]: 0 }, score: { [one]: 0, [two]: 0 }, bracketOrder,
-      serverId: one, tossWinnerId: one, events: [], category: tournament.categories?.length === 1 ? tournament.categories[0] : undefined, table: `Table ${String((fixtures.filter((match) => match.round === round).length % Math.max(1, tournament.tableCount ?? 1)) + 1).padStart(2, '0')}`,
-    };
-    fixtures.push(match);
-  };
-  if (tournament.format === 'Round robin') {
-    const rotation: (string | null)[] = [...entrants];
-    if (rotation.length % 2) rotation.push(null);
-    for (let round = 0; round < rotation.length - 1; round += 1) {
-      for (let index = 0; index < rotation.length / 2; index += 1) {
-        let one = rotation[index]; let two = rotation[rotation.length - 1 - index];
-        if (round % 2 && index === 0) [one, two] = [two, one];
-        if (one && two) addFixture(one, two, `Round ${round + 1}`);
-      }
-      const fixed = rotation[0];
-      const moved = rotation.pop();
-      if (moved !== undefined) rotation.splice(1, 0, moved);
-      rotation[0] = fixed;
+function makeFixture(tournament: Tournament, category: TournamentCategory, one: CategoryEntry, two: CategoryEntry, roundNumber: number, players: Player[], bracketOrder?: number, tie?: { id: string; order: number; teamOneId: string; teamTwoId: string; teamOneName: string; teamTwoName: string; teamOneRosterIds?: string[]; teamTwoRosterIds?: string[]; doublesPending?: boolean }): Match {
+  const sideOneId = tie ? `${tie.id}:one:${tie.order}` : one.id;
+  const sideTwoId = tie ? `${tie.id}:two:${tie.order}` : two.id;
+  const label = (entry: CategoryEntry) => entry.name || entry.playerIds.map((id) => players.find((player) => player.id === id)?.name ?? 'Unknown').join(' & ');
+  return { id: crypto.randomUUID(), playerOneId: one.playerIds[0], playerTwoId: two.playerIds[0], sideOneId, sideTwoId, sideOneLabel: label(one), sideTwoLabel: label(two), sideOneTeamName: tie?.teamOneName, sideTwoTeamName: tie?.teamTwoName, sideOnePlayerIds: one.playerIds, sideTwoPlayerIds: two.playerIds, sideOneTeamRosterIds: tie?.teamOneRosterIds, sideTwoTeamRosterIds: tie?.teamTwoRosterIds, teamOneId: tie?.teamOneId, teamTwoId: tie?.teamTwoId, teamTieId: tie?.id, teamTieOrder: tie?.order, doublesNominationPending: tie?.doublesPending, status: 'Scheduled', tournamentId: tournament.id, tournamentName: tournament.name, category: category.name, categoryId: category.id, round: category.kind === 'Team' ? `Round ${roundNumber} · Tie ${bracketOrder! + 1}` : `Round ${roundNumber}`, startsAt: 'TBD', format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3, gamesWon: { [sideOneId]: 0, [sideTwoId]: 0 }, score: { [sideOneId]: 0, [sideTwoId]: 0 }, serverId: one.playerIds[0], tossWinnerId: sideOneId, events: [], bracketOrder };
+}
+
+function orderEntries(category: TournamentCategory, entries: CategoryEntry[]) {
+  if (category.format !== 'Knockout') return entries;
+  if (category.bracketSlots?.length) {
+    const byId = new Map(entries.map((entry) => [entry.id, entry]));
+    return category.bracketSlots.map((id) => id ? byId.get(id) ?? null : null);
+  }
+  return entries;
+}
+
+function teamTieFixtures(tournament: Tournament, category: TournamentCategory, oneTeam: CategoryEntry, twoTeam: CategoryEntry, roundNumber: number, tieNumber: number, players: Player[]): Match[] {
+  const spec = teamMatchSequence(category.teamSystem ?? 'new_swaythling');
+  const tieId = crypto.randomUUID();
+  const oneIsABC = Math.random() < 0.5; // Team letters are assigned by lot for each tie.
+  const teamOne = oneIsABC ? oneTeam : twoTeam, teamTwo = oneIsABC ? twoTeam : oneTeam;
+  const label = (team: CategoryEntry, indexes: number[]) => ({ id: `${team.id}:${tieId}:${indexes.join('-')}`, name: indexes.map((index) => team.playerIds[index]).filter(Boolean).map((id) => id).join(' & '), playerIds: indexes.map((index) => team.playerIds[index]).filter((id): id is string => Boolean(id)) });
+  return spec.sides.map(([aIndexes, xIndexes], order) => {
+    const nominated = spec.doublesAt === order && ['corbillon', 'best_of_7'].includes(category.teamSystem ?? '');
+    const left = label(teamOne, nominated && teamOne.doublesPlayerIds?.length === 2 ? teamOne.doublesPlayerIds.map((id) => teamOne.playerIds.indexOf(id)) : aIndexes);
+    const right = label(teamTwo, nominated && teamTwo.doublesPlayerIds?.length === 2 ? teamTwo.doublesPlayerIds.map((id) => teamTwo.playerIds.indexOf(id)) : xIndexes);
+    return makeFixture(tournament, category, left, right, roundNumber, players, tieNumber, { id: tieId, order, teamOneId: teamOne.id, teamTwoId: teamTwo.id, teamOneName: teamOne.name, teamTwoName: teamTwo.name, teamOneRosterIds: teamOne.playerIds, teamTwoRosterIds: teamTwo.playerIds, doublesPending: nominated });
+  });
+}
+
+function pairRoundRobin(entries: CategoryEntry[]) {
+  const rotation: (CategoryEntry | null)[] = [...entries]; if (rotation.length % 2) rotation.push(null);
+  const rounds: [CategoryEntry, CategoryEntry][][] = [];
+  for (let round = 0; round < rotation.length - 1; round += 1) {
+    const pairs: [CategoryEntry, CategoryEntry][] = [];
+    for (let index = 0; index < rotation.length / 2; index += 1) {
+      let one = rotation[index], two = rotation[rotation.length - 1 - index];
+      if (round % 2 && index === 0) [one, two] = [two, one];
+      if (one && two) pairs.push([one, two]);
     }
-  } else {
-    const byeIds = new Set(tournament.byePlayerIds ?? []);
-    const slots = tournament.bracketSlots ?? entrants;
-    for (let index = 0; index + 1 < slots.length; index += 2) {
-      const one = slots[index]; const two = slots[index + 1];
-      if (one && two && !byeIds.has(one) && !byeIds.has(two)) addFixture(one, two, 'Round 1', Math.floor(index / 2));
+    rounds.push(pairs); const fixed = rotation[0], moved = rotation.pop(); if (moved !== undefined) rotation.splice(1, 0, moved); rotation[0] = fixed;
+  }
+  return rounds;
+}
+
+export function generateTournamentFixtures(tournament: Tournament, players: Player[]): Match[] {
+  const fixtures: Match[] = [];
+  for (const category of tournament.categories) {
+    const entries = category.entries.filter((entry) => entry.playerIds.length > 0);
+    if (category.kind === 'Team') {
+      const rounds = category.format === 'Round robin' ? pairRoundRobin(entries) : [pairKnockoutRound(category, entries)];
+      rounds[0]?.forEach(([one, two], tieIndex) => fixtures.push(...teamTieFixtures(tournament, category, one, two, 1, tieIndex, players)));
+      continue;
+    }
+    if (category.format === 'Round robin') {
+      pairRoundRobin(entries).forEach((pairs, round) => pairs.forEach(([one, two]) => fixtures.push(makeFixture(tournament, category, one, two, round + 1, players))));
+    } else {
+      const slots = orderEntries(category, entries);
+      for (let index = 0; index + 1 < slots.length; index += 2) {
+        const one = slots[index], two = slots[index + 1];
+        if (one && two) fixtures.push(makeFixture(tournament, category, one, two, 1, players, Math.floor(index / 2)));
+      }
     }
   }
+  const roundCounts = new Map<string, number>();
+  return fixtures.map((match) => {
+    const count = roundCounts.get(match.round ?? '') ?? 0; roundCounts.set(match.round ?? '', count + 1);
+    return { ...match, table: `Table ${String(count % Math.max(1, tournament.tableCount) + 1).padStart(2, '0')}` };
+  });
+}
+
+export function resolveTeamTie(matches: Match[], teamSystem: TeamSystem): { winnerId?: string; matches: Match[] } {
+  const ordered = [...matches].sort((a, b) => (a.teamTieOrder ?? 0) - (b.teamTieOrder ?? 0));
+  const needed = Math.ceil(teamMatchSequence(teamSystem).sides.length / 2);
+  const wins = new Map<string, number>();
+  for (const match of ordered) if (match.status === 'Completed' && match.winnerId) {
+    const winningTeam = match.winnerId === match.sideOneId ? match.teamOneId : match.teamTwoId;
+    if (winningTeam) wins.set(winningTeam, (wins.get(winningTeam) ?? 0) + 1);
+  }
+  const winnerId = [...wins].find(([, count]) => count >= needed)?.[0];
+  if (!winnerId) return { matches: ordered };
+  return { winnerId, matches: ordered.map((match) => match.status === 'Scheduled' ? { ...match, status: 'Not played' } : match) };
+}
+
+export function generateCategoryRoundFixtures(tournament: Tournament, category: TournamentCategory, entrantIds: string[], roundNumber: number, players: Player[]): Match[] {
+  const byId = new Map(category.entries.map((entry) => [entry.id, entry]));
+  const entrants = entrantIds.map((id) => byId.get(id)).filter((entry): entry is CategoryEntry => Boolean(entry));
+  if (category.kind === 'Team') {
+    const round = pairKnockoutRound({ ...category, bracketSlots: undefined, byeEntryIds: [] }, entrants);
+    return round.flatMap(([one, two], tieIndex) => teamTieFixtures(tournament, category, one, two, roundNumber, tieIndex, players));
+  }
+  const fixtures: Match[] = [];
+  for (let index = 0; index + 1 < entrants.length; index += 2) fixtures.push(makeFixture(tournament, category, entrants[index], entrants[index + 1], roundNumber, players, Math.floor(index / 2)));
   return fixtures;
+}
+
+function pairKnockoutRound(category: TournamentCategory, entries: CategoryEntry[]): [CategoryEntry, CategoryEntry][] {
+  const slots = orderEntries(category, entries), pairs: [CategoryEntry, CategoryEntry][] = [];
+  for (let index = 0; index + 1 < slots.length; index += 2) { const one = slots[index], two = slots[index + 1]; if (one && two) pairs.push([one, two]); }
+  return pairs;
 }
 
 

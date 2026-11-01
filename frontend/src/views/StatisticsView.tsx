@@ -8,8 +8,8 @@ export function StatisticsView({ workspace }: { workspace: Workspace }) {
   const rated = [...workspace.players].sort((a, b) => b.rating - a.rating);
   const avgRating = workspace.players.length ? Math.round(workspace.players.reduce((sum, player) => sum + player.rating, 0) / workspace.players.length) : 0;
   const records = workspace.players.map((player) => {
-    const played = finished.filter((match) => match.playerOneId === player.id || match.playerTwoId === player.id);
-    const wins = played.filter((match) => match.winnerId === player.id).length;
+    const played = finished.filter((match) => (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id));
+    const wins = played.filter((match) => match.winnerId === (match.sideOneId ?? match.playerOneId) && (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || match.winnerId === (match.sideTwoId ?? match.playerTwoId) && (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id)).length;
     return { ...player, wins, losses: played.length - wins };
   });
   const progress = rated.slice(0, 7).map((player) => ({ player, width: Math.max(12, player.rating / Math.max(1, rated[0]?.rating) * 100) }));

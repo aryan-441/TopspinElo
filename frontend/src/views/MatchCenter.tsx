@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleHelp, Clock3, Flag, Play, Timer, Undo2, X } from 'lucide-react';
 import type { Match, Player, Referee, Workspace } from '../types';
 import { Dialog } from '../components/Dialog';
+import { chooseDoublesFirstServer, doublesServerAfterPoint, nextDoublesGameOrder } from '../services/tableTennisRules';
 
 type MatchCenterProps = { workspace: Workspace; players: Map<string, Player>; referees?: Referee[]; refereeDesk?: boolean; query: string; onQuery: (value: string) => void; onOpenMatch: (id: string) => void; onCreate: () => void };
 
@@ -31,10 +32,11 @@ export function MatchCenter({ workspace, players, referees = [], refereeDesk = f
 
 function MatchRow({ match, players, referee, onOpen, showReferee }: { match: Match; players: Map<string, Player>; referee?: Referee; onOpen: () => void; showReferee: boolean }) {
   const one = players.get(match.playerOneId); const two = players.get(match.playerTwoId);
-  const scoreOne = match.status === 'Completed' ? match.gamesWon[match.playerOneId] ?? 0 : match.score[match.playerOneId] ?? 0;
-  const scoreTwo = match.status === 'Completed' ? match.gamesWon[match.playerTwoId] ?? 0 : match.score[match.playerTwoId] ?? 0;
+  const oneId = match.sideOneId ?? match.playerOneId, twoId = match.sideTwoId ?? match.playerTwoId;
+  const scoreOne = match.status === 'Completed' ? match.gamesWon[oneId] ?? 0 : match.score[oneId] ?? 0;
+  const scoreTwo = match.status === 'Completed' ? match.gamesWon[twoId] ?? 0 : match.score[twoId] ?? 0;
   return <tr className="match-row" onClick={onOpen} tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') onOpen(); }}>
-    <td><div className="match-cell-players"><span className="avatar avatar--tiny">{one?.initials ?? 'P1'}</span><div className="match-name-stack"><b className={match.winnerId === match.playerOneId ? 'winner-name' : ''}>{one?.name ?? 'Player one'}</b><b className={match.winnerId === match.playerTwoId ? 'winner-name' : ''}>{two?.name ?? 'Player two'}</b></div><span className="vs-mark">vs</span></div></td>
+    <td><div className="match-cell-players"><span className="avatar avatar--tiny">{one?.initials ?? 'P1'}</span><div className="match-name-stack"><b className={match.winnerId === oneId ? 'winner-name' : ''}>{match.sideOneLabel ?? one?.name ?? 'Player one'}</b><b className={match.winnerId === twoId ? 'winner-name' : ''}>{match.sideTwoLabel ?? two?.name ?? 'Player two'}</b></div><span className="vs-mark">vs</span></div></td>
     <td><span className="event-name">{match.tournamentName ?? 'Club match'}</span><small className="event-round">{[match.category, match.round ?? 'Unassigned'].filter(Boolean).join(' · ')}</small></td>
     <td><span className="format-tag">{match.format}</span></td>
     <td><span className="table-label">{match.table ?? '—'}</span></td>
@@ -46,46 +48,68 @@ function MatchRow({ match, players, referee, onOpen, showReferee }: { match: Mat
 }
 
 export function StatusPill({ status }: { status: Match['status'] }) {
-  const className = status === 'In progress' ? 'status-pill status-pill--live' : status === 'Completed' ? 'status-pill status-pill--complete' : status === 'Postponed' ? 'status-pill status-pill--paused' : 'status-pill status-pill--scheduled';
+  const className = status === 'In progress' ? 'status-pill status-pill--live' : status === 'Completed' ? 'status-pill status-pill--complete' : status === 'Postponed' ? 'status-pill status-pill--paused' : status === 'Not played' ? 'status-pill status-pill--not-played' : 'status-pill status-pill--scheduled';
   return <span className={className}><i />{status}</span>;
 }
 
-type LiveProps = { match: Match; players: Map<string, Player>; onBack: () => void; onChange: (match: Match) => void; toast: (message: string) => void };
+type LiveProps = { match: Match; players: Map<string, Player>; canNominateDoubles?: boolean; onBack: () => void; onChange: (match: Match) => void; toast: (message: string) => void };
 
-export function LiveScoring({ match, players, onBack, onChange, toast }: LiveProps) {
-  const one = players.get(match.playerOneId)!; const two = players.get(match.playerTwoId)!;
-  const [tossWinner, setTossWinner] = useState(match.tossWinnerId || match.playerOneId);
+export function LiveScoring({ match, players, canNominateDoubles = true, onBack, onChange, toast }: LiveProps) {
+  const oneId = match.sideOneId ?? match.playerOneId; const twoId = match.sideTwoId ?? match.playerTwoId;
+  const onePlayer = players.get(match.playerOneId)!; const twoPlayer = players.get(match.playerTwoId)!;
+  const rosterOne = match.sideOneTeamRosterIds ?? match.sideOnePlayerIds ?? [match.playerOneId];
+  const rosterTwo = match.sideTwoTeamRosterIds ?? match.sideTwoPlayerIds ?? [match.playerTwoId];
+  const [lineupOne, setLineupOne] = useState(match.sideOnePlayerIds ?? [match.playerOneId]);
+  const [lineupTwo, setLineupTwo] = useState(match.sideTwoPlayerIds ?? [match.playerTwoId]);
+  const oneLabel = (match.doublesNominationPending ? lineupOne.map((id) => players.get(id)?.name).filter(Boolean).join(' & ') : match.sideOneLabel) || onePlayer.name;
+  const twoLabel = (match.doublesNominationPending ? lineupTwo.map((id) => players.get(id)?.name).filter(Boolean).join(' & ') : match.sideTwoLabel) || twoPlayer.name;
+  const one = { ...onePlayer, id: oneId, name: oneLabel }; const two = { ...twoPlayer, id: twoId, name: twoLabel };
+  const [tossWinner, setTossWinner] = useState(match.tossWinnerId || one.id);
   const [serveChoice, setServeChoice] = useState<'serve' | 'receive'>('serve');
+  const [firstServerSelection, setFirstServerSelection] = useState(match.serverId);
+  const [firstReceiverSelection, setFirstReceiverSelection] = useState('');
+  const [nextGameServerChoice, setNextGameServerChoice] = useState(match.doublesOrder?.[0] ?? '');
   const [undoOpen, setUndoOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [mobileActions, setMobileActions] = useState(false);
-  const scoreOne = match.score[match.playerOneId] ?? 0; const scoreTwo = match.score[match.playerTwoId] ?? 0;
+  const scoreOne = match.score[one.id] ?? 0; const scoreTwo = match.score[two.id] ?? 0;
   const gameWinner = match.status === 'In progress' ? findGameWinner(match) : undefined;
-  const matchWinner = match.winnerId ? players.get(match.winnerId) : undefined;
+  const matchWinner = match.winnerId === oneId ? one : match.winnerId === twoId ? two : undefined;
   const inProgress = match.status === 'In progress';
   const currentGameIndex = (match.gameResults?.length ?? 0) + 1;
   const servingPlayer = players.get(match.serverId) ?? one;
+  const servingSideId = (match.sideOnePlayerIds ?? [match.playerOneId]).includes(match.serverId) ? one.id : two.id;
   const updateMatch = (next: Match) => onChange(next);
+  const chosenServingSide = serveChoice === 'serve' ? tossWinner : tossWinner === one.id ? two.id : one.id;
+  const chosenServingLineup = chosenServingSide === one.id ? lineupOne : lineupTwo;
+  const chosenReceivingLineup = chosenServingSide === one.id ? lineupTwo : lineupOne;
+  const isDoubles = chosenServingLineup.length === 2 && chosenReceivingLineup.length === 2;
 
   const startMatch = () => {
-    const firstServerId = serveChoice === 'serve' ? tossWinner : tossWinner === match.playerOneId ? match.playerTwoId : match.playerOneId;
-    updateMatch({ ...match, status: 'In progress', tossWinnerId: tossWinner, serverId: firstServerId });
+    if (match.doublesNominationPending && !canNominateDoubles) { toast('The doubles pair can be nominated after the preceding singles finish'); return; }
+    const servers = chosenServingLineup, receivers = chosenReceivingLineup;
+    const server = servers.includes(firstServerSelection) ? firstServerSelection : servers[0];
+    const receiver = receivers.includes(firstReceiverSelection) ? firstReceiverSelection : receivers[0];
+    const doublesOrder = isDoubles ? [server, receiver, servers.find((id) => id !== server)!, receivers.find((id) => id !== receiver)!] : undefined;
+    const nextOneLabel = lineupOne.map((id) => players.get(id)?.name).filter(Boolean).join(' & ');
+    const nextTwoLabel = lineupTwo.map((id) => players.get(id)?.name).filter(Boolean).join(' & ');
+    updateMatch({ ...match, status: 'In progress', tossWinnerId: tossWinner, serverId: server, doublesOrder, sideOnePlayerIds: lineupOne, sideTwoPlayerIds: lineupTwo, sideOneLabel: nextOneLabel, sideTwoLabel: nextTwoLabel, doublesNominationPending: false });
     toast('Match started');
   };
 
   const addPoint = (winnerId: string, kind: 'Point' | 'Fault' = 'Point') => {
-    if (!inProgress || gameWinner) return;
+    if (!inProgress || gameWinner || match.awaitingDoublesServerChoice) return;
     const before = { ...match.score };
     const nextScore = { ...before, [winnerId]: (before[winnerId] ?? 0) + 1 };
     const nextServer = serverForNextPoint(match, before, match.serverId);
-    const event: Match['events'][number] = { id: crypto.randomUUID(), winnerId, score: `${nextScore[match.playerOneId]}–${nextScore[match.playerTwoId]}`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), kind };
+    const event: Match['events'][number] = { id: crypto.randomUUID(), winnerId, score: `${nextScore[one.id]}–${nextScore[two.id]}`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), kind };
     updateMatch({ ...match, score: nextScore, serverId: nextServer, events: [event, ...match.events] });
     if (kind === 'Fault') toast('Fault recorded · point awarded to receiver');
   };
 
   const addLet = () => {
-    if (!inProgress || gameWinner) return;
+    if (!inProgress || gameWinner || match.awaitingDoublesServerChoice) return;
     const event: Match['events'][number] = { id: crypto.randomUUID(), winnerId: match.serverId, score: `${scoreOne}–${scoreTwo}`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), kind: 'Let' };
     updateMatch({ ...match, events: [event, ...match.events] });
     toast('Let recorded · replay the point');
@@ -95,13 +119,13 @@ export function LiveScoring({ match, players, onBack, onChange, toast }: LivePro
     const latestPoint = match.events.find((event) => event.kind === 'Point' || event.kind === 'Fault');
     if (!latestPoint) { toast('There is no point to undo'); setUndoOpen(false); return; }
     const [oneScore, twoScore] = latestPoint.score.split('–').map(Number);
-    const beforeScore = latestPoint.winnerId === match.playerOneId ? { ...match.score, [match.playerOneId]: Math.max(0, oneScore - 1) } : { ...match.score, [match.playerTwoId]: Math.max(0, twoScore - 1) };
+    const beforeScore = latestPoint.winnerId === one.id ? { ...match.score, [one.id]: Math.max(0, oneScore - 1) } : { ...match.score, [two.id]: Math.max(0, twoScore - 1) };
     const totalAfter = oneScore + twoScore;
-    const oneBefore = beforeScore[match.playerOneId] ?? 0; const twoBefore = beforeScore[match.playerTwoId] ?? 0;
+    const oneBefore = beforeScore[one.id] ?? 0; const twoBefore = beforeScore[two.id] ?? 0;
     const atDeuceBeforePoint = oneBefore >= match.pointsPerGame - 1 && twoBefore >= match.pointsPerGame - 1;
     const serviceInterval = atDeuceBeforePoint ? 1 : match.pointsPerGame === 11 ? 2 : 5;
     const serverChangedAfterPoint = totalAfter % serviceInterval === 0;
-    const previousServerId = serverChangedAfterPoint ? match.serverId === match.playerOneId ? match.playerTwoId : match.playerOneId : match.serverId;
+    const previousServerId = serverChangedAfterPoint ? match.doublesOrder?.length === 4 ? match.doublesOrder[(match.doublesOrder.indexOf(match.serverId) + 3) % 4] : match.serverId === match.playerOneId ? match.playerTwoId : match.playerOneId : match.serverId;
     const next = { ...match, score: beforeScore, serverId: previousServerId, events: [{ id: crypto.randomUUID(), winnerId: latestPoint.winnerId, score: latestPoint.score, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), kind: 'Correction' as const }, ...match.events.filter((event) => event.id !== latestPoint.id)] };
     updateMatch(next); setUndoOpen(false); toast(`Last point removed · ${reason}`);
   };
@@ -111,31 +135,43 @@ export function LiveScoring({ match, players, onBack, onChange, toast }: LivePro
     const nextGames = { ...match.gamesWon, [gameWinner]: (match.gamesWon[gameWinner] ?? 0) + 1 };
     const matchWon = nextGames[gameWinner] >= match.gamesToWin;
     const completedGame = { one: scoreOne, two: scoreTwo, winnerId: gameWinner };
-    const nextServer = match.serverId === match.playerOneId ? match.playerTwoId : match.playerOneId;
-    updateMatch({ ...match, gamesWon: nextGames, gameResults: [...(match.gameResults ?? []), completedGame], score: matchWon ? match.score : { [match.playerOneId]: 0, [match.playerTwoId]: 0 }, status: matchWon ? 'Completed' : 'In progress', winnerId: matchWon ? gameWinner : undefined, serverId: nextServer, events: match.events });
+    const nextOrder = match.doublesOrder?.length === 4 ? nextDoublesGameOrder(match.doublesOrder) ?? undefined : undefined;
+    const nextServer = nextOrder?.[0] ?? (match.serverId === match.playerOneId ? match.playerTwoId : match.playerOneId);
+    updateMatch({ ...match, gamesWon: nextGames, gameResults: [...(match.gameResults ?? []), completedGame], score: matchWon ? match.score : { [one.id]: 0, [two.id]: 0 }, status: matchWon ? 'Completed' : 'In progress', winnerId: matchWon ? gameWinner : undefined, serverId: nextServer, doublesOrder: nextOrder, awaitingDoublesServerChoice: !matchWon && Boolean(nextOrder), events: match.events });
     toast(matchWon ? 'Match result recorded' : 'Game confirmed · next game is ready');
+  };
+
+  const confirmNextGameServer = () => {
+    const order = match.doublesOrder;
+    if (!order || order.length !== 4) return;
+    const serverIndex = order.indexOf(nextGameServerChoice);
+    if (serverIndex !== 0 && serverIndex !== 2) return;
+    const nextOrder = chooseDoublesFirstServer(order, nextGameServerChoice);
+    if (!nextOrder) return;
+    updateMatch({ ...match, doublesOrder: nextOrder, serverId: nextOrder[0], awaitingDoublesServerChoice: false });
   };
 
   return <div className="scoring-screen">
     <header className="scoring-topbar"><button className="scoring-back" onClick={onBack}><ArrowLeft size={17} /> <span>Match desk</span></button><span className="scoring-brand">rally<span>desk</span></span><div className="scoring-top-right"><StatusPill status={match.status} /><button className="icon-button scoring-help" onClick={() => setHelpOpen(true)} aria-label="Scoring help"><CircleHelp size={18} /></button></div></header>
     <main className="scoring-layout">
+      {match.status === 'Not played' && <div className="not-played-banner"><b>Not played</b><span>The team tie was decided by the required majority of individual matches.</span></div>}
       <section className="scoring-main">
         <div className="scoring-match-meta"><div><p className="eyebrow">{match.tournamentName ?? 'CLUB MATCH'} <span className="eyebrow-rule" /> {match.round ?? 'FRIENDLY'}</p><h1>{one.name} <span>vs</span> {two.name}</h1><p className="scoring-meta-line"><span>{match.table ?? 'Table unassigned'}</span><i />{match.format}<i />First to {match.pointsPerGame}</p></div></div>
-        {!inProgress && match.status !== 'Completed' && <section className="toss-panel"><div><p className="eyebrow">BEFORE THE FIRST SERVE</p><h2>Confirm the toss</h2><p>The toss winner chooses to serve or receive first.</p></div><div className="toss-controls"><div className="toss-player-choice"><span>Toss winner</span><div className="choice-pair"><button className={tossWinner === one.id ? 'choice-button choice-button--selected' : 'choice-button'} onClick={() => setTossWinner(one.id)}>{one.name}</button><button className={tossWinner === two.id ? 'choice-button choice-button--selected' : 'choice-button'} onClick={() => setTossWinner(two.id)}>{two.name}</button></div></div><div className="serve-choice"><span>Choice</span><div className="choice-pair choice-pair--short"><button className={serveChoice === 'serve' ? 'choice-button choice-button--selected' : 'choice-button'} onClick={() => setServeChoice('serve')}>Serve</button><button className={serveChoice === 'receive' ? 'choice-button choice-button--selected' : 'choice-button'} onClick={() => setServeChoice('receive')}>Receive</button></div></div><button className="button button-primary" onClick={startMatch}><Play size={15} fill="currentColor" /> Start match</button></div></section>}
+        {!inProgress && match.status !== 'Completed' && match.status !== 'Not played' && <section className="toss-panel"><div><p className="eyebrow">BEFORE THE FIRST SERVE</p><h2>{match.doublesNominationPending ? 'Confirm the doubles pair' : 'Confirm the toss'}</h2><p>{match.doublesNominationPending && !canNominateDoubles ? 'The nominated pair can be selected after the preceding singles are complete.' : 'The toss winner chooses to serve or receive first. In doubles, choose the first server and receiver; partners then rotate in the ITTF order.'}</p></div><div className="toss-controls"><div className="toss-player-choice"><span>Toss winner</span><div className="choice-pair"><button className={tossWinner === one.id ? 'choice-button choice-button--selected' : 'choice-button'} onClick={() => setTossWinner(one.id)}>{one.name}</button><button className={tossWinner === two.id ? 'choice-button choice-button--selected' : 'choice-button'} onClick={() => setTossWinner(two.id)}>{two.name}</button></div></div><div className="serve-choice"><span>Choice</span><div className="choice-pair choice-pair--short"><button className={serveChoice === 'serve' ? 'choice-button choice-button--selected' : 'choice-button'} onClick={() => setServeChoice('serve')}>Serve</button><button className={serveChoice === 'receive' ? 'choice-button choice-button--selected' : 'choice-button'} onClick={() => setServeChoice('receive')}>Receive</button></div></div>{match.doublesNominationPending && <div className="doubles-nomination"><label className="field"><span>{one.name} · doubles player 1</span><select value={lineupOne[0] ?? ''} onChange={(event) => setLineupOne([event.target.value, lineupOne[1] ?? ''])} disabled={!canNominateDoubles}>{rosterOne.map((id) => <option key={id} value={id}>{players.get(id)?.name}</option>)}</select></label><label className="field"><span>Doubles player 2</span><select value={lineupOne[1] ?? ''} onChange={(event) => setLineupOne([lineupOne[0] ?? '', event.target.value])} disabled={!canNominateDoubles}>{rosterOne.filter((id) => id !== lineupOne[0]).map((id) => <option key={id} value={id}>{players.get(id)?.name}</option>)}</select></label><label className="field"><span>{two.name} · doubles player 1</span><select value={lineupTwo[0] ?? ''} onChange={(event) => setLineupTwo([event.target.value, lineupTwo[1] ?? ''])} disabled={!canNominateDoubles}>{rosterTwo.map((id) => <option key={id} value={id}>{players.get(id)?.name}</option>)}</select></label><label className="field"><span>Doubles player 2</span><select value={lineupTwo[1] ?? ''} onChange={(event) => setLineupTwo([lineupTwo[0] ?? '', event.target.value])} disabled={!canNominateDoubles}>{rosterTwo.filter((id) => id !== lineupTwo[0]).map((id) => <option key={id} value={id}>{players.get(id)?.name}</option>)}</select></label></div>}{isDoubles && <div className="doubles-service-order"><label className="field"><span>First server</span><select value={chosenServingLineup.includes(firstServerSelection) ? firstServerSelection : chosenServingLineup[0]} onChange={(event) => setFirstServerSelection(event.target.value)}>{chosenServingLineup.map((id) => <option key={id} value={id}>{players.get(id)?.name}</option>)}</select></label><label className="field"><span>First receiver</span><select value={chosenReceivingLineup.includes(firstReceiverSelection) ? firstReceiverSelection : chosenReceivingLineup[0]} onChange={(event) => setFirstReceiverSelection(event.target.value)}>{chosenReceivingLineup.map((id) => <option key={id} value={id}>{players.get(id)?.name}</option>)}</select></label></div>}<button className="button button-primary" onClick={startMatch} disabled={(match.doublesNominationPending && (!canNominateDoubles || lineupOne.length !== 2 || lineupTwo.length !== 2 || new Set(lineupOne).size !== 2 || new Set(lineupTwo).size !== 2))}><Play size={15} fill="currentColor" /> Start match</button></div></section>}
 
         <div className={`scorecard ${match.status === 'Completed' ? 'scorecard--complete' : ''}`}>
           <div className="scorecard-top"><span><i className={inProgress ? 'score-live-dot' : 'score-done-dot'} />{match.status === 'Completed' ? 'FINAL SCORE' : inProgress ? `GAME ${currentGameIndex}` : 'MATCH RESULT'}</span><span>{match.status === 'Completed' ? 'Recorded' : `${match.pointsPerGame} POINT GAME`}</span></div>
           <div className="scorecard-players">
-            <div className="scorecard-player"><div className="scorecard-person"><span className={`score-big-avatar ${matchWinner?.id === one.id ? 'score-big-avatar--winner' : ''}`}>{one.initials}</span><div><b>{one.name}</b><small>{one.style} <span>·</span> {one.hand.toLowerCase()} handed</small></div></div><span className="game-score">{match.gamesWon[one.id] ?? 0}</span><span className={`point-score ${!inProgress || match.serverId !== one.id ? 'point-score--muted' : ''}`}>{scoreOne}</span></div>
+            <div className="scorecard-player"><div className="scorecard-person"><span className={`score-big-avatar ${matchWinner?.id === one.id ? 'score-big-avatar--winner' : ''}`}>{one.initials}</span><div><b>{one.name}</b>{match.sideOneTeamName && <small>{match.sideOneTeamName} · A/B/C lineup</small>}<small>{one.style} <span>·</span> {one.hand.toLowerCase()} handed</small></div></div><span className="game-score">{match.gamesWon[one.id] ?? 0}</span><span className={`point-score ${!inProgress || servingSideId !== one.id ? 'point-score--muted' : ''}`}>{scoreOne}</span></div>
             <div className="scorecard-divider"><span /><span>SETS</span><span>POINTS</span></div>
-            <div className="scorecard-player"><div className="scorecard-person"><span className={`score-big-avatar score-big-avatar--second ${matchWinner?.id === two.id ? 'score-big-avatar--winner' : ''}`}>{two.initials}</span><div><b>{two.name}</b><small>{two.style} <span>·</span> {two.hand.toLowerCase()} handed</small></div></div><span className="game-score">{match.gamesWon[two.id] ?? 0}</span><span className={`point-score point-score--second ${!inProgress || match.serverId !== two.id ? 'point-score--muted' : ''}`}>{scoreTwo}</span></div>
+            <div className="scorecard-player"><div className="scorecard-person"><span className={`score-big-avatar score-big-avatar--second ${matchWinner?.id === two.id ? 'score-big-avatar--winner' : ''}`}>{two.initials}</span><div><b>{two.name}</b>{match.sideTwoTeamName && <small>{match.sideTwoTeamName} · X/Y/Z lineup</small>}<small>{two.style} <span>·</span> {two.hand.toLowerCase()} handed</small></div></div><span className="game-score">{match.gamesWon[two.id] ?? 0}</span><span className={`point-score point-score--second ${!inProgress || servingSideId !== two.id ? 'point-score--muted' : ''}`}>{scoreTwo}</span></div>
           </div>
           {match.status === 'Completed' && <div className="match-final-strip"><Check size={16} /><span><b>{matchWinner?.name}</b> won the match</span><span>{match.format} · {match.gamesWon[one.id]}–{match.gamesWon[two.id]}</span></div>}
           {inProgress && <div className="serve-bar"><span className="serve-ball">●</span><span><b>{servingPlayer.name}</b> to serve next</span><span className="serve-bar-note">Serve changes automatically</span></div>}
         </div>
 
         {inProgress && <>
-          {gameWinner ? <div className="game-won-banner"><div><span className="eyebrow">GAME POINT</span><b>{players.get(gameWinner)?.name} takes the game</b></div><button className="button button-primary" onClick={acceptGame}><Check size={16} /> Confirm game result</button><button className="undo-game" onClick={() => setUndoOpen(true)}><Undo2 size={15} /> Undo last point</button></div> : <div className="score-controls"><div className="score-control-heading"><span>POINT WON BY</span><span>Tap a player to add a point</span></div><div className="point-buttons"><button className="point-button" onClick={() => addPoint(one.id)}><span className="point-plus">+</span><span><small>POINT FOR</small><b>{one.name}</b></span><span className="point-shortcut">A</span></button><span className="point-separator">OR</span><button className="point-button point-button--orange" onClick={() => addPoint(two.id)}><span className="point-plus">+</span><span><small>POINT FOR</small><b>{two.name}</b></span><span className="point-shortcut">L</span></button></div><div className="score-secondary-actions"><button onClick={addLet}><span className="let-icon">↻</span> Let · replay point</button><button onClick={() => addPoint(match.serverId === one.id ? two.id : one.id, 'Fault')}><Flag size={14} /> Fault · point to receiver</button><button onClick={() => setUndoOpen(true)} disabled={!match.events.some((event) => event.kind === 'Point' || event.kind === 'Fault')}><Undo2 size={14} /> Undo last point</button></div></div>}
+          {match.awaitingDoublesServerChoice ? <div className="game-won-banner"><div><span className="eyebrow">NEXT GAME · DOUBLES</span><b>The serving pair chooses its first server</b><small>The first receiver is determined by the service order from the previous game.</small></div><label className="field"><span>First server</span><select value={nextGameServerChoice} onChange={(event) => setNextGameServerChoice(event.target.value)}>{[match.doublesOrder?.[0], match.doublesOrder?.[2]].filter((id): id is string => Boolean(id)).map((id) => <option key={id} value={id}>{players.get(id)?.name}</option>)}</select></label><button className="button button-primary" onClick={confirmNextGameServer}><Check size={15} /> Confirm server</button></div> : gameWinner ? <div className="game-won-banner"><div><span className="eyebrow">GAME POINT</span><b>{(gameWinner === one.id ? one.name : two.name)} takes the game</b></div><button className="button button-primary" onClick={acceptGame}><Check size={16} /> Confirm game result</button><button className="undo-game" onClick={() => setUndoOpen(true)}><Undo2 size={15} /> Undo last point</button></div> : <div className="score-controls"><div className="score-control-heading"><span>POINT WON BY</span><span>Tap a side to add a point</span></div><div className="point-buttons"><button className="point-button" onClick={() => addPoint(one.id)}><span className="point-plus">+</span><span><small>POINT FOR</small><b>{one.name}</b></span><span className="point-shortcut">A</span></button><span className="point-separator">OR</span><button className="point-button point-button--orange" onClick={() => addPoint(two.id)}><span className="point-plus">+</span><span><small>POINT FOR</small><b>{two.name}</b></span><span className="point-shortcut">L</span></button></div><div className="score-secondary-actions"><button onClick={addLet}><span className="let-icon">↻</span> Let · replay point</button><button onClick={() => { const servingSide = (match.sideOnePlayerIds ?? [match.playerOneId]).includes(match.serverId) ? one.id : two.id; addPoint(servingSide === one.id ? two.id : one.id, 'Fault'); }}><Flag size={14} /> Fault · point to receiver</button><button onClick={() => setUndoOpen(true)} disabled={!match.events.some((event) => event.kind === 'Point' || event.kind === 'Fault')}><Undo2 size={14} /> Undo last point</button></div></div>}
         </>}
         <div className="game-history"><div className="section-head"><div><p className="eyebrow">MATCH RECORD</p><h3>Games so far</h3></div><span className="small-meta">Best of {match.gamesToWin * 2 - 1}</span></div><div className="game-history-list">{match.gameResults?.length ? match.gameResults.map((game, index) => <div className="game-history-row" key={`${index}-${game.winnerId}`}><span className="game-number">GAME {String(index + 1).padStart(2, '0')}</span><span className={game.winnerId === one.id ? 'game-result game-result--winner' : 'game-result'}>{game.one}</span><i>–</i><span className={game.winnerId === two.id ? 'game-result game-result--winner' : 'game-result'}>{game.two}</span><span className="game-winner-name">{players.get(game.winnerId)?.name} won</span><Check size={15} /></div>) : <div className="history-placeholder"><span>GAMES WILL APPEAR HERE</span><span>Each accepted result is kept in the match record.</span></div>}</div></div>
       </section>
@@ -160,17 +196,21 @@ function UndoDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: (r
 }
 
 function serverForNextPoint(match: Match, scoreBefore: Record<string, number>, currentServer: string) {
-  const totalAfter = (scoreBefore[match.playerOneId] ?? 0) + (scoreBefore[match.playerTwoId] ?? 0) + 1;
-  const atDeuce = (scoreBefore[match.playerOneId] ?? 0) >= match.pointsPerGame - 1 && (scoreBefore[match.playerTwoId] ?? 0) >= match.pointsPerGame - 1;
+  const one = match.sideOneId ?? match.playerOneId, two = match.sideTwoId ?? match.playerTwoId;
+  const totalAfter = (scoreBefore[one] ?? 0) + (scoreBefore[two] ?? 0) + 1;
+  const atDeuce = (scoreBefore[one] ?? 0) >= match.pointsPerGame - 1 && (scoreBefore[two] ?? 0) >= match.pointsPerGame - 1;
   const interval = atDeuce ? 1 : match.pointsPerGame === 11 ? 2 : 5;
-  return totalAfter % interval === 0 ? currentServer === match.playerOneId ? match.playerTwoId : match.playerOneId : currentServer;
+  if (match.doublesOrder?.length === 4) return doublesServerAfterPoint(match.doublesOrder, currentServer, scoreBefore[one] ?? 0, scoreBefore[two] ?? 0, match.pointsPerGame);
+  if (totalAfter % interval !== 0) return currentServer;
+  return currentServer === match.playerOneId ? match.playerTwoId : match.playerOneId;
 }
 
 function findGameWinner(match: Match): string | undefined {
-  const one = match.score[match.playerOneId] ?? 0; const two = match.score[match.playerTwoId] ?? 0;
+  const sideOne = match.sideOneId ?? match.playerOneId, sideTwo = match.sideTwoId ?? match.playerTwoId;
+  const one = match.score[sideOne] ?? 0; const two = match.score[sideTwo] ?? 0;
   const target = match.pointsPerGame;
-  if (one >= target && one - two >= 2) return match.playerOneId;
-  if (two >= target && two - one >= 2) return match.playerTwoId;
+  if (one >= target && one - two >= 2) return sideOne;
+  if (two >= target && two - one >= 2) return sideTwo;
   return undefined;
 }
 
