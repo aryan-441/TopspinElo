@@ -106,8 +106,13 @@ export default function App() {
         const roundMatches = eventMatches.filter((match) => match.round === `Round ${currentRound}`);
         const hasNextRound = eventMatches.some((match) => match.round === `Round ${currentRound + 1}`);
         if (roundMatches.length && roundMatches.every((match) => match.status === 'Completed' && match.winnerId) && !hasNextRound) {
-          const qualifiers = [ ...(currentRound === 1 ? tournament.byePlayerIds ?? [] : []), ...roundMatches.map((match) => match.winnerId!) ]
-            .sort((one, two) => tournament.entrantIds.indexOf(one) - tournament.entrantIds.indexOf(two));
+          const advancingByBracketPosition = new Map<number, string>();
+          if (currentRound === 1) for (const playerId of tournament.byePlayerIds ?? []) {
+            const slot = (tournament.bracketSlots ?? tournament.entrantIds).indexOf(playerId);
+            if (slot >= 0) advancingByBracketPosition.set(Math.floor(slot / 2), playerId);
+          }
+          roundMatches.forEach((match, index) => advancingByBracketPosition.set(match.bracketOrder ?? index, match.winnerId!));
+          const qualifiers = [...advancingByBracketPosition.entries()].sort((a, b) => a[0] - b[0]).map(([, playerId]) => playerId);
           const fixtures = generateKnockoutRoundFixtures(tournament, qualifiers, currentRound + 1);
           matches = [...fixtures, ...matches];
           updatedTournament = { ...tournament, matchIds: [...tournament.matchIds, ...fixtures.map((match) => match.id)] };

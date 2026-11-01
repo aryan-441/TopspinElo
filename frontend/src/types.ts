@@ -37,6 +37,7 @@ export type Match = {
   events: PointEvent[];
   winnerId?: string;
   gameResults?: { one: number; two: number; winnerId: string }[];
+  bracketOrder?: number;
 };
 
 export type Standing = { playerId: string; played: number; wins: number; losses: number; gamesWon: number; gamesLost: number; pointsFor: number; pointsAgainst: number };
@@ -50,6 +51,7 @@ export type Tournament = {
   venue: string;
   entrantIds: string[];
   seeds?: Record<string, number>;
+  bracketSlots?: (string | null)[];
   byePlayerIds?: string[];
   matchIds: string[];
   rounds: number;

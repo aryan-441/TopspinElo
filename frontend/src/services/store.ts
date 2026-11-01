@@ -40,6 +40,12 @@ export function createMatch(input: Pick<Match, 'playerOneId' | 'playerTwoId' | '
   return { ...input, id: crypto.randomUUID(), status: 'Scheduled', startsAt: 'Now', gamesWon: { [input.playerOneId]: 0, [input.playerTwoId]: 0 }, score: { [input.playerOneId]: 0, [input.playerTwoId]: 0 }, serverId: server.id, tossWinnerId: server.id, events: [], tournamentName: undefined };
 }
 
+function seedRankOrder(size: number): number[] {
+  let order = [1, 2];
+  while (order.length < size) { const nextSize = order.length * 2 + 1; order = order.flatMap((seed) => [seed, nextSize - seed]); }
+  return order;
+}
+
 export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds?: Record<string, number> }): Tournament {
   const entrantCount = input.entrantIds.length;
   const rounds = input.format === 'Knockout' ? Math.ceil(Math.log2(Math.max(2, entrantCount))) : Math.max(1, entrantCount % 2 ? entrantCount : entrantCount - 1);
@@ -48,7 +54,12 @@ export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'da
   const unseededIds = input.entrantIds.filter((id) => !seededIds.includes(id));
   const orderedEntrants = [...seededIds, ...unseededIds];
   const byePlayerIds = input.format === 'Knockout' ? orderedEntrants.slice(0, bracketSize - entrantCount) : [];
-  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format === 'Round robin' ? ['Match wins', 'Game difference', 'Games won'] : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
+  const bracketSeedMap = new Map<number, string>();
+  seededIds.forEach((id) => bracketSeedMap.set(input.seeds![id], id));
+  const remaining = orderedEntrants.filter((id) => !seededIds.includes(id));
+  for (let rank = 1; rank <= bracketSize; rank += 1) if (!bracketSeedMap.has(rank) && remaining.length) bracketSeedMap.set(rank, remaining.shift()!);
+  const bracketSlots = input.format === 'Knockout' ? seedRankOrder(bracketSize).map((rank) => bracketSeedMap.get(rank) ?? null) : undefined;
+  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, bracketSlots, id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format === 'Round robin' ? ['Match wins', 'Game difference', 'Games won'] : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
 }
 
 
@@ -56,12 +67,12 @@ export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'da
 export function generateTournamentFixtures(tournament: Tournament, players: Player[]): Match[] {
   const entrants = tournament.entrantIds.filter((id) => players.some((player) => player.id === id));
   const fixtures: Match[] = [];
-  const addFixture = (one: string, two: string, round: string) => {
+  const addFixture = (one: string, two: string, round: string, bracketOrder?: number) => {
     const match: Match = {
       id: crypto.randomUUID(), playerOneId: one, playerTwoId: two, status: 'Scheduled',
       tournamentId: tournament.id, tournamentName: tournament.name, round, startsAt: 'TBD',
       format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3,
-      gamesWon: { [one]: 0, [two]: 0 }, score: { [one]: 0, [two]: 0 },
+      gamesWon: { [one]: 0, [two]: 0 }, score: { [one]: 0, [two]: 0 }, bracketOrder,
       serverId: one, tossWinnerId: one, events: [],
     };
     fixtures.push(match);
@@ -81,21 +92,12 @@ export function generateTournamentFixtures(tournament: Tournament, players: Play
       rotation[0] = fixed;
     }
   } else {
-    const bracketSize = 2 ** Math.ceil(Math.log2(Math.max(2, entrants.length)));
-    const seedSlots = (size: number): number[] => {
-      let order = [1, 2];
-      while (order.length < size) { const nextSize = order.length * 2 + 1; order = order.flatMap((seed) => [seed, nextSize - seed]); }
-      return order;
-    };
-    const slots = seedSlots(bracketSize);
-    const entrantsBySeed = new Map<number, string>();
-    const seeded = entrants.filter((id) => tournament.seeds?.[id]).sort((a, b) => tournament.seeds![a] - tournament.seeds![b]);
-    seeded.forEach((id) => entrantsBySeed.set(tournament.seeds![id], id));
-    const remaining = entrants.filter((id) => !seeded.includes(id));
-    for (const rank of slots) if (!entrantsBySeed.has(rank) && remaining.length) entrantsBySeed.set(rank, remaining.shift()!);
     const byeIds = new Set(tournament.byePlayerIds ?? []);
-    const firstRound = slots.map((rank) => entrantsBySeed.get(rank)).filter((id): id is string => Boolean(id) && !byeIds.has(id!));
-    for (let index = 0; index + 1 < firstRound.length; index += 2) addFixture(firstRound[index], firstRound[index + 1], 'Round 1');
+    const slots = tournament.bracketSlots ?? entrants;
+    for (let index = 0; index + 1 < slots.length; index += 2) {
+      const one = slots[index]; const two = slots[index + 1];
+      if (one && two && !byeIds.has(one) && !byeIds.has(two)) addFixture(one, two, 'Round 1', Math.floor(index / 2));
+    }
   }
   return fixtures;
 }
@@ -105,7 +107,7 @@ export function generateKnockoutRoundFixtures(tournament: Tournament, entrantIds
   const matches: Match[] = [];
   for (let index = 0; index + 1 < entrantIds.length; index += 2) {
     const one = entrantIds[index]; const two = entrantIds[index + 1];
-    matches.push({ id: crypto.randomUUID(), playerOneId: one, playerTwoId: two, status: 'Scheduled', tournamentId: tournament.id, tournamentName: tournament.name, round: `Round ${roundNumber}`, startsAt: 'TBD', format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3, gamesWon: { [one]: 0, [two]: 0 }, score: { [one]: 0, [two]: 0 }, serverId: one, tossWinnerId: one, events: [] });
+    matches.push({ id: crypto.randomUUID(), playerOneId: one, playerTwoId: two, status: 'Scheduled', tournamentId: tournament.id, tournamentName: tournament.name, round: `Round ${roundNumber}`, startsAt: 'TBD', format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3, gamesWon: { [one]: 0, [two]: 0 }, score: { [one]: 0, [two]: 0 }, serverId: one, tossWinnerId: one, events: [], bracketOrder: matches.length });
   }
   return matches;
 }
