@@ -283,6 +283,10 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .score-chip--live { color: #874c36; background: #f8e9df; }
 .row-open { display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 4px; color: #9aa49b; background: transparent; cursor: pointer; }
 .row-open:hover { color: #315a40; background: #e9efe6; }
+.row-actions { display: flex; align-items: center; gap: 1px; }
+.row-actions .icon-button { width: 27px; height: 27px; }
+.json-editor { width: 100%; min-height: 220px; resize: vertical; padding: 12px; border: 1px solid var(--line); border-radius: 5px; color: #304137; background: #f7f8f3; font: 11px/1.55 var(--mono); tab-size: 2; }
+.json-editor:focus-visible { outline: 3px solid rgba(231, 110, 67, .4); outline-offset: 2px; }
 .match-summary, .tournament-summary-line { display: flex; gap: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; color: #79857c; background: rgba(255,255,251,.55); font-size: 9.5px; }
 .match-summary span, .tournament-summary-line span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .match-summary span + span, .tournament-summary-line span + span { padding-left: 14px; border-left: 1px solid var(--line); }
@@ -1169,6 +1173,18 @@ main.page-wrap .page-content .stat-cell > b i { color: var(--text-positive); }
 .category-editor-head h3 { margin: 4px 0 0; color: #273b30; font-size: 15px; letter-spacing: -.02em; }
 .category-editor .form-row { align-items: end; }
 .category-editor .entrant-list { max-height: 190px; }
+.entrant-entry-mode { display: flex; flex-wrap: wrap; gap: 7px; }
+.entrant-entry-mode .button { min-height: 34px; font-size: 11px; }
+.manual-entrant-list { display: grid; gap: 9px; }
+.manual-entrant-help { margin: 0; font-size: 11px; line-height: 1.5; }
+.manual-entrant-row { display: grid; grid-template-columns: minmax(180px, 1fr) 90px 30px; align-items: end; gap: 9px; }
+.manual-entrant-row .field { min-width: 0; }
+.manual-entrant-row .field > span { display: flex; gap: 5px; align-items: baseline; }
+.manual-entrant-row .field > span small { font-weight: 400; }
+.manual-entrant-row input[aria-invalid="true"] { border-color: #b8584d; }
+.manual-entrant-row .manual-seed-field input { width: 100%; }
+.manual-remove-entry { margin-bottom: 2px; }
+.manual-entry-error { grid-column: 1 / -1; margin-top: -5px; }
 .category-add-entry { align-self: end; margin-bottom: 1px; }
 .registered-entries { display: grid; gap: 6px; }
 .registered-entry { display: flex; align-items: center; gap: 10px; min-height: 38px; padding: 5px 8px; border: 1px solid #e7ebe4; border-radius: 8px; background: white; font-size: 11px; }
@@ -1190,6 +1206,7 @@ main.page-wrap .page-content .stat-cell > b i { color: var(--text-positive); }
 @media (max-width: 620px) {
   .category-editor { padding: 11px; }
   .category-editor .form-row { grid-template-columns: 1fr; }
+  .manual-entrant-row { grid-template-columns: minmax(0, 1fr) 72px 30px; gap: 6px; }
   .doubles-nomination,.doubles-service-order { grid-template-columns: 1fr; }
   .match-category-badge { display: none; }
 }

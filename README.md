@@ -41,4 +41,4 @@ pnpm install
 pnpm run dev
 ```
 
-Create a production build with `pnpm run build` and run rule checks with `pnpm test`. The current frontend is a local browser preview stored in `localStorage`; it is not connected to the Python app or a shared backend. Direct editing/deletion for every fixture and tournament structure is still incomplete. Firebase Authentication, Firestore, legal/consent flows, and production hardening are not connected. See `frontend/UX-CONTRACT.md` for interaction rules and `frontend/QA_RESULTS.md` for browser acceptance limits.
+Create a production build with `pnpm run build` and run rule checks with `pnpm test`. The current frontend is a local browser preview stored in `localStorage`; it is not connected to the Python app or a shared backend. Organisers can edit or remove fixture records and edit/remove tournament records; advanced event edits use the full JSON model and are journaled. Firebase Authentication, Firestore, legal/consent flows, and production hardening are not connected. See `frontend/UX-CONTRACT.md` for interaction rules and `frontend/QA_RESULTS.md` for browser acceptance limits.

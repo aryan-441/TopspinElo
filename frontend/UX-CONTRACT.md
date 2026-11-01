@@ -42,7 +42,8 @@ Rallydesk helps a club organiser manage players, matches, tournament draws, resu
 - Backup restore validates the file and previews its player, match, and tournament counts. It replaces browser data only after an explicit confirmation.
 - Workspace exports from Settings and Exports use the same versioned backup envelope accepted by Restore. Browser storage failures are caught and explained while the local preview remains usable.
 - Every organiser workspace change is recorded in a workspace activity journal with before/after record snapshots; match scoring changes also record score state and point-event deltas. The full workspace JSON and a separate journal JSON are downloadable from Exports & recovery. Player profiles can be edited, removed from the active roster, and restored without breaking historical match IDs.
-- The local preview is not yet an unrestricted tournament editor: individual fixture opponents and tournament/category structures do not all have direct edit/delete controls. Do not describe it as absolute organiser control until those controls are added and tested.
+- Organisers can edit a match’s full JSON record or remove any fixture from the active schedule, regardless of match status. They can edit the full tournament record, including categories, entrants, seeds and bracket slots, or remove the tournament and its active fixtures. Simple single-singles draws also have a roster editor; other category changes use the full event editor. Each override keeps the prior object in the workspace journal/export. JSON editors validate stable record IDs and participant IDs so organisers must add a player to the workspace before referencing that player.
+- Schedule, entrant, pause/resume and other organiser changes accept an optional reason. Leaving it blank records that no reason was supplied; it does not prevent the override.
 
 ## Feedback and recovery
 
