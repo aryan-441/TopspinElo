@@ -6,4 +6,5 @@ export const initialWorkspace: Workspace = {
   players: [],
   matches: [],
   tournaments: [],
+  referees: [],
 };

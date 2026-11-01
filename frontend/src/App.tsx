@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Info, Menu, Plus, Settings2, Table2, Trophy, Users, X } from 'lucide-react';
+import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { createMatch, createPlayer, createTournament, generateKnockoutRoundFixtures, generateTournamentFixtures, loadWorkspace, resetWorkspace, saveWorkspace } from './services/store';
 import type { Match, PageId, Player, Tournament, Workspace } from './types';
 import { Overview } from './views/Overview';
 import { MatchCenter, LiveScoring } from './views/MatchCenter';
 import { PlayersView } from './views/PlayersView';
+import { RefereesView } from './views/RefereesView';
 import { TournamentsView } from './views/TournamentsView';
 import { StatisticsView } from './views/StatisticsView';
 import { AboutView, ExportsView, SettingsView } from './views/UtilityViews';
@@ -17,6 +18,7 @@ const mainNav: NavItem[] = [
   { id: 'matches', label: 'Matches', icon: CircleDot },
   { id: 'tournaments', label: 'Tournaments', icon: Trophy },
   { id: 'players', label: 'Players', icon: Users },
+  { id: 'referees', label: 'Referees', icon: UserRound },
   { id: 'statistics', label: 'Statistics', icon: ChartNoAxesCombined },
 ];
 const workspaceNav: NavItem[] = [
@@ -25,7 +27,7 @@ const workspaceNav: NavItem[] = [
   { id: 'about', label: 'About Rallydesk', icon: Info },
 ];
 const pageTitles: Record<PageId, string> = {
-  overview: 'Rallydesk', matches: 'Matches', tournaments: 'Tournaments', players: 'Players', statistics: 'Statistics', exports: 'Exports & recovery', settings: 'Workspace settings', about: 'About Rallydesk',
+  overview: 'Rallydesk', matches: 'Matches', tournaments: 'Tournaments', players: 'Players', referees: 'Referees', statistics: 'Statistics', exports: 'Exports & recovery', settings: 'Workspace settings', about: 'About Rallydesk',
 };
 
 type CreateDialog = 'player' | 'match' | 'tournament' | null;
@@ -162,7 +164,7 @@ export default function App() {
     setActiveMatchId(match.id);
     setToast('Match created. Confirm the toss and first server to begin.');
   };
-  const createNewTournament = (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds: Record<string, number> }) => {
+  const createNewTournament = (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds: Record<string, number>; categories: string[]; tableCount: number }) => {
     const tournament = createTournament(input);
     const fixtures = generateTournamentFixtures(tournament, workspace.players);
     tournament.matchIds = fixtures.map((match) => match.id);
@@ -172,7 +174,7 @@ export default function App() {
     setPage('tournaments');
     setToast(`${tournament.name} created · ${fixtures.length} opening fixtures generated`);
   };
-  const replaceWorkspace = (next: Workspace) => { setWorkspace(next); setToast('Workspace updated'); };
+  const replaceWorkspace = (next: Workspace) => { setWorkspace({ ...next, referees: next.referees ?? [], tournaments: next.tournaments.map((tournament) => ({ ...tournament, categories: tournament.categories ?? ['Open singles'], tableCount: tournament.tableCount ?? 1 })) }); setToast('Workspace updated'); };
   const reset = () => { setWorkspace(resetWorkspace()); setPage('overview'); setSelectedPlayerId(null); setSelectedTournamentId(null); setToast('Workspace cleared'); };
 
   if (activeMatch) {
@@ -218,8 +220,9 @@ export default function App() {
           </div>
 
           {page === 'overview' && <Overview workspace={workspace} players={playerById} onOpenMatch={setActiveMatchId} onPage={setPage} onNewMatch={openMatchSetup} onNewTournament={openTournamentSetup} onNewPlayer={() => setCreateDialog('player')} />}
-          {page === 'matches' && <MatchCenter workspace={workspace} players={playerById} query={query} onQuery={setQuery} onOpenMatch={setActiveMatchId} onCreate={openMatchSetup} />}
+          {page === 'matches' && <MatchCenter workspace={workspace} players={playerById} referees={workspace.referees ?? []} refereeDesk={workspaceRole === 'referee'} query={query} onQuery={setQuery} onOpenMatch={setActiveMatchId} onCreate={openMatchSetup} />}
           {page === 'players' && <PlayersView workspace={workspace} query={query} onQuery={setQuery} selectedId={selectedPlayerId} onSelect={setSelectedPlayerId} onAdd={() => setCreateDialog('player')} onMatch={(id) => { setSelectedPlayerId(null); setCreateDialog('match'); if (id) setToast('Choose this player in the match setup.'); }} />}
+          {page === 'referees' && <RefereesView workspace={workspace} onChange={replaceWorkspace} toast={setToast} />}
           {page === 'tournaments' && <TournamentsView workspace={workspace} players={playerById} selectedId={selectedTournamentId} onSelect={setSelectedTournamentId} onCreate={openTournamentSetup} onOpenMatch={setActiveMatchId} onChange={(next) => replaceWorkspace(next)} toast={setToast} />}
           {page === 'statistics' && <StatisticsView workspace={workspace} />}
           {page === 'exports' && <ExportsView workspace={workspace} onToast={setToast} />}
@@ -257,29 +260,33 @@ function PlayerDialog({ onClose, onCreate }: { onClose: () => void; onCreate: (n
 
 function MatchDialog({ players, tournaments, onClose, onCreate }: { players: Player[]; tournaments: Tournament[]; onClose: () => void; onCreate: (input: Pick<Match, 'playerOneId' | 'playerTwoId' | 'format' | 'pointsPerGame' | 'gamesToWin' | 'tournamentId' | 'table'>) => void }) {
   const [one, setOne] = useState(''); const [two, setTwo] = useState(''); const [format, setFormat] = useState('Best of 5'); const [points, setPoints] = useState<11 | 21>(11); const [tournamentId, setTournamentId] = useState(''); const [table, setTable] = useState('Table 01');
+  const tableOptions = Array.from({ length: tournaments.find((item) => item.id === tournamentId)?.tableCount ?? 4 }, (_, index) => `Table ${String(index + 1).padStart(2, '0')}`);
   const gamesToWin = format === 'One game' ? 1 : format === 'Best of 3' ? 2 : format === 'Best of 5' ? 3 : 4;
   return <Dialog title="Set up a match" eyebrow="MATCH SETUP" onClose={onClose}><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (one && two && one !== two) onCreate({ playerOneId: one, playerTwoId: two, format, pointsPerGame: points, gamesToWin, tournamentId: tournamentId || undefined, table }); }}>
     <div className="match-pick-row"><label className="field"><span>Player one</span><select value={one} onChange={(event) => setOne(event.target.value)} required><option value="">Choose player</option>{players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label><span className="versus">VS</span><label className="field"><span>Player two</span><select value={two} onChange={(event) => setTwo(event.target.value)} required><option value="">Choose player</option>{players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label></div>
     <div className="form-row"><label className="field"><span>Match format</span><select value={format} onChange={(event) => setFormat(event.target.value)}>{['One game', 'Best of 3', 'Best of 5', 'Best of 7'].map((value) => <option key={value}>{value}</option>)}</select></label><label className="field"><span>Points per game</span><select value={points} onChange={(event) => setPoints(Number(event.target.value) as 11 | 21)}><option value={11}>11 points · deuce</option><option value={21}>21 points · deuce</option></select></label></div>
-    <div className="form-row"><label className="field"><span>Tournament <small>Optional</small></span><select value={tournamentId} onChange={(event) => setTournamentId(event.target.value)}><option value="">Friendly match</option>{tournaments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="field"><span>Table</span><select value={table} onChange={(event) => setTable(event.target.value)}>{['Table 01', 'Table 02', 'Table 03', 'Table 04'].map((value) => <option key={value}>{value}</option>)}</select></label></div>
+    <div className="form-row"><label className="field"><span>Tournament <small>Optional</small></span><select value={tournamentId} onChange={(event) => { setTournamentId(event.target.value); setTable('Table 01'); }}><option value="">Friendly match</option>{tournaments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="field"><span>Table</span><select value={table} onChange={(event) => setTable(event.target.value)}>{tableOptions.map((value) => <option key={value}>{value}</option>)}</select></label></div>
     <p className="form-note"><Activity size={15} /> Match settings: win by 2 at deuce. Toss and first server are confirmed on the scoring screen.</p>
     <div className="dialog-actions"><button className="button button-quiet" type="button" onClick={onClose}>Cancel</button><button className="button button-primary" type="submit" disabled={!one || !two || one === two}>Create match <ArrowRight size={15} /></button></div>
   </form></Dialog>;
 }
 
-function TournamentDialog({ players, onClose, onCreate }: { players: Player[]; onClose: () => void; onCreate: (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds: Record<string, number> }) => void }) {
-  const [name, setName] = useState(''); const [format, setFormat] = useState<Tournament['format']>('Round robin'); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [venue, setVenue] = useState(''); const [entrants, setEntrants] = useState<string[]>([]); const [seeds, setSeeds] = useState<Record<string, string>>({});
+function TournamentDialog({ players, onClose, onCreate }: { players: Player[]; onClose: () => void; onCreate: (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds: Record<string, number>; categories: string[]; tableCount: number }) => void }) {
+  const [name, setName] = useState(''); const [format, setFormat] = useState<Tournament['format']>('Round robin'); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [venue, setVenue] = useState(''); const [tableCount, setTableCount] = useState('4'); const [categoryText, setCategoryText] = useState('Open singles'); const [entrants, setEntrants] = useState<string[]>([]); const [seeds, setSeeds] = useState<Record<string, string>>({});
   const toggleEntrant = (id: string) => setEntrants((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   const seedValues = entrants.map((id) => seeds[id]).filter(Boolean);
   const duplicateSeeds = seedValues.some((value, index) => seedValues.indexOf(value) !== index);
   const invalidSeeds = seedValues.some((value) => !/^\d+$/.test(value) || Number(value) < 1 || Number(value) > entrants.length);
+  const categories = [...new Set(categoryText.split(/\r?\n/).map((value) => value.trim()).filter(Boolean))];
+  const invalidTables = !/^\d+$/.test(tableCount) || Number(tableCount) < 1 || Number(tableCount) > 100;
   const updateSeed = (id: string, value: string) => setSeeds((current) => ({ ...current, [id]: value }));
   const shuffle = <T,>(items: T[]) => { const result = [...items]; for (let index = result.length - 1; index > 0; index -= 1) { const swap = Math.floor(Math.random() * (index + 1)); [result[index], result[swap]] = [result[swap], result[index]]; } return result; };
-  return <Dialog title="Create a tournament" eyebrow="TOURNAMENT SETUP" onClose={onClose} size="wide"><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (name.trim() && date && entrants.length >= 2 && !duplicateSeeds && !invalidSeeds) { const seedMap = Object.fromEntries(entrants.filter((id) => seeds[id]).map((id) => [id, Number(seeds[id])])); const seededIds = Object.entries(seedMap).sort((a, b) => a[1] - b[1]).map(([id]) => id); const unseededIds = shuffle(entrants.filter((id) => !seedMap[id])); onCreate({ name: name.trim(), format, date: new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), venue, entrantIds: [...seededIds, ...unseededIds], seeds: seedMap }); } }}>
+  return <Dialog title="Create a tournament" eyebrow="TOURNAMENT SETUP" onClose={onClose} size="wide"><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (name.trim() && date && entrants.length >= 2 && !duplicateSeeds && !invalidSeeds && !invalidTables && categories.length) { const seedMap = Object.fromEntries(entrants.filter((id) => seeds[id]).map((id) => [id, Number(seeds[id])])); const seededIds = Object.entries(seedMap).sort((a, b) => a[1] - b[1]).map(([id]) => id); const unseededIds = shuffle(entrants.filter((id) => !seedMap[id])); onCreate({ name: name.trim(), format, date: new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), venue, tableCount: Number(tableCount), categories, entrantIds: [...seededIds, ...unseededIds], seeds: seedMap }); } }}>
     <div className="form-row"><label className="field"><span>Tournament name</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Winter Club Open" required maxLength={80} /></label><label className="field"><span>Format</span><select value={format} onChange={(event) => setFormat(event.target.value as Tournament['format'])}><option>Round robin</option><option>Knockout</option></select></label></div>
     <div className="form-row"><label className="field"><span>Start date</span><input type="date" value={date} onChange={(event) => setDate(event.target.value)} required /></label><label className="field"><span>Venue</span><input value={venue} onChange={(event) => setVenue(event.target.value)} placeholder="Add a venue (optional)" maxLength={90} /></label></div>
+    <div className="form-row"><label className="field"><span>Tables at venue</span><input type="number" min="1" max="100" step="1" value={tableCount} onChange={(event) => setTableCount(event.target.value)} required /><small>Opening fixtures will be distributed across these tables.</small></label><label className="field"><span>Categories <small>One per line</small></span><textarea value={categoryText} onChange={(event) => setCategoryText(event.target.value)} rows={3} maxLength={600} placeholder={'Open singles\nU19 singles\nU17 girls doubles'} required /><small>Assign categories to fixtures in Draw & matches. Doubles team entry is not part of this preview yet.</small></label></div>
     <div className="entrant-picker"><div className="entrant-picker-head"><span>Entrants & seeds</span><small>{entrants.length} selected · choose at least 2</small></div><div className="entrant-list">{players.map((player) => <div className="entrant-option-wrap" key={player.id}><label className={`entrant-option ${entrants.includes(player.id) ? 'entrant-option--selected' : ''}`}><input type="checkbox" checked={entrants.includes(player.id)} onChange={() => toggleEntrant(player.id)} /><span className="avatar avatar--tiny">{player.initials}</span><span>{player.name}</span><span className="entrant-rating">{player.rating}</span></label>{entrants.includes(player.id) && <input aria-label={`Seed for ${player.name} (optional)`} className="seed-input" type="number" step="1" min="1" max={entrants.length} placeholder="Seed" value={seeds[player.id] ?? ''} onChange={(event) => updateSeed(player.id, event.target.value)} />}</div>)}</div>{(duplicateSeeds || invalidSeeds) && <p className="field-error" role="alert">Seeds must be unique whole numbers from 1 to the number of selected entrants.</p>}</div>
     <p className="form-note"><ClipboardList size={15} /> Optional seeds shape the opening order; unseeded entrants are shuffled when the draw is created. Review the generated draw before play.</p>
-    <div className="dialog-actions"><button className="button button-quiet" type="button" onClick={onClose}>Cancel</button><button className="button button-primary" type="submit" disabled={!name.trim() || !date || entrants.length < 2 || duplicateSeeds || invalidSeeds}>Create tournament <ArrowRight size={15} /></button></div>
+    <div className="dialog-actions"><button className="button button-quiet" type="button" onClick={onClose}>Cancel</button><button className="button button-primary" type="submit" disabled={!name.trim() || !date || entrants.length < 2 || duplicateSeeds || invalidSeeds || invalidTables || !categories.length}>Create tournament <ArrowRight size={15} /></button></div>
   </form></Dialog>;
 }

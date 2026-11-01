@@ -31,8 +31,8 @@ export function ExportsView({ workspace, onToast }: { workspace: Workspace; onTo
     downloadFile(`rallydesk-players-${new Date().toISOString().slice(0, 10)}.csv`, [header, ...rows].join('\n'), 'text/csv'); onToast('Player list downloaded');
   };
   const exportMatches = () => {
-    const header = 'match_id,tournament,status,player_one,player_two,format,table,games_one,games_two';
-    const rows = workspace.matches.map((match) => [match.id, match.tournamentName ?? '', match.status, workspace.players.find((p) => p.id === match.playerOneId)?.name ?? '', workspace.players.find((p) => p.id === match.playerTwoId)?.name ?? '', match.format, match.table ?? '', match.gamesWon[match.playerOneId] ?? 0, match.gamesWon[match.playerTwoId] ?? 0].map((value) => `"${String(value).replaceAll('"', '""')}"`).join(','));
+    const header = 'match_id,tournament,category,status,player_one,player_two,format,table,referee,games_one,games_two';
+    const rows = workspace.matches.map((match) => [match.id, match.tournamentName ?? '', match.category ?? '', match.status, workspace.players.find((p) => p.id === match.playerOneId)?.name ?? '', workspace.players.find((p) => p.id === match.playerTwoId)?.name ?? '', match.format, match.table ?? '', workspace.referees.find((referee) => referee.id === match.refereeId)?.name ?? '', match.gamesWon[match.playerOneId] ?? 0, match.gamesWon[match.playerTwoId] ?? 0].map((value) => `"${String(value).replaceAll('"', '""')}"`).join(','));
     downloadFile(`rallydesk-matches-${new Date().toISOString().slice(0, 10)}.csv`, [header, ...rows].join('\n'), 'text/csv'); onToast('Match summary downloaded');
   };
   return <div className="page-content utility-page">

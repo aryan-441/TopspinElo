@@ -1,4 +1,4 @@
-export type PageId = 'overview' | 'matches' | 'tournaments' | 'players' | 'statistics' | 'exports' | 'settings' | 'about';
+export type PageId = 'overview' | 'matches' | 'tournaments' | 'players' | 'referees' | 'statistics' | 'exports' | 'settings' | 'about';
 export type MatchStatus = 'In progress' | 'Scheduled' | 'Completed' | 'Postponed';
 
 export type Player = {
@@ -26,6 +26,8 @@ export type Match = {
   tournamentName?: string;
   round?: string;
   table?: string;
+  category?: string;
+  refereeId?: string;
   startsAt: string;
   format: string;
   pointsPerGame: 11 | 21;
@@ -49,6 +51,8 @@ export type Tournament = {
   status: 'Running' | 'Upcoming' | 'Completed' | 'Paused';
   date: string;
   venue: string;
+  tableCount: number;
+  categories: string[];
   entrantIds: string[];
   seeds?: Record<string, number>;
   bracketSlots?: (string | null)[];
@@ -62,4 +66,5 @@ export type Tournament = {
   audit: { id: string; action: string; target: string; reason: string; at: string }[];
 };
 
-export type Workspace = { clubName?: string; players: Player[]; matches: Match[]; tournaments: Tournament[] };
+export type Referee = { id: string; name: string; email?: string; active: boolean };
+export type Workspace = { clubName?: string; players: Player[]; matches: Match[]; tournaments: Tournament[]; referees: Referee[] };

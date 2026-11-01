@@ -11,7 +11,7 @@ Rallydesk helps a club organiser manage players, matches, tournament draws, resu
 - The document title identifies the active page and Rallydesk; live scoring has its own title.
 - Overview is the first page and identifies the product as Rallydesk.
 - About Rallydesk and support information are available through Manage navigation and the shared footer.
-- The local preview offers Organiser and Referee workspace views. Organiser navigation includes club, tournament, player, statistics, export, and settings workflows; Referee navigation focuses on match desk and statistics.
+- The local preview offers Organiser and Referee workspace views. Organiser navigation includes club, tournament, player, referee roster/assignment, statistics, export, and settings workflows; Referee navigation focuses on assigned matches and statistics.
 - This view switch is a navigation preference only. It is not authentication or an authorization boundary. Production sign-in and server-enforced role permissions are required before using it to protect organiser data or actions.
 - The selected view is saved locally when browser storage is available.
 - Footer on every app screen includes support email `rallydesksupport@gmail.com` and `© Aryan Arora 2026`.
@@ -31,6 +31,9 @@ Rallydesk helps a club organiser manage players, matches, tournament draws, resu
 - Confirmed match results update player summaries and relevant tournament standings.
 - Round-robin fixtures are generated at tournament creation. Knockout creates its opening round and advances winners after a round is complete unless progression is paused.
 - Tournament setup allows optional, unique whole-number seeds. Seeded players receive seeded knockout positions and byes where applicable; unseeded entrants are shuffled for each new draw.
+- Tournament setup records a venue table count and one or more category names. Generated matches are distributed across the configured tables. Organisers can tag draw rows with a category, and CSV/JSON imports can include a category field.
+- Categories are currently fixture labels over the shared player roster. Doubles team registration and team scoring still need a dedicated model.
+- Organisers maintain referee names and optional email addresses in the Referees tab, assign upcoming/live matches there, and see assignments in the referee desk. Assignment changes are added to the tournament audit log.
 - Organisers retain authority over imported and generated draws. Imports require preview, validation, and confirmation. Unknown or ambiguous names need explicit mapping; importing must not silently overwrite workspace data.
 - The frontend currently imports structured CSV and JSON draw files. Image-based bracket recognition (OCR/computer vision) is not implemented; a future photo-import flow must show a reviewable, editable match list before import.
 - Before play begins, an organiser can change tournament entrants. Rallydesk rebuilds only that tournament's pending fixtures, requires a reason, and records the change in the audit log. Once any match is in progress, postponed, or completed, entrant/draw rebuilding is locked.

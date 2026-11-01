@@ -1,40 +1,44 @@
 import { useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleHelp, Clock3, Flag, Play, Timer, Undo2, X } from 'lucide-react';
-import type { Match, Player, Workspace } from '../types';
+import type { Match, Player, Referee, Workspace } from '../types';
 import { Dialog } from '../components/Dialog';
 
-type MatchCenterProps = { workspace: Workspace; players: Map<string, Player>; query: string; onQuery: (value: string) => void; onOpenMatch: (id: string) => void; onCreate: () => void };
+type MatchCenterProps = { workspace: Workspace; players: Map<string, Player>; referees?: Referee[]; refereeDesk?: boolean; query: string; onQuery: (value: string) => void; onOpenMatch: (id: string) => void; onCreate: () => void };
 
-export function MatchCenter({ workspace, players, query, onQuery, onOpenMatch, onCreate }: MatchCenterProps) {
+export function MatchCenter({ workspace, players, referees = [], refereeDesk = false, query, onQuery, onOpenMatch, onCreate }: MatchCenterProps) {
   const [filter, setFilter] = useState<'All matches' | Match['status']>('All matches');
+  const [activeRefereeId, setActiveRefereeId] = useState(referees[0]?.id ?? '');
   const rows = useMemo(() => workspace.matches.filter((match) => {
     const term = query.toLowerCase();
     const names = `${players.get(match.playerOneId)?.name ?? ''} ${players.get(match.playerTwoId)?.name ?? ''} ${match.tournamentName ?? ''}`.toLowerCase();
-    return (filter === 'All matches' || match.status === filter) && (!term || names.includes(term));
-  }), [workspace.matches, players, query, filter]);
+    return (filter === 'All matches' || match.status === filter) && (!refereeDesk || !activeRefereeId || match.refereeId === activeRefereeId) && (!term || names.includes(term));
+  }), [workspace.matches, players, query, filter, refereeDesk, activeRefereeId]);
   const active = workspace.matches.filter((match) => match.status === 'In progress').length;
   const scheduled = workspace.matches.filter((match) => match.status === 'Scheduled').length;
   const complete = workspace.matches.filter((match) => match.status === 'Completed').length;
   return <div className="page-content">
-    <div className="page-intro"><div><p className="eyebrow">COURT DESK</p><h2>Match schedule</h2><p>Track what’s on, start a scorecard, and pick up where a match left off.</p></div><div className="match-summary"><span><i className="summary-live-dot" />{active} live</span><span>{scheduled} scheduled</span><span>{complete} complete</span></div></div>
+    <div className="page-intro"><div><p className="eyebrow">{refereeDesk ? 'REFEREE DESK' : 'COURT DESK'}</p><h2>{refereeDesk ? 'Your assigned matches' : 'Match schedule'}</h2><p>{refereeDesk ? 'Open a scorecard, record points and keep your assigned matches moving.' : 'Track what’s on, start a scorecard, and pick up where a match left off.'}</p></div><div className="match-summary"><span><i className="summary-live-dot" />{active} live</span><span>{scheduled} scheduled</span><span>{complete} complete</span></div></div>
+    {refereeDesk && referees.length > 0 && <label className="referee-self-select"><span>Referee on this device</span><select value={activeRefereeId} onChange={(event) => setActiveRefereeId(event.target.value)}>{referees.filter((referee) => referee.active).map((referee) => <option key={referee.id} value={referee.id}>{referee.name}</option>)}</select></label>}
+    {refereeDesk && !referees.length && <p className="referee-note">No referee roster is set up yet. Ask the organiser to add referees and assign matches from the Referees tab.</p>}
     <div className="toolbar-row"><div className="filter-tabs" role="tablist" aria-label="Filter matches">{(['All matches', 'In progress', 'Scheduled', 'Completed'] as const).map((item) => <button key={item} role="tab" aria-selected={filter === item} className={filter === item ? 'filter-tab filter-tab--active' : 'filter-tab'} onClick={() => setFilter(item)}>{item}{item === 'In progress' && active > 0 && <span className="filter-count">{active}</span>}</button>)}</div><label className="search-field"><span className="sr-only">Search matches</span><input type="search" placeholder="Find a player or event" value={query} onChange={(event) => onQuery(event.target.value)} /><CircleHelp size={15} /></label></div>
     <p className="table-scroll-hint"><ArrowRight size={13} /> Swipe or use arrow keys to view all columns</p>
-    <div className="matches-table-wrap" role="region" aria-label="Scrollable match schedule" tabIndex={0}><table className="data-table matches-table"><thead><tr><th>Match</th><th>Event / round</th><th>Format</th><th>Table</th><th>Status</th><th>Score</th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>{rows.map((match) => <MatchRow key={match.id} match={match} players={players} onOpen={() => onOpenMatch(match.id)} />)}</tbody></table>
+    <div className="matches-table-wrap" role="region" aria-label="Scrollable match schedule" tabIndex={0}><table className="data-table matches-table"><thead><tr><th>Match</th><th>Event / round</th><th>Format</th><th>Table</th>{!refereeDesk && <th>Referee</th>}<th>Status</th><th>Score</th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>{rows.map((match) => <MatchRow key={match.id} match={match} players={players} referee={referees.find((item) => item.id === match.refereeId)} onOpen={() => onOpenMatch(match.id)} showReferee={!refereeDesk} />)}</tbody></table>
       {!rows.length && <div className="table-empty"><div className="empty-mark"><CircleHelp size={21} /></div><h3>{query ? 'No matches found' : 'Nothing on the schedule yet'}</h3><p>{query ? 'Try another player or event name.' : 'Set up a friendly or add a match to an event.'}</p>{!query && <button className="button button-primary" onClick={onCreate}>Create a match <ArrowRight size={15} /></button>}</div>}
     </div>
     <p className="table-footnote"><span /> Scores shown are from the current game. Match records are kept with their event history.</p>
   </div>;
 }
 
-function MatchRow({ match, players, onOpen }: { match: Match; players: Map<string, Player>; onOpen: () => void }) {
+function MatchRow({ match, players, referee, onOpen, showReferee }: { match: Match; players: Map<string, Player>; referee?: Referee; onOpen: () => void; showReferee: boolean }) {
   const one = players.get(match.playerOneId); const two = players.get(match.playerTwoId);
   const scoreOne = match.status === 'Completed' ? match.gamesWon[match.playerOneId] ?? 0 : match.score[match.playerOneId] ?? 0;
   const scoreTwo = match.status === 'Completed' ? match.gamesWon[match.playerTwoId] ?? 0 : match.score[match.playerTwoId] ?? 0;
   return <tr className="match-row" onClick={onOpen} tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') onOpen(); }}>
     <td><div className="match-cell-players"><span className="avatar avatar--tiny">{one?.initials ?? 'P1'}</span><div className="match-name-stack"><b className={match.winnerId === match.playerOneId ? 'winner-name' : ''}>{one?.name ?? 'Player one'}</b><b className={match.winnerId === match.playerTwoId ? 'winner-name' : ''}>{two?.name ?? 'Player two'}</b></div><span className="vs-mark">vs</span></div></td>
-    <td><span className="event-name">{match.tournamentName ?? 'Club match'}</span><small className="event-round">{match.round ?? 'Unassigned'}</small></td>
+    <td><span className="event-name">{match.tournamentName ?? 'Club match'}</span><small className="event-round">{[match.category, match.round ?? 'Unassigned'].filter(Boolean).join(' · ')}</small></td>
     <td><span className="format-tag">{match.format}</span></td>
     <td><span className="table-label">{match.table ?? '—'}</span></td>
+    {showReferee && <td><span className="table-label">{referee?.name ?? 'Unassigned'}</span></td>}
     <td><StatusPill status={match.status} /></td>
     <td><span className={`score-chip ${match.status === 'In progress' ? 'score-chip--live' : ''}`}>{scoreOne}<i>–</i>{scoreTwo}</span></td>
     <td><button className="row-open" aria-label={`Open ${one?.name} versus ${two?.name}`} onClick={(event) => { event.stopPropagation(); onOpen(); }}><ArrowRight size={16} /></button></td>

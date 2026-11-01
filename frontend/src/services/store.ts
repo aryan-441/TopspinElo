@@ -9,7 +9,7 @@ export function loadWorkspace(): Workspace {
     if (!saved) return structuredClone(initialWorkspace);
     const parsed = JSON.parse(saved) as Workspace;
     if (!parsed.players || !parsed.matches || !parsed.tournaments) return structuredClone(initialWorkspace);
-    return parsed;
+    return { ...parsed, referees: parsed.referees ?? [], tournaments: parsed.tournaments.map((tournament) => ({ ...tournament, categories: tournament.categories ?? ['Open singles'], tableCount: tournament.tableCount ?? 1 })) };
   } catch {
     return structuredClone(initialWorkspace);
   }
@@ -46,7 +46,7 @@ function seedRankOrder(size: number): number[] {
   return order;
 }
 
-export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds?: Record<string, number> }): Tournament {
+export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds?: Record<string, number>; categories?: string[]; tableCount?: number }): Tournament {
   const entrantCount = input.entrantIds.length;
   const rounds = input.format === 'Knockout' ? Math.ceil(Math.log2(Math.max(2, entrantCount))) : Math.max(1, entrantCount % 2 ? entrantCount : entrantCount - 1);
   const bracketSize = 2 ** Math.ceil(Math.log2(Math.max(2, entrantCount)));
@@ -59,7 +59,7 @@ export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'da
   const remaining = orderedEntrants.filter((id) => !seededIds.includes(id));
   for (let rank = 1; rank <= bracketSize; rank += 1) if (!bracketSeedMap.has(rank) && remaining.length) bracketSeedMap.set(rank, remaining.shift()!);
   const bracketSlots = input.format === 'Knockout' ? seedRankOrder(bracketSize).map((rank) => bracketSeedMap.get(rank) ?? null) : undefined;
-  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, bracketSlots, id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format === 'Round robin' ? ['Match wins', 'Game difference', 'Games won'] : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
+  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, bracketSlots, tableCount: input.tableCount ?? 1, categories: input.categories?.length ? input.categories : ['Open singles'], id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format === 'Round robin' ? ['Match wins', 'Game difference', 'Games won'] : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
 }
 
 
@@ -73,7 +73,7 @@ export function generateTournamentFixtures(tournament: Tournament, players: Play
       tournamentId: tournament.id, tournamentName: tournament.name, round, startsAt: 'TBD',
       format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3,
       gamesWon: { [one]: 0, [two]: 0 }, score: { [one]: 0, [two]: 0 }, bracketOrder,
-      serverId: one, tossWinnerId: one, events: [],
+      serverId: one, tossWinnerId: one, events: [], category: tournament.categories?.length === 1 ? tournament.categories[0] : undefined, table: `Table ${String((fixtures.filter((match) => match.round === round).length % Math.max(1, tournament.tableCount ?? 1)) + 1).padStart(2, '0')}`,
     };
     fixtures.push(match);
   };
