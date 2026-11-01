@@ -45,6 +45,9 @@ export default function App() {
   const previousMobileNav = useRef(false);
   const [query, setQuery] = useState('');
   const [showQuickActions, setShowQuickActions] = useState(false);
+  const [workspaceRole, setWorkspaceRole] = useState<'organiser' | 'referee'>(() => { try { return localStorage.getItem('rallydesk-view') === 'referee' ? 'referee' : 'organiser'; } catch { return 'organiser'; } });
+  const setRole = (role: 'organiser' | 'referee') => { setWorkspaceRole(role); try { localStorage.setItem('rallydesk-view', role); } catch { /* The view remains usable when storage is unavailable. */ } };
+  const visibleNav = workspaceRole === 'referee' ? mainNav.filter((item) => item.id === 'matches' || item.id === 'statistics') : mainNav;
 
   useEffect(() => { if (!saveWorkspace(workspace)) setToast('This browser blocked workspace storage. Changes may not persist after reload.'); }, [workspace]);
   useEffect(() => {
@@ -154,7 +157,7 @@ export default function App() {
     setActiveMatchId(match.id);
     setToast('Match created. Confirm the toss and first server to begin.');
   };
-  const createNewTournament = (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'>) => {
+  const createNewTournament = (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds: Record<string, number> }) => {
     const tournament = createTournament(input);
     const fixtures = generateTournamentFixtures(tournament, workspace.players);
     tournament.matchIds = fixtures.map((match) => match.id);
@@ -176,12 +179,12 @@ export default function App() {
       {mobileNav && <button className="nav-scrim" aria-label="Close navigation" onClick={() => setMobileNav(false)} />}
       <aside ref={sidebarRef} id="rallydesk-sidebar" aria-label="Primary navigation" className={`sidebar ${mobileNav ? 'sidebar--open' : ''}`}>
         <div className="brand-lockup"><span className="brand-mark"><i /><i /><i /></span><span>rally<span className="brand-light">desk</span><small>CLUB OPERATIONS</small></span><button ref={mobileCloseRef} className="mobile-close icon-button" onClick={() => setMobileNav(false)} aria-label="Close navigation"><X size={18} /></button></div>
+        <div className="role-switch" aria-label="Choose workspace interface"><span className="role-switch-label">WORKSPACE VIEW</span><div role="group" aria-label="Workspace interface"><button type="button" aria-pressed={workspaceRole === 'organiser'} className={workspaceRole === 'organiser' ? 'role-switch-active' : ''} onClick={() => { setRole('organiser'); if (page === 'matches') setPage('overview'); }}>Organiser</button><button type="button" aria-pressed={workspaceRole === 'referee'} className={workspaceRole === 'referee' ? 'role-switch-active' : ''} onClick={() => { setRole('referee'); setPage('matches'); }}>Referee</button></div></div>
         <button className="club-switcher" onClick={() => setPage('settings')}><span className="club-monogram">{workspace.clubName?.trim().charAt(0).toUpperCase() || '＋'}</span><span><b>{workspace.clubName || 'Add your club name'}</b><small>Workspace settings</small></span><span className="switch-caret">⌄</span></button>
         <nav aria-label="Main navigation">
-          <p className="nav-label">CLUB</p>
-          {mainNav.map((item) => <NavButton key={item.id} item={item} active={page === item.id} count={item.id === 'matches' ? workspace.matches.filter((match) => match.status === 'In progress').length : undefined} onClick={() => { setPage(item.id); setSelectedPlayerId(null); setSelectedTournamentId(null); setMobileNav(false); }} />)}
-          <p className="nav-label nav-label--spaced">MANAGE</p>
-          {workspaceNav.map((item) => <NavButton key={item.id} item={item} active={page === item.id} onClick={() => { setPage(item.id); setMobileNav(false); }} />)}
+          <p className="nav-label">{workspaceRole === 'referee' ? 'MATCH DESK' : 'CLUB'}</p>
+          {visibleNav.map((item) => <NavButton key={item.id} item={item} active={page === item.id} count={item.id === 'matches' ? workspace.matches.filter((match) => match.status === 'In progress').length : undefined} onClick={() => { setPage(item.id); setSelectedPlayerId(null); setSelectedTournamentId(null); setMobileNav(false); }} />)}
+          {workspaceRole === 'organiser' && <><p className="nav-label nav-label--spaced">MANAGE</p>{workspaceNav.map((item) => <NavButton key={item.id} item={item} active={page === item.id} onClick={() => { setPage(item.id); setMobileNav(false); }} />)}</>}
         </nav>
         <div className="sidebar-bottom">
           <div className="storage-note"><span className="storage-dot" /><span><b>Local preview</b><small>Saved in this browser</small></span></div>
@@ -201,12 +204,12 @@ export default function App() {
 
         <main className="page-wrap">
           <div className="page-toolbar">
-            <div className="mobile-page-title"><span className="eyebrow">{workspace.clubName || 'YOUR CLUB'} · {new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()).toUpperCase()}</span><h1>{pageTitles[page]}</h1></div>
-            <div className="quick-actions-wrap">
+            <div className="mobile-page-title"><span className="eyebrow">{workspaceRole === 'referee' ? 'REFEREE DESK' : workspace.clubName || 'YOUR CLUB'} · {new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()).toUpperCase()}</span><h1>{workspaceRole === 'referee' && page === 'matches' ? 'Referee desk' : pageTitles[page]}</h1></div>
+            {workspaceRole === 'organiser' && <div className="quick-actions-wrap">
               <button className="button button-primary" onClick={openMatchSetup}><Plus size={17} strokeWidth={2.5} /> New match</button>
               <button className="button button-icon" onClick={() => setShowQuickActions((value) => !value)} aria-label="More create actions"><span>···</span></button>
               {showQuickActions && <div className="quick-actions-menu"><button onClick={() => { openTournamentSetup(); setShowQuickActions(false); }}><Trophy size={16} /> New tournament</button><button onClick={() => { setCreateDialog('player'); setShowQuickActions(false); }}><Users size={16} /> Add player</button></div>}
-            </div>
+            </div>}
           </div>
 
           {page === 'overview' && <Overview workspace={workspace} players={playerById} onOpenMatch={setActiveMatchId} onPage={setPage} onNewMatch={openMatchSetup} onNewTournament={openTournamentSetup} onNewPlayer={() => setCreateDialog('player')} />}
@@ -259,14 +262,19 @@ function MatchDialog({ players, tournaments, onClose, onCreate }: { players: Pla
   </form></Dialog>;
 }
 
-function TournamentDialog({ players, onClose, onCreate }: { players: Player[]; onClose: () => void; onCreate: (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'>) => void }) {
-  const [name, setName] = useState(''); const [format, setFormat] = useState<Tournament['format']>('Round robin'); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [venue, setVenue] = useState(''); const [entrants, setEntrants] = useState<string[]>([]);
+function TournamentDialog({ players, onClose, onCreate }: { players: Player[]; onClose: () => void; onCreate: (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds: Record<string, number> }) => void }) {
+  const [name, setName] = useState(''); const [format, setFormat] = useState<Tournament['format']>('Round robin'); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [venue, setVenue] = useState(''); const [entrants, setEntrants] = useState<string[]>([]); const [seeds, setSeeds] = useState<Record<string, string>>({});
   const toggleEntrant = (id: string) => setEntrants((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
-  return <Dialog title="Create a tournament" eyebrow="TOURNAMENT SETUP" onClose={onClose} size="wide"><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (name.trim() && date && entrants.length >= 2) onCreate({ name: name.trim(), format, date: new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), venue, entrantIds: entrants }); }}>
+  const seedValues = entrants.map((id) => seeds[id]).filter(Boolean);
+  const duplicateSeeds = seedValues.some((value, index) => seedValues.indexOf(value) !== index);
+  const invalidSeeds = seedValues.some((value) => !/^\d+$/.test(value) || Number(value) < 1 || Number(value) > entrants.length);
+  const updateSeed = (id: string, value: string) => setSeeds((current) => ({ ...current, [id]: value }));
+  const shuffle = <T,>(items: T[]) => { const result = [...items]; for (let index = result.length - 1; index > 0; index -= 1) { const swap = Math.floor(Math.random() * (index + 1)); [result[index], result[swap]] = [result[swap], result[index]]; } return result; };
+  return <Dialog title="Create a tournament" eyebrow="TOURNAMENT SETUP" onClose={onClose} size="wide"><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (name.trim() && date && entrants.length >= 2 && !duplicateSeeds && !invalidSeeds) { const seedMap = Object.fromEntries(entrants.filter((id) => seeds[id]).map((id) => [id, Number(seeds[id])])); const seededIds = Object.entries(seedMap).sort((a, b) => a[1] - b[1]).map(([id]) => id); const unseededIds = shuffle(entrants.filter((id) => !seedMap[id])); onCreate({ name: name.trim(), format, date: new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), venue, entrantIds: [...seededIds, ...unseededIds], seeds: seedMap }); } }}>
     <div className="form-row"><label className="field"><span>Tournament name</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Winter Club Open" required maxLength={80} /></label><label className="field"><span>Format</span><select value={format} onChange={(event) => setFormat(event.target.value as Tournament['format'])}><option>Round robin</option><option>Knockout</option></select></label></div>
     <div className="form-row"><label className="field"><span>Start date</span><input type="date" value={date} onChange={(event) => setDate(event.target.value)} required /></label><label className="field"><span>Venue</span><input value={venue} onChange={(event) => setVenue(event.target.value)} placeholder="Add a venue (optional)" maxLength={90} /></label></div>
-    <div className="entrant-picker"><div className="entrant-picker-head"><span>Entrants</span><small>{entrants.length} selected · choose at least 2</small></div><div className="entrant-list">{players.map((player) => <label className={`entrant-option ${entrants.includes(player.id) ? 'entrant-option--selected' : ''}`} key={player.id}><input type="checkbox" checked={entrants.includes(player.id)} onChange={() => toggleEntrant(player.id)} /><span className="avatar avatar--tiny">{player.initials}</span><span>{player.name}</span><span className="entrant-rating">{player.rating}</span></label>)}</div></div>
-    <p className="form-note"><ClipboardList size={15} /> Draws can be reviewed and edited by the organiser after setup.</p>
-    <div className="dialog-actions"><button className="button button-quiet" type="button" onClick={onClose}>Cancel</button><button className="button button-primary" type="submit" disabled={!name.trim() || !date || entrants.length < 2}>Create tournament <ArrowRight size={15} /></button></div>
+    <div className="entrant-picker"><div className="entrant-picker-head"><span>Entrants & seeds</span><small>{entrants.length} selected · choose at least 2</small></div><div className="entrant-list">{players.map((player) => <div className="entrant-option-wrap" key={player.id}><label className={`entrant-option ${entrants.includes(player.id) ? 'entrant-option--selected' : ''}`}><input type="checkbox" checked={entrants.includes(player.id)} onChange={() => toggleEntrant(player.id)} /><span className="avatar avatar--tiny">{player.initials}</span><span>{player.name}</span><span className="entrant-rating">{player.rating}</span></label>{entrants.includes(player.id) && <input aria-label={`Seed for ${player.name} (optional)`} className="seed-input" type="number" step="1" min="1" max={entrants.length} placeholder="Seed" value={seeds[player.id] ?? ''} onChange={(event) => updateSeed(player.id, event.target.value)} />}</div>)}</div>{(duplicateSeeds || invalidSeeds) && <p className="field-error" role="alert">Seeds must be unique whole numbers from 1 to the number of selected entrants.</p>}</div>
+    <p className="form-note"><ClipboardList size={15} /> Optional seeds shape the opening order; unseeded entrants are shuffled when the draw is created. Review the generated draw before play.</p>
+    <div className="dialog-actions"><button className="button button-quiet" type="button" onClick={onClose}>Cancel</button><button className="button button-primary" type="submit" disabled={!name.trim() || !date || entrants.length < 2 || duplicateSeeds || invalidSeeds}>Create tournament <ArrowRight size={15} /></button></div>
   </form></Dialog>;
 }

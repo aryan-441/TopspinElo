@@ -49,6 +49,7 @@ export type Tournament = {
   date: string;
   venue: string;
   entrantIds: string[];
+  seeds?: Record<string, number>;
   byePlayerIds?: string[];
   matchIds: string[];
   rounds: number;

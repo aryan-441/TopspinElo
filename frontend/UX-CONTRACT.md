@@ -11,6 +11,9 @@ Rallydesk helps a club organiser manage players, matches, tournament draws, resu
 - The document title identifies the active page and Rallydesk; live scoring has its own title.
 - Overview is the first page and identifies the product as Rallydesk.
 - About Rallydesk and support information are available through Manage navigation and the shared footer.
+- The local preview offers Organiser and Referee workspace views. Organiser navigation includes club, tournament, player, statistics, export, and settings workflows; Referee navigation focuses on match desk and statistics.
+- This view switch is a navigation preference only. It is not authentication or an authorization boundary. Production sign-in and server-enforced role permissions are required before using it to protect organiser data or actions.
+- The selected view is saved locally when browser storage is available.
 - Footer on every app screen includes support email `rallydesksupport@gmail.com` and `© Aryan Arora 2026`.
 
 ## Empty and create flows
@@ -27,7 +30,9 @@ Rallydesk helps a club organiser manage players, matches, tournament draws, resu
 - Live scoring confirms toss and first server, records points, faults, lets, and corrections in event order, and presents undo/correction distinctly.
 - Confirmed match results update player summaries and relevant tournament standings.
 - Round-robin fixtures are generated at tournament creation. Knockout creates its opening round and advances winners after a round is complete unless progression is paused.
+- Tournament setup allows optional, unique whole-number seeds. Seeded players receive seeded knockout positions and byes where applicable; unseeded entrants are shuffled for each new draw.
 - Organisers retain authority over imported and generated draws. Imports require preview, validation, and confirmation. Unknown or ambiguous names need explicit mapping; importing must not silently overwrite workspace data.
+- The frontend currently imports structured CSV and JSON draw files. Image-based bracket recognition (OCR/computer vision) is not implemented; a future photo-import flow must show a reviewable, editable match list before import.
 - Before play begins, an organiser can change tournament entrants. Rallydesk rebuilds only that tournament's pending fixtures, requires a reason, and records the change in the audit log. Once any match is in progress, postponed, or completed, entrant/draw rebuilding is locked.
 - Pending match time/table changes require a reason and are recorded in the same tournament audit log. Completed match schedules cannot be edited.
 - Backup restore validates the file and previews its player, match, and tournament counts. It replaces browser data only after an explicit confirmation.
