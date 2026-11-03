@@ -1,3 +1,4 @@
+import { replayRatings, recordedPointsWon } from './services/resultEntry';
 import { qualifierDraw } from './services/qualifierDraw';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Image, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
@@ -109,7 +110,7 @@ export default function App() {
         ...player,
         wins: wins.length,
         losses: played.length - wins.length,
-        pointsWon: matches.filter((match) => (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id)).flatMap((match) => match.events.filter((event) => event.winnerId === (match.sideOneId ?? match.playerOneId) && (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || event.winnerId === (match.sideTwoId ?? match.playerTwoId) && (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id))).filter((event) => event.kind === 'Point' || event.kind === 'Fault').length,
+        pointsWon: recordedPointsWon(matches, player.id),
         recent: played.slice(0, 5).map((match) => (wins.includes(match) ? 'W' as const : 'L' as const)),
       };
     });
@@ -216,7 +217,7 @@ export default function App() {
       for (const category of allCategories) for (const row of category.standings ?? []) allRows.set(row.playerId, row);
       return { ...tournament, categories: allCategories, standings: [...allRows.values()], completed: resolved.length, status: tournament.progressPaused ? 'Paused' as const : complete ? 'Completed' as const : resolved.length ? 'Running' as const : tournament.status };
     });
-    return { ...current, matches, players, tournaments };
+    return replayRatings({ ...current, matches, players, tournaments });
   });
   const deleteMatch = (matchId: string) => update((current) => {
     const matches = current.matches.filter((match) => match.id !== matchId);
@@ -224,7 +225,7 @@ export default function App() {
     const players = current.players.map((player) => {
       const played = finished.filter((match) => (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id));
       const wins = played.filter((match) => match.winnerId === (match.sideOneId ?? match.playerOneId) && (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || match.winnerId === (match.sideTwoId ?? match.playerTwoId) && (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id));
-      return { ...player, wins: wins.length, losses: played.length - wins.length, recent: played.slice(0, 5).map((match) => wins.includes(match) ? 'W' as const : 'L' as const), pointsWon: matches.filter((match) => (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id)).flatMap((match) => match.events.filter((event) => event.kind === 'Point' || event.kind === 'Fault').filter((event) => event.winnerId === (match.sideOneId ?? match.playerOneId) && (match.sideOnePlayerIds ?? [match.playerOneId]).includes(player.id) || event.winnerId === (match.sideTwoId ?? match.playerTwoId) && (match.sideTwoPlayerIds ?? [match.playerTwoId]).includes(player.id))).length };
+      return { ...player, wins: wins.length, losses: played.length - wins.length, recent: played.slice(0, 5).map((match) => wins.includes(match) ? 'W' as const : 'L' as const), pointsWon: recordedPointsWon(matches, player.id) };
     });
     const tournaments = current.tournaments.map((tournament) => {
       const eventMatches = matches.filter((match) => match.tournamentId === tournament.id || tournament.matchIds.includes(match.id));
@@ -233,7 +234,7 @@ export default function App() {
       const completed = eventMatches.filter((match) => match.status === 'Completed' || match.status === 'Not played').length;
       return { ...tournament, matchIds: tournament.matchIds.filter((id) => id !== matchId), categories, completed, status: eventMatches.length && completed === eventMatches.length ? 'Completed' as const : eventMatches.some((match) => match.status === 'Completed' || match.status === 'In progress') ? 'Running' as const : 'Upcoming' as const, audit: [audit, ...tournament.audit] };
     });
-    return { ...current, matches, players, tournaments };
+    return replayRatings({ ...current, matches, players, tournaments });
   });
   const openMatchSetup = () => {
     if (activePlayers.length < 2) { setPage('players'); setToast('Add at least two active players before setting up a match'); return; }
@@ -261,7 +262,7 @@ export default function App() {
     setActiveMatchId(match.id);
     setToast('Match created. Confirm the toss and first server to begin.');
   };
-  const createNewTournament = (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { categories: TournamentCategory[]; tableCount: number }) => {
+  const createNewTournament = (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { categories: TournamentCategory[]; tableCount: number; includeReferees?: boolean }) => {
     const tournament = createTournament(input);
     for (const category of tournament.categories) if (category.groupStage?.groups?.length) {
       const seeds = category.groupStage.groups.map((group) => group.entryIds.map((id) => category.entries.find((entry) => entry.id === id)?.seed).filter((seed): seed is number => seed !== undefined));
@@ -374,11 +375,12 @@ function MatchDialog({ players, tournaments, onClose, onCreate }: { players: Pla
   </form></Dialog>;
 }
 
-function TournamentDialog({ players, onClose, onCreate }: { players: Player[]; onClose: () => void; onCreate: (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { categories: TournamentCategory[]; tableCount: number }) => void }) {
+function TournamentDialog({ players, onClose, onCreate }: { players: Player[]; onClose: () => void; onCreate: (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { categories: TournamentCategory[]; tableCount: number; includeReferees?: boolean }) => void }) {
   const newCategory = (name = 'Open singles', drawFormat: Tournament['format'] = 'Knockout'): TournamentCategory => ({ id: crypto.randomUUID(), name, kind: 'Singles', format: drawFormat, entries: [], groupStage: drawFormat === 'Group stage' ? { groupCount: 2, advancePerGroup: 1, advanceToKnockout: true } : undefined });
   const [name, setName] = useState(''); const [format, setFormat] = useState<Tournament['format']>('Knockout'); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [venue, setVenue] = useState(''); const [tableCount, setTableCount] = useState('4'); const [categories, setCategories] = useState<TournamentCategory[]>([newCategory()]);
   const [manualEntrants, setManualEntrants] = useState<Record<string, { name: string; seed: string; sourceSlot?: number; confidence?: number }[]>>({});
   const [groupImports, setGroupImports] = useState<Record<string, { fileName: string; groups: { id: string; name: string; entryIds: string[] }[] }>>({});
+  const [includeReferees,setIncludeReferees] = useState(false);
   const invalidTables = !/^\d+$/.test(tableCount) || Number(tableCount) < 1 || Number(tableCount) > 100;
   const entrantIds = [...new Set(categories.flatMap((category) => category.entries.flatMap((entry) => entry.playerIds)))];
   const invalidCategories = categories.some((category) => {
@@ -396,9 +398,10 @@ function TournamentDialog({ players, onClose, onCreate }: { players: Player[]; o
     return !category.name.trim() || category.entries.length < 2 || invalidSeeds || invalidManualNames || invalidImportedSlots || (category.kind === 'Doubles' && category.entries.some((entry) => entry.playerIds.length !== 2)) || team || invalidGroups;
   });
   const updateCategory = (index: number, next: TournamentCategory) => setCategories((items) => items.map((item, itemIndex) => itemIndex === index ? next : item));
-  return <Dialog title="Create a tournament" eyebrow="TOURNAMENT SETUP" onClose={onClose} size="wide"><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (name.trim() && date && !invalidCategories && !invalidTables) onCreate({ name: name.trim(), format: categories[0]?.format ?? format, date: new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), venue, tableCount: Number(tableCount), categories: categories.map(c => c.groupStage ? { ...c, groupStage: { ...c.groupStage, groups: groupImports[c.id]?.groups } } : c), entrantIds }); }}>
+  return <Dialog title="Create a tournament" eyebrow="TOURNAMENT SETUP" onClose={onClose} size="wide"><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (name.trim() && date && !invalidCategories && !invalidTables) onCreate({ name: name.trim(), format: categories[0]?.format ?? format, date: new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), venue, includeReferees, tableCount: Number(tableCount), categories: categories.map(c => c.groupStage ? { ...c, groupStage: { ...c.groupStage, groups: groupImports[c.id]?.groups } } : c), entrantIds }); }}>
     <div className="form-row"><label className="field"><span>Tournament name</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Winter Club Open" required maxLength={80} /></label><label className="field"><span>Default draw format</span><select value={format} onChange={(event) => { const next = event.target.value as Tournament['format']; setFormat(next); setCategories((current) => current.map((category) => ({ ...category, format: next === 'Group stage' && category.kind !== 'Singles' ? 'Knockout' : next, groupStage: next === 'Group stage' && category.kind === 'Singles' ? category.groupStage ?? { groupCount: 2, advancePerGroup: 1, advanceToKnockout: true } : undefined }))); }}><option>Group stage</option><option>Knockout</option></select></label></div>
     <div className="form-row"><label className="field"><span>Start date</span><input type="date" value={date} onChange={(event) => setDate(event.target.value)} required /></label><label className="field"><span>Venue</span><input value={venue} onChange={(event) => setVenue(event.target.value)} placeholder="Add a venue (optional)" maxLength={90} /></label></div>
+    <label className="referee-option"><input type="checkbox" checked={includeReferees} onChange={e=>setIncludeReferees(e.target.checked)}/><span><strong>INCLUDE REFEREES</strong><small>{includeReferees?'Assign officials and score points at the table.':'Organisers can enter results directly. Referees are optional.'}</small></span></label>
     <label className="field"><span>Tables at venue</span><input type="number" min="1" max="100" step="1" value={tableCount} onChange={(event) => setTableCount(event.target.value)} required /><small>Opening fixtures are assigned across these tables.</small></label>
     <div className="category-editors">{categories.map((category, index) => <CategoryRegistration key={category.id} category={{ ...category, groupStage: category.groupStage ? { ...category.groupStage, groups: groupImports[category.id]?.groups } : undefined }} players={players} defaultFormat={format} manualEntrants={manualEntrants[category.id]} onManualEntrantsChange={(rows) => setManualEntrants((current) => { const next = { ...current }; if (rows === undefined) delete next[category.id]; else next[category.id] = rows; return next; })} groupImport={groupImports[category.id]} onImportGroups={(value) => setGroupImports((current) => { const next = { ...current }; if (value) next[category.id] = value; else delete next[category.id]; return next; })} onChange={(next) => updateCategory(index, next)} onRemove={() => { setCategories((items) => items.filter((_, itemIndex) => itemIndex !== index)); setManualEntrants((current) => { const next = { ...current }; delete next[category.id]; return next; }); setGroupImports((current) => { const next = { ...current }; delete next[category.id]; return next; }); }} canRemove={categories.length > 1} />)}</div>
     <button type="button" className="button button-outline" onClick={() => setCategories((items) => [...items, newCategory(`Category ${items.length + 1}`, format)])}><Plus size={15} /> Add category</button>

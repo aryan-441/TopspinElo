@@ -30,6 +30,11 @@ export function calculatePlayerMetrics(matches: Match[], player: string, service
     count('Matches won',won);
     const opponentId = first ? m.playerTwoId : m.playerOneId;
     const target = m.pointsPerGame;
+    if (m.resultDetail === 'match-score') {
+      rates['Games won'] ??= { won:0,total:0 };
+      rates['Games won'].won += m.gamesWon[player] ?? 0;
+      rates['Games won'].total += Object.values(m.gamesWon).reduce((sum,n)=>sum+n,0);
+    }
     let ownGames=0, otherGames=0;
     let greatestGameDeficit=0;
     (m.gameResults ?? []).forEach((g,index) => {

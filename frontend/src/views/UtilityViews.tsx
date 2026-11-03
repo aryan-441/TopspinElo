@@ -99,6 +99,8 @@ export function ClubGuide({navigate}: {navigate: (page: PageId) => void}) {
     ['overview','Start here','Check the day’s activity and open a match or tournament.'],
     ['players','Register players','Add a name, then open the profile to set playing details, check results or remove the player from the active roster.'],
     ['tournaments','Build the draw','Create a tournament, choose singles, doubles or teams and register entrants. For singles group stages, open Edit group tables in setup. Remove a player with ×, then add them to another group.'],
+    ['matches','Record results without referees','Use Enter result in the match list. Save just a winner, an overall game score such as 3-0, or individual scores such as 11-3 11-7 11-5. Only recorded detail contributes to statistics. Completed singles update Elo using K=32, and corrections replay the ratings.'],
+    ['tournaments','Include referees when needed','Tournament setup has an INCLUDE REFEREES checkbox. Leave it off for casual club play. Add referees and assign matches when you want officials at the tables.'],
     ['matches','Score and review','Open the match, record the toss and score points, faults or lets. Use undo to correct a point. The timeline shows who scored and any recorded correction reasons.'],
     ['referees','Staff the tables','Register officials and assign fixtures. The referee desk lists assigned matches.'],
     ['tournaments','Confirm the knockout stage','After the qualifying fixtures finish, open the tournament. Review the random draw or import a draw for that category. Check opening opponents and byes, then apply.'],
@@ -112,5 +114,5 @@ export function ClubGuide({navigate}: {navigate: (page: PageId) => void}) {
     ['tournaments','Import a draw','Use the draw import in Draw & matches. Check every detected name and bye in the review before applying. The recognition service must be running for PDF and image recognition. JSON and CSV fixture imports use existing player identifiers.'],
     ['settings','Manage the workspace','Use Settings to name the club or restore a saved workspace.']
   ];
-  return <main className="page-content"><header className="page-intro"><div><p className="eyebrow">CLUB HANDBOOK</p><h2>From registration to the final point</h2></div></header><div className="about-grid">{chapters.map(([page,title,copy],i) => <article key={title} className="utility-card about-card"><small>SECTION {i+1}</small><h3>{title}</h3><p>{copy}</p><button className="button button-outline" onClick={() => navigate(page)}>Open {page}</button></article>)}</div></main>
+  return <main className="page-content"><header className="page-intro"><div><p className="eyebrow">CLUB HANDBOOK</p><h2>From registration to the final point</h2><p><a href="/palettes.html" target="_blank" rel="noreferrer">Explore the colour palette samples ↗</a></p></div></header><div className="about-grid">{chapters.map(([page,title,copy],i) => <article key={title} className="utility-card about-card"><small>SECTION {i+1}</small><h3>{title}</h3><p>{copy}</p><button className="button button-outline" onClick={() => navigate(page)}>Open {page}</button></article>)}</div></main>
 }

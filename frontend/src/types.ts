@@ -9,6 +9,7 @@ export type Player = {
   grip: 'Shakehand' | 'Penhold' | null;
   style: string | null;
   rating: number;
+  ratingBase?: number;
   wins: number;
   losses: number;
   pointsWon: number;
@@ -19,6 +20,8 @@ export type Player = {
 export type PointEvent = { reversedEvent?: PointEvent; serverId?: string; game?: number; reason?: string; reversedEventId?: string; recordedAt?: string; id: string; winnerId: string; score: string; time: string; kind: 'Point' | 'Fault' | 'Let' | 'Correction' };
 
 export type Match = {
+  resultDetail?: 'winner' | 'match-score' | 'game-scores' | 'point-by-point';
+  resultNote?: string;
   startRatings?: Record<string, number>;
   completedAt?: string;
   id: string;
@@ -88,6 +91,7 @@ export type TournamentCategory = {
 };
 
 export type Tournament = {
+  includeReferees?: boolean;
   id: string;
   name: string;
   format: 'Group stage' | 'Round robin' | 'Knockout';

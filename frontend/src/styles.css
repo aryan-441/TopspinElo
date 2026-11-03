@@ -1254,3 +1254,16 @@ main.page-wrap .page-content .stat-cell > b i { color: var(--text-positive); }
 .group-board{max-height:65vh;overflow:auto}.group-board table{width:100%}.group-board label{display:grid;gap:.5rem}.group-board button{border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--red);cursor:pointer}
 @media(prefers-reduced-motion:no-preference){.metric-board>div{animation:metric-arrive .3s ease-out both}@keyframes metric-arrive{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}}
 @media(max-width:600px){.metric-board{grid-template-columns:repeat(2,minmax(0,1fr))}.analysis-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.analysis{padding:16px!important}.analysis select{max-width:100%}}
+
+.referee-option{display:flex;gap:16px;align-items:center;padding:20px;border:2px solid var(--pine);background:var(--pine-soft);border-radius:8px;cursor:pointer}.referee-option input{width:24px;height:24px;accent-color:var(--pine)}.referee-option strong{display:block;font:700 20px var(--display)}.referee-option small{display:block;margin-top:5px;line-height:1.5}
+
+button{transition:transform .14s cubic-bezier(.2,.8,.2,1),background-color .18s,box-shadow .18s}
+button:not(:disabled):active{transform:scale(.96)}
+.button:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(20,48,58,.12)}
+.button-primary:not(:disabled):active{box-shadow:0 0 0 5px rgba(235,103,69,.18)}
+button:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+.stats-page .page-intro h2{font-size:36px;letter-spacing:-1px}.analysis h3{font-size:28px;letter-spacing:-.7px}
+.analysis>.metric-board:nth-of-type(2)>div:nth-child(-n+6){background:var(--pine);color:var(--paper);border-top:3px solid var(--orange);padding:20px}
+.analysis>.metric-board:nth-of-type(2)>div:nth-child(-n+6) strong,.analysis>.metric-board:nth-of-type(2)>div:nth-child(-n+6) small,.analysis>.metric-board:nth-of-type(2)>div:nth-child(-n+6) span{color:var(--paper)}
+.analysis>.metric-board:nth-of-type(2)>div:nth-child(-n+6) strong{font-size:34px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

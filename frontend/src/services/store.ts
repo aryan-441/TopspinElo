@@ -130,7 +130,7 @@ export function assignSeededGroups(entries: CategoryEntry[], groupCount: number,
   return groups;
 }
 
-export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds?: Record<string, number>; categories?: TournamentCategory[]; tableCount?: number }): Tournament {
+export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds?: Record<string, number>; categories?: TournamentCategory[]; tableCount?: number; includeReferees?: boolean }): Tournament {
   const entrantCount = input.entrantIds.length;
   const rounds = input.format === 'Knockout' ? Math.ceil(Math.log2(Math.max(2, entrantCount))) : Math.max(1, entrantCount % 2 ? entrantCount : entrantCount - 1);
   const bracketSize = 2 ** Math.ceil(Math.log2(Math.max(2, entrantCount)));
