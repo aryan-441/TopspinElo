@@ -125,9 +125,9 @@ pnpm run dev
 The approved product context and phased requirements for optional player attributes, group-stage tournaments, account roles, developer administration, tournament recovery, and future web deployment are recorded in [docs/ADDITIONAL_FEATURE_REQUIREMENTS.md](docs/ADDITIONAL_FEATURE_REQUIREMENTS.md). Treat this as the source of truth for future planning. Implement in manageable phases, preserve existing functionality, and inspect the current architecture before proposing changes. The immediate isolated feature is optional player attributes; do not attempt the full roadmap as one change.
 
 
-## Licence proposal awaiting approval
+## Source code terms
 
-The proposed MIT terms are in LICENSE-MIT-PROPOSAL.txt for the creator's review. Adoption is pending approval.
+Rallydesk is a free product for clubs, with no advertisements. The repository is available for source inspection and evaluation under the proprietary terms in [LICENSE](LICENSE). Reusing, modifying, deploying, redistributing, or incorporating its code requires the copyright owner's written permission. Request permission by emailing rallydesksupport@gmail.com or contacting the owner through [GitHub](https://github.com/aryan-441/table-tennis-manager).
 
 ## Recovery and demo
 
