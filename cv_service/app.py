@@ -1,8 +1,10 @@
-"""Local beta OCR service for extracting entrants and bye labels from draw scans."""
+"""Local beta OCR service for reviewable draw and sectioned group-roster scans."""
 from __future__ import annotations
 
 import re
+import os
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 
 import cv2
@@ -10,6 +12,9 @@ import fitz
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+os.environ.setdefault("PADDLE_PDX_CACHE_HOME", str(Path(__file__).resolve().parent / ".paddlex-cache"))
+os.environ.setdefault("HF_HOME", str(Path(__file__).resolve().parent / ".hf-cache"))
+os.environ.setdefault("FLAGS_use_mkldnn", "0")
 from paddleocr import PaddleOCR
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
@@ -25,6 +30,18 @@ app.add_middleware(
 )
 
 _ocr: PaddleOCR | None = None
+_group_ocr: PaddleOCR | None = None
+_bracket_ocr: PaddleOCR | None = None
+
+
+def bracket_ocr_engine() -> PaddleOCR:
+    global _bracket_ocr
+    if _bracket_ocr is None:
+        _bracket_ocr = PaddleOCR(text_detection_model_name="PP-OCRv5_mobile_det",
+                                 text_recognition_model_name="PP-OCRv5_mobile_rec",
+                                 use_doc_orientation_classify=False, use_doc_unwarping=False,
+                                 use_textline_orientation=False, enable_mkldnn=False, device="cpu")
+    return _bracket_ocr
 
 
 def ocr_engine() -> PaddleOCR:
@@ -34,6 +51,25 @@ def ocr_engine() -> PaddleOCR:
         _ocr = PaddleOCR(lang="mr", use_doc_orientation_classify=True, use_doc_unwarping=True,
                          use_textline_orientation=True, device="cpu")
     return _ocr
+
+
+def group_ocr_engine() -> PaddleOCR:
+    """Load a separately trained group-name recognizer when one is configured."""
+    global _group_ocr
+    model_dir = os.environ.get("GROUP_OCR_REC_MODEL_DIR", "").strip()
+    if not model_dir:
+        return ocr_engine()
+    if _group_ocr is None:
+        if not Path(model_dir).is_dir():
+            raise RuntimeError(f"GROUP_OCR_REC_MODEL_DIR is not a directory: {model_dir}")
+        _group_ocr = PaddleOCR(
+            text_recognition_model_dir=model_dir,
+            use_doc_orientation_classify=True,
+            use_doc_unwarping=True,
+            use_textline_orientation=True,
+            device="cpu",
+        )
+    return _group_ocr
 
 
 def document_pages(data: bytes, content_type: str) -> list[np.ndarray]:
@@ -68,13 +104,13 @@ def _result_dict(result: Any) -> dict[str, Any]:
     return value.get("res", value)
 
 
-def recognize(image: np.ndarray, page_number: int) -> list[dict[str, Any]]:
+def recognize(image: np.ndarray, page_number: int, engine: PaddleOCR | None = None) -> list[dict[str, Any]]:
     height, width = image.shape[:2]
     scale = max(1.0, 1800 / max(height, width))
     if scale > 1:
         image = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
     output: list[dict[str, Any]] = []
-    for result in ocr_engine().predict(image):
+    for result in (engine or ocr_engine()).predict(image):
         payload = _result_dict(result)
         texts = payload.get("rec_texts", [])
         scores = payload.get("rec_scores", [])
@@ -114,6 +150,42 @@ def extract_entries(lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [unique[key] for key in sorted(unique)]
 
 
+def extract_group_assignments(lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Read a conservative, sectioned group roster and leave every row reviewable."""
+    heading = re.compile(r"^\s*(?:group|grp\.?|pool)\s*[:#-]?\s*([a-z]|\d{1,2})\s*$", re.I)
+    ignored = re.compile(r"^(?:#|no\.?|seed|rank|pos(?:ition)?|player|name|played|matches|wins?|losses?|draws?|games?|points?|pts?)$", re.I)
+    groups: dict[str, dict[str, Any]] = {}
+    current: dict[str, Any] | None = None
+    current_page: int | None = None
+    for line in lines:
+        page = int(line.get("page", 1))
+        if current_page is not None and page != current_page:
+            current = None
+        current_page = page
+        text = re.sub(r"\s+", " ", str(line.get("text", ""))).strip()
+        if not text:
+            continue
+        match = heading.match(text)
+        if match:
+            label = match.group(1).upper()
+            current = groups.setdefault(label, {"name": f"Group {label}", "entries": []})
+            continue
+        if current is None or ignored.fullmatch(text.strip(" :.-")):
+            continue
+        # Ignore table statistics when OCR returns a separate numeric cell.
+        if re.fullmatch(r"[\d\s./:-]+", text):
+            continue
+        numbered = re.match(r"^\s*(?:\d{1,2}[.)]?|[-•])\s+(.+?)\s*$", text)
+        name = (numbered.group(1) if numbered else text).strip(" -–—:|")
+        if not name or len(name) > 80 or ignored.fullmatch(name):
+            continue
+        entry = {"name": name, "confidence": line.get("confidence"), "page": page,
+                 "status": "review" if line.get("confidence") is None or line["confidence"] < 0.8 else "recognized"}
+        if not any(existing["name"].casefold() == name.casefold() for existing in current["entries"]):
+            current["entries"].append(entry)
+    return [group for group in groups.values() if group["entries"]]
+
+
 @app.get("/health")
 def health() -> dict[str, Any]:
     return {"status": "ready", "engine": "PaddleOCR", "beta": True}
@@ -129,12 +201,46 @@ async def recognize_draw(file: UploadFile = File(...)) -> dict[str, Any]:
     pages = document_pages(data, file.content_type)
     lines: list[dict[str, Any]] = []
     for page_number, image in enumerate(pages, start=1):
-        lines.extend(recognize(image, page_number))
-    entries = extract_entries(lines)
+        lines.extend(recognize(image, page_number, bracket_ocr_engine()))
+    if __package__:
+        from .predict_bracket import draft
+    else:
+        from predict_bracket import draft
+    try:
+        structure = draft(lines)
+    except (ValueError, FileNotFoundError) as exc:
+        raise HTTPException(422, f"Bracket structure could not be read: {exc}") from exc
+    entries = [{"slot": entry["slot"], "name": entry["name"], "bye": False,
+                "confidence": entry["confidence"], "page": 1, "status": "review"}
+               for entry in structure["entries"]]
     if not entries:
         raise HTTPException(422, "No numbered entrant list was recognized. Use the manual entrant form or try a clearer scan.")
-    return {"beta": True, "languageModel": "Devanagari/Marathi", "sourceName": file.filename,
-            "pages": len(pages), "entries": entries, "warnings": [
-                "Names and bye labels are OCR suggestions. Confirm every row before using this draw.",
-                "Bracket connector lines are not imported yet; entrant order and bye detection are the beta scope.",
-            ]}
+    return {"beta": True, "sourceName": file.filename, "pages": len(pages), "entries": entries,
+            "structureDraft": structure, "warnings": structure["review"]["notes"]}
+
+
+@app.post("/api/groups/recognize")
+async def recognize_groups(file: UploadFile = File(...)) -> dict[str, Any]:
+    """Suggest player rosters from sectioned group/pool sheets for organiser review."""
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(415, "Upload a PDF or a JPG, PNG, WEBP, or TIFF image.")
+    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "The beta importer accepts files up to 20 MB.")
+    pages = document_pages(data, file.content_type)
+    lines: list[dict[str, Any]] = []
+    engine = group_ocr_engine()
+    for page_number, image in enumerate(pages, start=1):
+        lines.extend(recognize(image, page_number, engine))
+    groups = extract_group_assignments(lines)
+    if not groups or sum(len(group["entries"]) for group in groups) < 2:
+        raise HTTPException(422, "No sectioned group roster was recognized. Use a sheet with headings such as ‘Group A’ followed by player names, or import CSV/JSON.")
+    warnings = [
+                "OCR suggestions only: map every name to the tournament roster and confirm the group allocation before applying it.",
+                "This parser expects explicit Group A / Pool 1 section headings. It has not been qualified on representative group-table scans.",
+            ]
+    model_configured = bool(os.environ.get("GROUP_OCR_REC_MODEL_DIR", "").strip())
+    if not model_configured:
+        warnings.append("No fine-tuned group recognizer is configured; suggestions use the existing Marathi base OCR model.")
+    return {"beta": True, "recognizer": "fine-tuned" if model_configured else "base-fallback",
+            "sourceName": file.filename, "pages": len(pages), "groups": groups, "warnings": warnings}

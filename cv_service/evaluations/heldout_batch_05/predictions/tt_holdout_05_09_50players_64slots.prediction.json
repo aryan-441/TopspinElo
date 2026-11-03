@@ -1,0 +1,1722 @@
+{
+  "raw_ocr_lines": [
+    {
+      "text": "WILLOWDENE COUNTY RALLY",
+      "confidence": 0.986,
+      "page": 1,
+      "x": 213.0,
+      "y": 141.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "OPEN SINGLES / DRAW CHART",
+      "confidence": 0.949,
+      "page": 1,
+      "x": 216.0,
+      "y": 212.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "FINAL",
+      "confidence": 0.872,
+      "page": 1,
+      "x": 4260.0,
+      "y": 268.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "WINNER",
+      "confidence": 0.993,
+      "page": 1,
+      "x": 4406.0,
+      "y": 269.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "SF",
+      "confidence": 0.925,
+      "page": 1,
+      "x": 3714.0,
+      "y": 271.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "QF",
+      "confidence": 0.983,
+      "page": 1,
+      "x": 3152.0,
+      "y": 279.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "R3",
+      "confidence": 0.858,
+      "page": 1,
+      "x": 2589.0,
+      "y": 283.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "R2",
+      "confidence": 0.967,
+      "page": 1,
+      "x": 2030.0,
+      "y": 288.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "R1",
+      "confidence": 0.923,
+      "page": 1,
+      "x": 1465.0,
+      "y": 292.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Imogen Tisdale",
+      "confidence": 0.974,
+      "page": 1,
+      "x": 288.0,
+      "y": 360.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "01",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 217.0,
+      "y": 364.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Uma Bradbury",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 291.0,
+      "y": 407.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "02",
+      "confidence": 0.986,
+      "page": 1,
+      "x": 217.0,
+      "y": 409.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Florence Easton",
+      "confidence": 0.993,
+      "page": 1,
+      "x": 291.0,
+      "y": 450.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "03",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 217.0,
+      "y": 453.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 291.0,
+      "y": 495.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "04",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 217.0,
+      "y": 499.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "05",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 218.0,
+      "y": 542.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Iris Norcross",
+      "confidence": 0.983,
+      "page": 1,
+      "x": 293.0,
+      "y": 542.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Darcie Cheswick",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 292.0,
+      "y": 581.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "06",
+      "confidence": 0.988,
+      "page": 1,
+      "x": 218.0,
+      "y": 587.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.982,
+      "page": 1,
+      "x": 293.0,
+      "y": 628.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "07",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 218.0,
+      "y": 632.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Frances Ellery",
+      "confidence": 0.96,
+      "page": 1,
+      "x": 292.0,
+      "y": 671.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "08",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 219.0,
+      "y": 676.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Rowan Garwood",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 293.0,
+      "y": 714.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "09",
+      "confidence": 0.986,
+      "page": 1,
+      "x": 219.0,
+      "y": 720.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Lillian Goodall",
+      "confidence": 0.981,
+      "page": 1,
+      "x": 294.0,
+      "y": 761.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "10",
+      "confidence": 0.966,
+      "page": 1,
+      "x": 222.0,
+      "y": 765.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Ramona Hardwick",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 293.0,
+      "y": 804.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "11",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 223.0,
+      "y": 811.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 294.0,
+      "y": 850.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "12",
+      "confidence": 0.991,
+      "page": 1,
+      "x": 222.0,
+      "y": 854.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Joel Parrish",
+      "confidence": 0.972,
+      "page": 1,
+      "x": 292.0,
+      "y": 892.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "13",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 222.0,
+      "y": 897.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Molly Yorke",
+      "confidence": 0.969,
+      "page": 1,
+      "x": 293.0,
+      "y": 938.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "14",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 222.0,
+      "y": 944.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.99,
+      "page": 1,
+      "x": 296.0,
+      "y": 983.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "15",
+      "confidence": 0.993,
+      "page": 1,
+      "x": 222.0,
+      "y": 987.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Beatrice Sutherland",
+      "confidence": 0.988,
+      "page": 1,
+      "x": 295.0,
+      "y": 1025.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "16",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 223.0,
+      "y": 1031.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Diana Walden",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 295.0,
+      "y": 1070.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "17",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 223.0,
+      "y": 1076.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Stella Bramble",
+      "confidence": 0.98,
+      "page": 1,
+      "x": 295.0,
+      "y": 1115.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "18",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 224.0,
+      "y": 1121.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.993,
+      "page": 1,
+      "x": 297.0,
+      "y": 1161.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "19",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 224.0,
+      "y": 1164.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Rosa Winterbourne",
+      "confidence": 0.973,
+      "page": 1,
+      "x": 298.0,
+      "y": 1207.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "20",
+      "confidence": 0.982,
+      "page": 1,
+      "x": 224.0,
+      "y": 1210.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Brianna Lockhart",
+      "confidence": 0.979,
+      "page": 1,
+      "x": 297.0,
+      "y": 1247.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "21",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 225.0,
+      "y": 1253.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Ruby Hawthorne",
+      "confidence": 0.984,
+      "page": 1,
+      "x": 298.0,
+      "y": 1293.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "22",
+      "confidence": 0.991,
+      "page": 1,
+      "x": 225.0,
+      "y": 1298.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Edith Sandford",
+      "confidence": 0.967,
+      "page": 1,
+      "x": 298.0,
+      "y": 1335.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "23",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 225.0,
+      "y": 1342.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Ines Fairchild",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 298.0,
+      "y": 1381.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "24",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 225.0,
+      "y": 1387.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.991,
+      "page": 1,
+      "x": 299.0,
+      "y": 1427.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "25",
+      "confidence": 0.993,
+      "page": 1,
+      "x": 226.0,
+      "y": 1432.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Alana Wainwright",
+      "confidence": 0.979,
+      "page": 1,
+      "x": 299.0,
+      "y": 1470.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "26",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 226.0,
+      "y": 1477.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Ezra Pollard",
+      "confidence": 0.971,
+      "page": 1,
+      "x": 299.0,
+      "y": 1513.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "27",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 226.0,
+      "y": 1520.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Lennox Greenfield",
+      "confidence": 0.974,
+      "page": 1,
+      "x": 299.0,
+      "y": 1558.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "28",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 228.0,
+      "y": 1564.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.956,
+      "page": 1,
+      "x": 299.0,
+      "y": 1603.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "29",
+      "confidence": 0.99,
+      "page": 1,
+      "x": 228.0,
+      "y": 1609.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Augusta Ackerman",
+      "confidence": 0.98,
+      "page": 1,
+      "x": 299.0,
+      "y": 1649.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "30",
+      "confidence": 0.977,
+      "page": 1,
+      "x": 228.0,
+      "y": 1653.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Florence Somerton",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 300.0,
+      "y": 1692.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "31",
+      "confidence": 0.99,
+      "page": 1,
+      "x": 228.0,
+      "y": 1697.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Max Tiling",
+      "confidence": 0.934,
+      "page": 1,
+      "x": 303.0,
+      "y": 1739.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "32",
+      "confidence": 0.99,
+      "page": 1,
+      "x": 229.0,
+      "y": 1743.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Orla Woodford",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 301.0,
+      "y": 1780.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "33",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 229.0,
+      "y": 1786.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.99,
+      "page": 1,
+      "x": 303.0,
+      "y": 1828.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "34",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 229.0,
+      "y": 1831.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Alice Vale",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 304.0,
+      "y": 1873.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "35",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 229.0,
+      "y": 1874.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Lara Leighton",
+      "confidence": 0.992,
+      "page": 1,
+      "x": 303.0,
+      "y": 1916.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "36",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 230.0,
+      "y": 1920.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Suki Hollis",
+      "confidence": 0.988,
+      "page": 1,
+      "x": 302.0,
+      "y": 1960.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "37",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 230.0,
+      "y": 1964.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Ivy Jessop",
+      "confidence": 0.961,
+      "page": 1,
+      "x": 304.0,
+      "y": 2006.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "38",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 230.0,
+      "y": 2008.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Kieran Faraday",
+      "confidence": 0.991,
+      "page": 1,
+      "x": 304.0,
+      "y": 2050.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "39",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 231.0,
+      "y": 2052.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.988,
+      "page": 1,
+      "x": 304.0,
+      "y": 2094.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "40",
+      "confidence": 0.988,
+      "page": 1,
+      "x": 231.0,
+      "y": 2098.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Audrey Cranford",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 303.0,
+      "y": 2134.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "41",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 232.0,
+      "y": 2140.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Miriam Hilliard",
+      "confidence": 0.983,
+      "page": 1,
+      "x": 304.0,
+      "y": 2180.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "42",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 232.0,
+      "y": 2186.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Lennox Cuthbert",
+      "confidence": 0.968,
+      "page": 1,
+      "x": 305.0,
+      "y": 2224.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "43",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 232.0,
+      "y": 2231.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.993,
+      "page": 1,
+      "x": 306.0,
+      "y": 2272.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "44",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 232.0,
+      "y": 2275.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Harriet Pennington",
+      "confidence": 0.96,
+      "page": 1,
+      "x": 305.0,
+      "y": 2314.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "45",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 232.0,
+      "y": 2319.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Gwen Aldridge",
+      "confidence": 0.974,
+      "page": 1,
+      "x": 306.0,
+      "y": 2360.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "46",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 234.0,
+      "y": 2363.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.993,
+      "page": 1,
+      "x": 308.0,
+      "y": 2405.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "47",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 234.0,
+      "y": 2406.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Elsa Ormond",
+      "confidence": 0.967,
+      "page": 1,
+      "x": 306.0,
+      "y": 2446.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "48",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 234.0,
+      "y": 2453.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Martha Ashcombe",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 307.0,
+      "y": 2491.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "49",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 235.0,
+      "y": 2497.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Lana Hallowell",
+      "confidence": 0.989,
+      "page": 1,
+      "x": 307.0,
+      "y": 2535.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "50",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 236.0,
+      "y": 2542.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.992,
+      "page": 1,
+      "x": 309.0,
+      "y": 2582.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "51",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 236.0,
+      "y": 2585.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Diana Clements",
+      "confidence": 0.972,
+      "page": 1,
+      "x": 310.0,
+      "y": 2629.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "52",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 236.0,
+      "y": 2630.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Eleanor Allerton",
+      "confidence": 0.99,
+      "page": 1,
+      "x": 310.0,
+      "y": 2672.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "53",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 236.0,
+      "y": 2674.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Tamsin Osbourne",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 310.0,
+      "y": 2717.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "54",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 237.0,
+      "y": 2720.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Mara Wetherby",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 309.0,
+      "y": 2759.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "55",
+      "confidence": 0.772,
+      "page": 1,
+      "x": 237.0,
+      "y": 2763.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Demi Redfern",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 310.0,
+      "y": 2802.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "56",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 237.0,
+      "y": 2808.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 311.0,
+      "y": 2849.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "57",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 237.0,
+      "y": 2853.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Louisa Camden",
+      "confidence": 0.965,
+      "page": 1,
+      "x": 310.0,
+      "y": 2892.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "58",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 238.0,
+      "y": 2897.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Iris Winfield",
+      "confidence": 0.992,
+      "page": 1,
+      "x": 311.0,
+      "y": 2935.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "59",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 238.0,
+      "y": 2941.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Ezra Truscott",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 312.0,
+      "y": 2980.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "60",
+      "confidence": 0.991,
+      "page": 1,
+      "x": 238.0,
+      "y": 2986.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 312.0,
+      "y": 3026.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "61",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 240.0,
+      "y": 3030.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Iris Allerton",
+      "confidence": 0.98,
+      "page": 1,
+      "x": 312.0,
+      "y": 3073.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "62",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 240.0,
+      "y": 3075.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Clara lves",
+      "confidence": 0.988,
+      "page": 1,
+      "x": 313.0,
+      "y": 3116.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "63",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 240.0,
+      "y": 3118.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "Jonah Stanhope",
+      "confidence": 0.987,
+      "page": 1,
+      "x": 309.0,
+      "y": 3157.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "64",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 240.0,
+      "y": 3163.0,
+      "width": 4768,
+      "height": 3368
+    },
+    {
+      "text": "DRAW SUPERVISOR",
+      "confidence": 0.99,
+      "page": 1,
+      "x": 4157.0,
+      "y": 3199.0,
+      "width": 4768,
+      "height": 3368
+    }
+  ],
+  "structureDraft": {
+    "format": "Knockout",
+    "bracketSlots": [
+      "Imogen Tisdale",
+      "Uma Bradbury",
+      "Florence Easton",
+      null,
+      "Iris Norcross",
+      "Darcie Cheswick",
+      null,
+      "Frances Ellery",
+      "Rowan Garwood",
+      "Lillian Goodall",
+      "Ramona Hardwick",
+      null,
+      "Joel Parrish",
+      "Molly Yorke",
+      null,
+      "Beatrice Sutherland",
+      "Diana Walden",
+      "Stella Bramble",
+      null,
+      "Rosa Winterbourne",
+      "Brianna Lockhart",
+      "Ruby Hawthorne",
+      "Edith Sandford",
+      "Ines Fairchild",
+      null,
+      "Alana Wainwright",
+      "Ezra Pollard",
+      "Lennox Greenfield",
+      null,
+      "Augusta Ackerman",
+      "Florence Somerton",
+      "Max Tiling",
+      "Orla Woodford",
+      null,
+      "Alice Vale",
+      "Lara Leighton",
+      "Suki Hollis",
+      "Ivy Jessop",
+      "Kieran Faraday",
+      null,
+      "Audrey Cranford",
+      "Miriam Hilliard",
+      "Lennox Cuthbert",
+      null,
+      "Harriet Pennington",
+      "Gwen Aldridge",
+      null,
+      "Elsa Ormond",
+      "Martha Ashcombe",
+      "Lana Hallowell",
+      null,
+      "Diana Clements",
+      "Eleanor Allerton",
+      "Tamsin Osbourne",
+      "Mara Wetherby",
+      "Demi Redfern",
+      null,
+      "Louisa Camden",
+      "Iris Winfield",
+      "Ezra Truscott",
+      null,
+      "Iris Allerton",
+      "Clara lves",
+      "Jonah Stanhope"
+    ],
+    "byeSlotNumbers": [
+      4,
+      7,
+      12,
+      15,
+      19,
+      25,
+      29,
+      34,
+      40,
+      44,
+      47,
+      51,
+      57,
+      61
+    ],
+    "entries": [
+      {
+        "name": "Imogen Tisdale",
+        "slot": 1,
+        "confidence": 0.999
+      },
+      {
+        "name": "Uma Bradbury",
+        "slot": 2,
+        "confidence": 0.986
+      },
+      {
+        "name": "Florence Easton",
+        "slot": 3,
+        "confidence": 0.997
+      },
+      {
+        "name": "Iris Norcross",
+        "slot": 5,
+        "confidence": 0.996
+      },
+      {
+        "name": "Darcie Cheswick",
+        "slot": 6,
+        "confidence": 0.988
+      },
+      {
+        "name": "Frances Ellery",
+        "slot": 8,
+        "confidence": 0.995
+      },
+      {
+        "name": "Rowan Garwood",
+        "slot": 9,
+        "confidence": 0.986
+      },
+      {
+        "name": "Lillian Goodall",
+        "slot": 10,
+        "confidence": 0.966
+      },
+      {
+        "name": "Ramona Hardwick",
+        "slot": 11,
+        "confidence": 0.996
+      },
+      {
+        "name": "Joel Parrish",
+        "slot": 13,
+        "confidence": 0.994
+      },
+      {
+        "name": "Molly Yorke",
+        "slot": 14,
+        "confidence": 0.998
+      },
+      {
+        "name": "Beatrice Sutherland",
+        "slot": 16,
+        "confidence": 0.999
+      },
+      {
+        "name": "Diana Walden",
+        "slot": 17,
+        "confidence": 0.997
+      },
+      {
+        "name": "Stella Bramble",
+        "slot": 18,
+        "confidence": 0.999
+      },
+      {
+        "name": "Rosa Winterbourne",
+        "slot": 20,
+        "confidence": 0.982
+      },
+      {
+        "name": "Brianna Lockhart",
+        "slot": 21,
+        "confidence": 0.997
+      },
+      {
+        "name": "Ruby Hawthorne",
+        "slot": 22,
+        "confidence": 0.991
+      },
+      {
+        "name": "Edith Sandford",
+        "slot": 23,
+        "confidence": 0.997
+      },
+      {
+        "name": "Ines Fairchild",
+        "slot": 24,
+        "confidence": 0.996
+      },
+      {
+        "name": "Alana Wainwright",
+        "slot": 26,
+        "confidence": 0.994
+      },
+      {
+        "name": "Ezra Pollard",
+        "slot": 27,
+        "confidence": 0.994
+      },
+      {
+        "name": "Lennox Greenfield",
+        "slot": 28,
+        "confidence": 0.999
+      },
+      {
+        "name": "Augusta Ackerman",
+        "slot": 30,
+        "confidence": 0.977
+      },
+      {
+        "name": "Florence Somerton",
+        "slot": 31,
+        "confidence": 0.99
+      },
+      {
+        "name": "Max Tiling",
+        "slot": 32,
+        "confidence": 0.99
+      },
+      {
+        "name": "Orla Woodford",
+        "slot": 33,
+        "confidence": 0.995
+      },
+      {
+        "name": "Alice Vale",
+        "slot": 35,
+        "confidence": 0.994
+      },
+      {
+        "name": "Lara Leighton",
+        "slot": 36,
+        "confidence": 0.998
+      },
+      {
+        "name": "Suki Hollis",
+        "slot": 37,
+        "confidence": 0.996
+      },
+      {
+        "name": "Ivy Jessop",
+        "slot": 38,
+        "confidence": 0.998
+      },
+      {
+        "name": "Kieran Faraday",
+        "slot": 39,
+        "confidence": 0.996
+      },
+      {
+        "name": "Audrey Cranford",
+        "slot": 41,
+        "confidence": 0.996
+      },
+      {
+        "name": "Miriam Hilliard",
+        "slot": 42,
+        "confidence": 0.997
+      },
+      {
+        "name": "Lennox Cuthbert",
+        "slot": 43,
+        "confidence": 0.999
+      },
+      {
+        "name": "Harriet Pennington",
+        "slot": 45,
+        "confidence": 0.995
+      },
+      {
+        "name": "Gwen Aldridge",
+        "slot": 46,
+        "confidence": 0.998
+      },
+      {
+        "name": "Elsa Ormond",
+        "slot": 48,
+        "confidence": 0.999
+      },
+      {
+        "name": "Martha Ashcombe",
+        "slot": 49,
+        "confidence": 0.994
+      },
+      {
+        "name": "Lana Hallowell",
+        "slot": 50,
+        "confidence": 0.994
+      },
+      {
+        "name": "Diana Clements",
+        "slot": 52,
+        "confidence": 0.996
+      },
+      {
+        "name": "Eleanor Allerton",
+        "slot": 53,
+        "confidence": 0.999
+      },
+      {
+        "name": "Tamsin Osbourne",
+        "slot": 54,
+        "confidence": 0.998
+      },
+      {
+        "name": "Mara Wetherby",
+        "slot": 55,
+        "confidence": 0.772
+      },
+      {
+        "name": "Demi Redfern",
+        "slot": 56,
+        "confidence": 0.999
+      },
+      {
+        "name": "Louisa Camden",
+        "slot": 58,
+        "confidence": 0.999
+      },
+      {
+        "name": "Iris Winfield",
+        "slot": 59,
+        "confidence": 0.994
+      },
+      {
+        "name": "Ezra Truscott",
+        "slot": 60,
+        "confidence": 0.991
+      },
+      {
+        "name": "Iris Allerton",
+        "slot": 62,
+        "confidence": 0.998
+      },
+      {
+        "name": "Clara lves",
+        "slot": 63,
+        "confidence": 0.999
+      },
+      {
+        "name": "Jonah Stanhope",
+        "slot": 64,
+        "confidence": 0.999
+      }
+    ],
+    "openingMatches": [
+      [
+        "Imogen Tisdale",
+        "Uma Bradbury"
+      ],
+      [
+        "Florence Easton",
+        null
+      ],
+      [
+        "Iris Norcross",
+        "Darcie Cheswick"
+      ],
+      [
+        null,
+        "Frances Ellery"
+      ],
+      [
+        "Rowan Garwood",
+        "Lillian Goodall"
+      ],
+      [
+        "Ramona Hardwick",
+        null
+      ],
+      [
+        "Joel Parrish",
+        "Molly Yorke"
+      ],
+      [
+        null,
+        "Beatrice Sutherland"
+      ],
+      [
+        "Diana Walden",
+        "Stella Bramble"
+      ],
+      [
+        null,
+        "Rosa Winterbourne"
+      ],
+      [
+        "Brianna Lockhart",
+        "Ruby Hawthorne"
+      ],
+      [
+        "Edith Sandford",
+        "Ines Fairchild"
+      ],
+      [
+        null,
+        "Alana Wainwright"
+      ],
+      [
+        "Ezra Pollard",
+        "Lennox Greenfield"
+      ],
+      [
+        null,
+        "Augusta Ackerman"
+      ],
+      [
+        "Florence Somerton",
+        "Max Tiling"
+      ],
+      [
+        "Orla Woodford",
+        null
+      ],
+      [
+        "Alice Vale",
+        "Lara Leighton"
+      ],
+      [
+        "Suki Hollis",
+        "Ivy Jessop"
+      ],
+      [
+        "Kieran Faraday",
+        null
+      ],
+      [
+        "Audrey Cranford",
+        "Miriam Hilliard"
+      ],
+      [
+        "Lennox Cuthbert",
+        null
+      ],
+      [
+        "Harriet Pennington",
+        "Gwen Aldridge"
+      ],
+      [
+        null,
+        "Elsa Ormond"
+      ],
+      [
+        "Martha Ashcombe",
+        "Lana Hallowell"
+      ],
+      [
+        null,
+        "Diana Clements"
+      ],
+      [
+        "Eleanor Allerton",
+        "Tamsin Osbourne"
+      ],
+      [
+        "Mara Wetherby",
+        "Demi Redfern"
+      ],
+      [
+        null,
+        "Louisa Camden"
+      ],
+      [
+        "Iris Winfield",
+        "Ezra Truscott"
+      ],
+      [
+        null,
+        "Iris Allerton"
+      ],
+      [
+        "Clara lves",
+        "Jonah Stanhope"
+      ]
+    ],
+    "review": {
+      "missingSlots": [],
+      "duplicateSlots": [],
+      "requiresReview": true,
+      "notes": [
+        "Map names to registered app entrants and confirm every BYE and match before applying.",
+        "Later-round connector paths are not inferred by this model."
+      ]
+    }
+  }
+}

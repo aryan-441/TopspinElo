@@ -102,6 +102,25 @@ function shuffle<T>(values: T[]): T[] {
   return result;
 }
 
+export function assignSeededGroups(entries: CategoryEntry[], groupCount: number) {
+  if (!Number.isInteger(groupCount) || groupCount < 2 || groupCount > Math.floor(entries.length / 2)) throw new Error('Choose at least two groups, with at least two entrants per group.');
+  if (groupCount > 26) throw new Error('Choose no more than 26 groups.');
+  const groups = Array.from({ length: groupCount }, (_, index) => ({ id: crypto.randomUUID(), name: `Group ${String.fromCharCode(65 + index)}`, entryIds: [] as string[] }));
+  const seeded = entries.filter((entry) => Number.isInteger(entry.seed)).sort((a, b) => a.seed! - b.seed!);
+  const unseeded = shuffle(entries.filter((entry) => !Number.isInteger(entry.seed)));
+  const groupOrder = shuffle(groups);
+  const topSeeds = seeded.slice(0, groupCount);
+  topSeeds.forEach((entry, index) => groupOrder[index].entryIds.push(entry.id));
+  const seededGroups = new Map(topSeeds.map((entry, index) => [entry.id, groupOrder[index]]));
+  const remaining = [...seeded.slice(groupCount), ...unseeded];
+  for (const entry of remaining) {
+    const smallest = Math.min(...groups.map((group) => group.entryIds.length));
+    const eligible = shuffle(groups.filter((group) => group.entryIds.length === smallest && (!Number.isInteger(entry.seed) || !seededGroups.has(entry.id) || seededGroups.get(entry.id) !== group)));
+    (eligible.length ? eligible[0] : shuffle(groups.filter((group) => group.entryIds.length === smallest))[0]).entryIds.push(entry.id);
+  }
+  return groups;
+}
+
 export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { seeds?: Record<string, number>; categories?: TournamentCategory[]; tableCount?: number }): Tournament {
   const entrantCount = input.entrantIds.length;
   const rounds = input.format === 'Knockout' ? Math.ceil(Math.log2(Math.max(2, entrantCount))) : Math.max(1, entrantCount % 2 ? entrantCount : entrantCount - 1);
@@ -118,19 +137,21 @@ export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'da
   const categoryInput: TournamentCategory[] = input.categories?.length ? input.categories : [{ id: crypto.randomUUID(), name: 'Open singles', kind: 'Singles', format: input.format, entries: orderedEntrants.map((id) => ({ id, name: '', playerIds: [id] })) }];
   const categories = categoryInput.map((category) => {
     const entryCount = category.entries.length;
+    const groupStage = category.groupStage ? { ...category.groupStage, groups: category.groupStage.groups?.length ? category.groupStage.groups : assignSeededGroups(category.entries, category.groupStage.groupCount), advanced: false } : undefined;
     const size = 2 ** Math.ceil(Math.log2(Math.max(2, entryCount)));
-    const seeded = category.entries.filter((entry) => entry.seed).sort((a, b) => a.seed! - b.seed!);
+      const seeded = category.entries.filter((entry) => entry.seed).sort((a, b) => a.seed! - b.seed!);
     const unseeded = shuffle(category.entries.filter((entry) => !entry.seed));
     const sorted = [...seeded, ...unseeded];
     const slotByRank = new Map<number, string>();
     seeded.forEach((entry) => slotByRank.set(entry.seed!, entry.id));
     const available = sorted.filter((entry) => !entry.seed);
     for (let rank = 1; rank <= entryCount; rank += 1) if (!slotByRank.has(rank) && available.length) slotByRank.set(rank, available.shift()!.id);
-    const slots = category.format === 'Knockout' ? seedRankOrder(size).map((rank) => slotByRank.get(rank) ?? null) : undefined;
-    const byeEntryIds = category.format === 'Knockout' ? sorted.slice(0, size - entryCount).map((entry) => entry.id) : [];
-    return { ...category, entries: sorted, format: category.format ?? input.format, bracketSlots: slots, byeEntryIds, standings: sorted.map((entry) => ({ playerId: entry.id, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), tieBreaks: ['Match wins', 'Game difference', 'Games won'] };
+    const importedSlots = category.bracketSlots?.length === size && category.bracketSlots.filter(Boolean).length === entryCount && category.bracketSlots.every((id) => !id || category.entries.some((entry) => entry.id === id)) ? category.bracketSlots : undefined;
+    const slots = category.format === 'Knockout' ? importedSlots ?? seedRankOrder(size).map((rank) => slotByRank.get(rank) ?? null) : undefined;
+    const byeEntryIds = category.format === 'Knockout' ? importedSlots ? importedSlots.flatMap((id, index) => id || importedSlots[index ^ 1] === null ? [] : [importedSlots[index ^ 1]!]) : sorted.slice(0, size - entryCount).map((entry) => entry.id) : [];
+    return { ...category, entries: sorted, format: category.format ?? input.format, bracketSlots: slots, byeEntryIds, groupStage, standings: sorted.map((entry) => ({ playerId: entry.id, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), tieBreaks: groupStage ? ['Match wins', 'Game difference', 'Games won', 'Point difference'] : ['Match wins', 'Game difference', 'Games won'] };
   });
-  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, bracketSlots, tableCount: input.tableCount ?? 1, categories, id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format === 'Round robin' ? ['Match wins', 'Game difference', 'Games won'] : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
+  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, bracketSlots, tableCount: input.tableCount ?? 1, categories, id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format === 'Round robin' ? (categoryInput.some((category) => category.groupStage) ? ['Match wins', 'Game difference', 'Games won', 'Point difference'] : ['Match wins', 'Game difference', 'Games won']) : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
 }
 
 
@@ -190,7 +211,15 @@ export function generateTournamentFixtures(tournament: Tournament, players: Play
       continue;
     }
     if (category.format === 'Round robin') {
-      pairRoundRobin(entries).forEach((pairs, round) => pairs.forEach(([one, two]) => fixtures.push(makeFixture(tournament, category, one, two, round + 1, players))));
+      if (category.groupStage?.groups?.length) {
+        const byId = new Map(entries.map((entry) => [entry.id, entry]));
+        for (const group of category.groupStage.groups) {
+          const groupEntries = group.entryIds.map((id) => byId.get(id)).filter((entry): entry is CategoryEntry => Boolean(entry));
+          pairRoundRobin(groupEntries).forEach((pairs, round) => pairs.forEach(([one, two]) => fixtures.push({ ...makeFixture(tournament, category, one, two, round + 1, players), round: `${group.name} · Round ${round + 1}` })));
+        }
+      } else {
+        pairRoundRobin(entries).forEach((pairs, round) => pairs.forEach(([one, two]) => fixtures.push(makeFixture(tournament, category, one, two, round + 1, players))));
+      }
     } else {
       const slots = orderEntries(category, entries);
       for (let index = 0; index + 1 < slots.length; index += 2) {

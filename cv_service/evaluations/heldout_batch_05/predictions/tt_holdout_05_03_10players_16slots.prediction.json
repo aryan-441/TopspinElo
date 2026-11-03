@@ -1,0 +1,488 @@
+{
+  "raw_ocr_lines": [
+    {
+      "text": "CEDARFIELD GAMES ASSOCIATION",
+      "confidence": 0.974,
+      "page": 1,
+      "x": 133.0,
+      "y": 124.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "INDIVIDUAL SINGLES - FIXTURE DRAW",
+      "confidence": 0.959,
+      "page": 1,
+      "x": 135.0,
+      "y": 191.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "WINNER",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 1397.0,
+      "y": 253.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "FINAL",
+      "confidence": 0.971,
+      "page": 1,
+      "x": 1254.0,
+      "y": 258.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "sF",
+      "confidence": 0.737,
+      "page": 1,
+      "x": 1095.0,
+      "y": 261.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "QF",
+      "confidence": 0.983,
+      "page": 1,
+      "x": 915.0,
+      "y": 264.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "R1",
+      "confidence": 0.968,
+      "page": 1,
+      "x": 740.0,
+      "y": 268.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Florence Woodhouse",
+      "confidence": 0.986,
+      "page": 1,
+      "x": 203.0,
+      "y": 368.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "01",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 138.0,
+      "y": 374.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 210.0,
+      "y": 487.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "02",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 139.0,
+      "y": 489.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 210.0,
+      "y": 604.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "03",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 140.0,
+      "y": 607.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Remy Ainsley",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 207.0,
+      "y": 714.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "04",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 143.0,
+      "y": 722.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Rafael Ludlow",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 211.0,
+      "y": 833.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "05",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 145.0,
+      "y": 838.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 215.0,
+      "y": 951.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "06",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 147.0,
+      "y": 954.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Elodie Calloway",
+      "confidence": 0.988,
+      "page": 1,
+      "x": 216.0,
+      "y": 1065.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "07",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 147.0,
+      "y": 1068.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Quinn Truscott",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 220.0,
+      "y": 1181.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "08",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 151.0,
+      "y": 1188.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Lara Maddock",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 220.0,
+      "y": 1298.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "09",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 153.0,
+      "y": 1304.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 225.0,
+      "y": 1417.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "10",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 155.0,
+      "y": 1419.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Quinn Corbett",
+      "confidence": 0.976,
+      "page": 1,
+      "x": 224.0,
+      "y": 1531.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "11",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 157.0,
+      "y": 1538.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.992,
+      "page": 1,
+      "x": 229.0,
+      "y": 1652.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "12",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 159.0,
+      "y": 1654.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Molly Woodhouse",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 229.0,
+      "y": 1766.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "13",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 162.0,
+      "y": 1770.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Poppy Parrish",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 228.0,
+      "y": 1880.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "14",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 163.0,
+      "y": 1888.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 232.0,
+      "y": 1997.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "15",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 166.0,
+      "y": 2003.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Alma Barnett",
+      "confidence": 0.962,
+      "page": 1,
+      "x": 235.0,
+      "y": 2114.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "16",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 168.0,
+      "y": 2119.0,
+      "width": 1684,
+      "height": 2382
+    },
+    {
+      "text": "Draw steward",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 168.0,
+      "y": 2262.0,
+      "width": 1684,
+      "height": 2382
+    }
+  ],
+  "structureDraft": {
+    "format": "Knockout",
+    "bracketSlots": [
+      "Florence Woodhouse",
+      null,
+      null,
+      "Remy Ainsley",
+      "Rafael Ludlow",
+      null,
+      "Elodie Calloway",
+      "Quinn Truscott",
+      "Lara Maddock",
+      null,
+      "Quinn Corbett",
+      null,
+      "Molly Woodhouse",
+      "Poppy Parrish",
+      null,
+      "Alma Barnett"
+    ],
+    "byeSlotNumbers": [
+      2,
+      3,
+      6,
+      10,
+      12,
+      15
+    ],
+    "entries": [
+      {
+        "name": "Florence Woodhouse",
+        "slot": 1,
+        "confidence": 0.999
+      },
+      {
+        "name": "Remy Ainsley",
+        "slot": 4,
+        "confidence": 0.998
+      },
+      {
+        "name": "Rafael Ludlow",
+        "slot": 5,
+        "confidence": 0.995
+      },
+      {
+        "name": "Elodie Calloway",
+        "slot": 7,
+        "confidence": 0.997
+      },
+      {
+        "name": "Quinn Truscott",
+        "slot": 8,
+        "confidence": 0.997
+      },
+      {
+        "name": "Lara Maddock",
+        "slot": 9,
+        "confidence": 0.995
+      },
+      {
+        "name": "Quinn Corbett",
+        "slot": 11,
+        "confidence": 0.998
+      },
+      {
+        "name": "Molly Woodhouse",
+        "slot": 13,
+        "confidence": 0.996
+      },
+      {
+        "name": "Poppy Parrish",
+        "slot": 14,
+        "confidence": 0.999
+      },
+      {
+        "name": "Alma Barnett",
+        "slot": 16,
+        "confidence": 0.998
+      }
+    ],
+    "openingMatches": [
+      [
+        "Florence Woodhouse",
+        null
+      ],
+      [
+        null,
+        "Remy Ainsley"
+      ],
+      [
+        "Rafael Ludlow",
+        null
+      ],
+      [
+        "Elodie Calloway",
+        "Quinn Truscott"
+      ],
+      [
+        "Lara Maddock",
+        null
+      ],
+      [
+        "Quinn Corbett",
+        null
+      ],
+      [
+        "Molly Woodhouse",
+        "Poppy Parrish"
+      ],
+      [
+        null,
+        "Alma Barnett"
+      ]
+    ],
+    "review": {
+      "missingSlots": [],
+      "duplicateSlots": [],
+      "requiresReview": true,
+      "notes": [
+        "Map names to registered app entrants and confirm every BYE and match before applying.",
+        "Later-round connector paths are not inferred by this model."
+      ]
+    }
+  }
+}

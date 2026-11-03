@@ -1,0 +1,242 @@
+{
+  "raw_ocr_lines": [
+    {
+      "text": "Alderbrook Table Tennis Circuit",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 144.0,
+      "y": 78.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "COMMUNITY SERIES",
+      "confidence": 0.964,
+      "page": 1,
+      "x": 411.0,
+      "y": 156.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "SINGLES BRACKET /",
+      "confidence": 0.917,
+      "page": 1,
+      "x": 145.0,
+      "y": 157.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "SF",
+      "confidence": 0.992,
+      "page": 1,
+      "x": 702.0,
+      "y": 235.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "FINAL",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 355.0,
+      "y": 237.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "QF",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 1039.0,
+      "y": 237.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "WINNER",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 139.0,
+      "y": 240.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 1261.0,
+      "y": 339.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "01",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 1196.0,
+      "y": 340.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "02 Gillian Garwood",
+      "confidence": 0.973,
+      "page": 1,
+      "x": 1195.0,
+      "y": 453.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "03 Nora Connelly",
+      "confidence": 0.975,
+      "page": 1,
+      "x": 1195.0,
+      "y": 566.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "04 Alana Avery",
+      "confidence": 0.951,
+      "page": 1,
+      "x": 1194.0,
+      "y": 677.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "05 Esme Branson",
+      "confidence": 0.967,
+      "page": 1,
+      "x": 1196.0,
+      "y": 797.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "06 Felicity Wetherby",
+      "confidence": 0.971,
+      "page": 1,
+      "x": 1192.0,
+      "y": 906.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "07 BYE",
+      "confidence": 0.921,
+      "page": 1,
+      "x": 1192.0,
+      "y": 1023.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "08 Avery Clifton",
+      "confidence": 0.963,
+      "page": 1,
+      "x": 1194.0,
+      "y": 1139.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "Umpire:",
+      "confidence": 0.986,
+      "page": 1,
+      "x": 1469.0,
+      "y": 1301.0,
+      "width": 1584,
+      "height": 1224
+    },
+    {
+      "text": "DRAW CONTROL",
+      "confidence": 0.971,
+      "page": 1,
+      "x": 1198.0,
+      "y": 1302.0,
+      "width": 1584,
+      "height": 1224
+    }
+  ],
+  "structureDraft": {
+    "format": "Knockout",
+    "bracketSlots": [
+      null,
+      "Gillian Garwood",
+      "Nora Connelly",
+      "Alana Avery",
+      "Esme Branson",
+      "Felicity Wetherby",
+      null,
+      "Avery Clifton"
+    ],
+    "byeSlotNumbers": [
+      1,
+      7
+    ],
+    "entries": [
+      {
+        "name": "Gillian Garwood",
+        "slot": 2,
+        "confidence": 0.973
+      },
+      {
+        "name": "Nora Connelly",
+        "slot": 3,
+        "confidence": 0.975
+      },
+      {
+        "name": "Alana Avery",
+        "slot": 4,
+        "confidence": 0.951
+      },
+      {
+        "name": "Esme Branson",
+        "slot": 5,
+        "confidence": 0.967
+      },
+      {
+        "name": "Felicity Wetherby",
+        "slot": 6,
+        "confidence": 0.971
+      },
+      {
+        "name": "Avery Clifton",
+        "slot": 8,
+        "confidence": 0.963
+      }
+    ],
+    "openingMatches": [
+      [
+        null,
+        "Gillian Garwood"
+      ],
+      [
+        "Nora Connelly",
+        "Alana Avery"
+      ],
+      [
+        "Esme Branson",
+        "Felicity Wetherby"
+      ],
+      [
+        null,
+        "Avery Clifton"
+      ]
+    ],
+    "review": {
+      "missingSlots": [],
+      "duplicateSlots": [],
+      "requiresReview": true,
+      "notes": [
+        "Map names to registered app entrants and confirm every BYE and match before applying.",
+        "Later-round connector paths are not inferred by this model."
+      ]
+    }
+  }
+}

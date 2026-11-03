@@ -1,0 +1,509 @@
+{
+  "raw_ocr_lines": [
+    {
+      "text": "BRAMBLEFORD INVITATIONAL",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 140.0,
+      "y": 75.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "OPEN SINGLES | DRAW REGISTER",
+      "confidence": 0.956,
+      "page": 1,
+      "x": 142.0,
+      "y": 150.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Sheet",
+      "confidence": 0.987,
+      "page": 1,
+      "x": 1815.0,
+      "y": 151.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "/ Convenor",
+      "confidence": 0.942,
+      "page": 1,
+      "x": 1930.0,
+      "y": 151.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "WINNER",
+      "confidence": 0.989,
+      "page": 1,
+      "x": 2145.0,
+      "y": 210.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "FINAL",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 1989.0,
+      "y": 223.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "R1",
+      "confidence": 0.991,
+      "page": 1,
+      "x": 823.0,
+      "y": 224.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "SF",
+      "confidence": 0.981,
+      "page": 1,
+      "x": 1615.0,
+      "y": 225.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "QF",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 1220.0,
+      "y": 226.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Olivia Holman",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 180.0,
+      "y": 286.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "01",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 103.0,
+      "y": 288.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 178.0,
+      "y": 364.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "02",
+      "confidence": 0.994,
+      "page": 1,
+      "x": 105.0,
+      "y": 366.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Zara Rivington",
+      "confidence": 0.947,
+      "page": 1,
+      "x": 179.0,
+      "y": 442.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "03",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 103.0,
+      "y": 445.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Sofia Eddison",
+      "confidence": 0.962,
+      "page": 1,
+      "x": 179.0,
+      "y": 520.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "04",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 104.0,
+      "y": 523.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "05",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 102.0,
+      "y": 602.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Frances Pollard",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 182.0,
+      "y": 603.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Rosa Barrington",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 179.0,
+      "y": 680.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "06",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 104.0,
+      "y": 681.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 179.0,
+      "y": 759.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "07",
+      "confidence": 1.0,
+      "page": 1,
+      "x": 102.0,
+      "y": 760.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Cora Davenport",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 180.0,
+      "y": 839.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "08",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 105.0,
+      "y": 841.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Bella Gregory",
+      "confidence": 0.977,
+      "page": 1,
+      "x": 178.0,
+      "y": 914.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "09",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 102.0,
+      "y": 918.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Callum Cranford",
+      "confidence": 0.986,
+      "page": 1,
+      "x": 180.0,
+      "y": 998.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "10",
+      "confidence": 0.993,
+      "page": 1,
+      "x": 105.0,
+      "y": 1000.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Sadie Fairburn",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 181.0,
+      "y": 1076.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "11",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 102.0,
+      "y": 1077.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "12",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 105.0,
+      "y": 1158.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Solomon Maclean",
+      "confidence": 0.996,
+      "page": 1,
+      "x": 183.0,
+      "y": 1158.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Rufus Connelly",
+      "confidence": 0.985,
+      "page": 1,
+      "x": 180.0,
+      "y": 1232.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "13",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 102.0,
+      "y": 1237.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 180.0,
+      "y": 1314.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "14",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 104.0,
+      "y": 1315.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Willow Oldham",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 180.0,
+      "y": 1392.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "15",
+      "confidence": 1.0,
+      "page": 1,
+      "x": 102.0,
+      "y": 1394.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "16",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 105.0,
+      "y": 1474.0,
+      "width": 2382,
+      "height": 1684
+    },
+    {
+      "text": "Jenson Elwood",
+      "confidence": 0.988,
+      "page": 1,
+      "x": 180.0,
+      "y": 1474.0,
+      "width": 2382,
+      "height": 1684
+    }
+  ],
+  "structureDraft": {
+    "format": "Knockout",
+    "bracketSlots": [
+      "Olivia Holman",
+      null,
+      "Zara Rivington",
+      "Sofia Eddison",
+      "Frances Pollard",
+      "Rosa Barrington",
+      null,
+      "Cora Davenport",
+      "Bella Gregory",
+      "Callum Cranford",
+      "Sadie Fairburn",
+      "Solomon Maclean",
+      "Rufus Connelly",
+      null,
+      "Willow Oldham",
+      "Jenson Elwood"
+    ],
+    "byeSlotNumbers": [
+      2,
+      7,
+      14
+    ],
+    "entries": [
+      {
+        "name": "Olivia Holman",
+        "slot": 1,
+        "confidence": 0.999
+      },
+      {
+        "name": "Zara Rivington",
+        "slot": 3,
+        "confidence": 0.999
+      },
+      {
+        "name": "Sofia Eddison",
+        "slot": 4,
+        "confidence": 0.998
+      },
+      {
+        "name": "Frances Pollard",
+        "slot": 5,
+        "confidence": 0.999
+      },
+      {
+        "name": "Rosa Barrington",
+        "slot": 6,
+        "confidence": 0.997
+      },
+      {
+        "name": "Cora Davenport",
+        "slot": 8,
+        "confidence": 0.998
+      },
+      {
+        "name": "Bella Gregory",
+        "slot": 9,
+        "confidence": 0.996
+      },
+      {
+        "name": "Callum Cranford",
+        "slot": 10,
+        "confidence": 0.993
+      },
+      {
+        "name": "Sadie Fairburn",
+        "slot": 11,
+        "confidence": 0.999
+      },
+      {
+        "name": "Solomon Maclean",
+        "slot": 12,
+        "confidence": 0.997
+      },
+      {
+        "name": "Rufus Connelly",
+        "slot": 13,
+        "confidence": 0.999
+      },
+      {
+        "name": "Willow Oldham",
+        "slot": 15,
+        "confidence": 1.0
+      },
+      {
+        "name": "Jenson Elwood",
+        "slot": 16,
+        "confidence": 0.997
+      }
+    ],
+    "openingMatches": [
+      [
+        "Olivia Holman",
+        null
+      ],
+      [
+        "Zara Rivington",
+        "Sofia Eddison"
+      ],
+      [
+        "Frances Pollard",
+        "Rosa Barrington"
+      ],
+      [
+        null,
+        "Cora Davenport"
+      ],
+      [
+        "Bella Gregory",
+        "Callum Cranford"
+      ],
+      [
+        "Sadie Fairburn",
+        "Solomon Maclean"
+      ],
+      [
+        "Rufus Connelly",
+        null
+      ],
+      [
+        "Willow Oldham",
+        "Jenson Elwood"
+      ]
+    ],
+    "review": {
+      "missingSlots": [],
+      "duplicateSlots": [],
+      "requiresReview": true,
+      "notes": [
+        "Map names to registered app entrants and confirm every BYE and match before applying.",
+        "Later-round connector paths are not inferred by this model."
+      ]
+    }
+  }
+}

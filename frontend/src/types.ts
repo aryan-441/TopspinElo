@@ -66,6 +66,8 @@ export type Standing = { playerId: string; played: number; wins: number; losses:
 export type CategoryKind = 'Singles' | 'Doubles' | 'Team';
 export type TeamSystem = 'new_swaythling' | 'corbillon' | 'olympic' | 'best_of_7' | 'best_of_9';
 export type CategoryEntry = { id: string; name: string; playerIds: string[]; seed?: number; doublesPlayerIds?: string[] };
+export type TournamentGroup = { id: string; name: string; entryIds: string[] };
+export type GroupStageConfig = { groupCount: number; advancePerGroup: number; groups?: TournamentGroup[]; advanced?: boolean };
 export type TournamentCategory = {
   id: string;
   name: string;
@@ -78,6 +80,7 @@ export type TournamentCategory = {
   teamSystem?: TeamSystem;
   standings?: Standing[];
   tieBreaks?: string[];
+  groupStage?: GroupStageConfig;
 };
 
 export type Tournament = {
