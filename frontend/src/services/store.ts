@@ -151,7 +151,7 @@ export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'da
     const byeEntryIds = category.format === 'Knockout' ? importedSlots ? importedSlots.flatMap((id, index) => id || importedSlots[index ^ 1] === null ? [] : [importedSlots[index ^ 1]!]) : sorted.slice(0, size - entryCount).map((entry) => entry.id) : [];
     return { ...category, entries: sorted, format: category.format ?? input.format, bracketSlots: slots, byeEntryIds, groupStage, standings: sorted.map((entry) => ({ playerId: entry.id, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), tieBreaks: groupStage ? ['Match wins', 'Game difference', 'Games won', 'Point difference'] : ['Match wins', 'Game difference', 'Games won'] };
   });
-  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, bracketSlots, tableCount: input.tableCount ?? 1, categories, id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format === 'Round robin' ? (categoryInput.some((category) => category.groupStage) ? ['Match wins', 'Game difference', 'Games won', 'Point difference'] : ['Match wins', 'Game difference', 'Games won']) : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
+  return { ...input, entrantIds: orderedEntrants, seeds: input.seeds ?? {}, bracketSlots, tableCount: input.tableCount ?? 1, categories, id: crypto.randomUUID(), status: 'Upcoming', byePlayerIds, matchIds: [], rounds, completed: 0, progressPaused: false, tieBreaks: input.format !== 'Knockout' ? (categoryInput.some((category) => category.groupStage) ? ['Match wins', 'Game difference', 'Games won', 'Point difference'] : ['Match wins', 'Game difference', 'Games won']) : [], standings: orderedEntrants.map((playerId) => ({ playerId, played: 0, wins: 0, losses: 0, gamesWon: 0, gamesLost: 0, pointsFor: 0, pointsAgainst: 0 })), audit: [] };
 }
 
 
@@ -206,11 +206,11 @@ export function generateTournamentFixtures(tournament: Tournament, players: Play
   for (const category of tournament.categories) {
     const entries = category.entries.filter((entry) => entry.playerIds.length > 0);
     if (category.kind === 'Team') {
-      const rounds = category.format === 'Round robin' ? pairRoundRobin(entries) : [pairKnockoutRound(category, entries)];
+      const rounds = category.format !== 'Knockout' ? pairRoundRobin(entries) : [pairKnockoutRound(category, entries)];
       rounds[0]?.forEach(([one, two], tieIndex) => fixtures.push(...teamTieFixtures(tournament, category, one, two, 1, tieIndex, players)));
       continue;
     }
-    if (category.format === 'Round robin') {
+    if (category.format !== 'Knockout') {
       if (category.groupStage?.groups?.length) {
         const byId = new Map(entries.map((entry) => [entry.id, entry]));
         for (const group of category.groupStage.groups) {

@@ -67,12 +67,12 @@ export type CategoryKind = 'Singles' | 'Doubles' | 'Team';
 export type TeamSystem = 'new_swaythling' | 'corbillon' | 'olympic' | 'best_of_7' | 'best_of_9';
 export type CategoryEntry = { id: string; name: string; playerIds: string[]; seed?: number; doublesPlayerIds?: string[] };
 export type TournamentGroup = { id: string; name: string; entryIds: string[] };
-export type GroupStageConfig = { groupCount: number; advancePerGroup: number; groups?: TournamentGroup[]; advanced?: boolean };
+export type GroupStageConfig = { groupCount: number; advancePerGroup: number; advanceToKnockout?: boolean; groups?: TournamentGroup[]; advanced?: boolean };
 export type TournamentCategory = {
   id: string;
   name: string;
   kind: CategoryKind;
-  format: 'Round robin' | 'Knockout';
+  format: 'Group stage' | 'Round robin' | 'Knockout';
   entries: CategoryEntry[];
   seeds?: Record<string, number>;
   bracketSlots?: (string | null)[];
@@ -86,7 +86,7 @@ export type TournamentCategory = {
 export type Tournament = {
   id: string;
   name: string;
-  format: 'Round robin' | 'Knockout';
+  format: 'Group stage' | 'Round robin' | 'Knockout';
   status: 'Running' | 'Upcoming' | 'Completed' | 'Paused';
   date: string;
   venue: string;
