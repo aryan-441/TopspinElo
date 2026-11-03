@@ -163,7 +163,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
     const serviceInterval = atDeuceBeforePoint ? 1 : match.pointsPerGame === 11 ? 2 : 5;
     const serverChangedAfterPoint = totalAfter % serviceInterval === 0;
     const previousServerId = serverChangedAfterPoint ? match.doublesOrder?.length === 4 ? match.doublesOrder[(match.doublesOrder.indexOf(match.serverId) + 3) % 4] : match.serverId === match.playerOneId ? match.playerTwoId : match.playerOneId : match.serverId;
-    const next = { ...match, score: beforeScore, serverId: previousServerId, events: [{ id: crypto.randomUUID(), winnerId: latestPoint.winnerId, score: latestPoint.score, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), reason, reversedEventId: latestPoint.id, kind: 'Correction' as const }, ...match.events.filter((event) => event.id !== latestPoint.id)] };
+    const next = { ...match, score: beforeScore, serverId: previousServerId, events: [{ id: crypto.randomUUID(), winnerId: latestPoint.winnerId, score: latestPoint.score, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), reason, reversedEvent: latestPoint, recordedAt: new Date().toISOString(), game:latestPoint.game, reversedEventId: latestPoint.id, kind: 'Correction' as const }, ...match.events.filter((event) => event.id !== latestPoint.id)] };
     updateMatch(next); setUndoOpen(false); toast(`Last point removed · ${reason}`);
   };
 

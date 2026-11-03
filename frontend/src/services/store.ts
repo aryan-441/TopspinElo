@@ -1,18 +1,20 @@
+import { demoWorkspace } from '../data/demo';
 import { initialWorkspace } from '../data/seed';
 import type { CategoryEntry, GroupStageConfig, Match, Player, TeamSystem, Tournament, TournamentCategory, Workspace } from '../types';
 import { teamMatchSequence } from './tableTennisRules';
 
-const STORAGE_KEY = 'rallydesk-workspace-v2';
+export const demoMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('demo');
+const STORAGE_KEY = demoMode ? 'rallydesk-demo-v1' : 'rallydesk-workspace-v2';
 
 export function loadWorkspace(): Workspace {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return structuredClone(initialWorkspace);
+    if (!saved) return demoMode ? demoWorkspace() : structuredClone(initialWorkspace);
     const parsed = JSON.parse(saved) as Workspace;
-    if (!parsed.players || !parsed.matches || !parsed.tournaments) return structuredClone(initialWorkspace);
+    if (!parsed.players || !parsed.matches || !parsed.tournaments) return demoMode ? demoWorkspace() : structuredClone(initialWorkspace);
     return normalizeWorkspace(parsed);
   } catch {
-    return structuredClone(initialWorkspace);
+    return demoMode ? demoWorkspace() : structuredClone(initialWorkspace);
   }
 }
 
@@ -76,7 +78,7 @@ export function saveWorkspace(workspace: Workspace): boolean {
 
 export function resetWorkspace() {
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* Save effect reports storage failures to the organiser. */ }
-  return structuredClone(initialWorkspace);
+  return demoMode ? demoWorkspace() : structuredClone(initialWorkspace);
 }
 
 export function createPlayer(name: string, hand: Player['hand'] = null, grip: Player['grip'] = null, style: Player['style'] = null): Player {

@@ -14,6 +14,7 @@ export function Overview({ workspace, players, onOpenMatch, onPage, onNewMatch, 
   const tablesInUse = new Set(workspace.matches.map((match) => match.table).filter(Boolean)).size;
 
   return <div className="page-content overview-page">
+    <section className="principles-banner" aria-label="Rallydesk principles"><span className="principles-mark" aria-hidden="true">R</span><div><b>Free to use, source available, with no ads</b><span>Made for table tennis clubs and organisers.</span></div><a href="https://github.com/aryan-441/table-tennis-manager" target="_blank" rel="noreferrer">Explore the GitHub project <ArrowRight size={14} /></a></section>
     <div className="welcome-line"><div><p className="eyebrow">{today} <span className="eyebrow-rule" /> {workspace.clubName || 'YOUR CLUB'}</p><h2>Your club desk<span className="greeting-period">.</span></h2><p className="welcome-sub">Add players, schedule a match, or build your next tournament.</p></div><div className="overview-quick">{workspace.players.length < 2 ? <button className="text-action" onClick={onNewPlayer}><Users size={15} /> Add your first player</button> : <><button className="text-action" onClick={onNewTournament}><Trophy size={15} /> Plan a tournament</button><button className="text-action" onClick={onPage.bind(null, 'players')}><Users size={15} /> View players</button></>}</div></div>
 
     <section className="today-board" aria-label="Today's match">

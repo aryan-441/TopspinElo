@@ -1247,3 +1247,10 @@ main.page-wrap .page-content .stat-cell > b i { color: var(--text-positive); }
 .group-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-block:1rem}.group-board caption,.group-workbench summary{font-weight:700;padding:.75rem}.group-board button,.group-board select{padding:.4rem}.group-workbench summary{cursor:pointer}
 
 .analysis-filters,.metric-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.8rem;margin-block:1rem}.analysis-filters label{display:grid;gap:.3rem}.analysis-filters select,.analysis-filters input{width:100%;padding:.45rem;border:1px solid var(--line);border-radius:5px}.metric-board>div{background:var(--pine-soft);padding:.85rem;display:grid;gap:.35rem;border-radius:8px}.metric-board strong{font:700 1.65rem var(--display);color:var(--pine-deep)}.metric-board span{font-size:.8rem}.metric-board meter{width:100%;accent-color:var(--orange)}
+
+.trend-plot{margin-top:1rem;background:var(--pine-soft);padding:1rem;border-radius:8px}.trend-plot svg{display:block;width:100%;max-height:220px}.trend-plot>span{font-size:.8rem;color:var(--muted)}
+.analysis h4{margin-top:1.6rem}.analysis details{margin-block:1rem}.analysis summary{cursor:pointer;padding:.6rem 0;font-weight:600}.analysis p{line-height:1.7}.analysis meter{height:8px}
+.analysis-filters label{font-size:.8rem;color:var(--muted)}.analysis-filters select:focus,.analysis-filters input:focus{outline:2px solid var(--orange);outline-offset:2px}
+.group-board{max-height:65vh;overflow:auto}.group-board table{width:100%}.group-board label{display:grid;gap:.5rem}.group-board button{border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--red);cursor:pointer}
+@media(prefers-reduced-motion:no-preference){.metric-board>div{animation:metric-arrive .3s ease-out both}@keyframes metric-arrive{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}}
+@media(max-width:600px){.metric-board{grid-template-columns:repeat(2,minmax(0,1fr))}.analysis-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.analysis{padding:16px!important}.analysis select{max-width:100%}}

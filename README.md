@@ -123,3 +123,14 @@ pnpm run dev
 ## Additional feature requirements
 
 The approved product context and phased requirements for optional player attributes, group-stage tournaments, account roles, developer administration, tournament recovery, and future web deployment are recorded in [docs/ADDITIONAL_FEATURE_REQUIREMENTS.md](docs/ADDITIONAL_FEATURE_REQUIREMENTS.md). Treat this as the source of truth for future planning. Implement in manageable phases, preserve existing functionality, and inspect the current architecture before proposing changes. The immediate isolated feature is optional player attributes; do not attempt the full roadmap as one change.
+
+
+## Licence proposal awaiting approval
+
+The proposed MIT terms are in LICENSE-MIT-PROPOSAL.txt for the creator's review. Adoption is pending approval.
+
+## Recovery and demo
+
+Open the app with ?demo to use sample records in a separate browser storage key. The demo contains eight fictional players and a group-stage cup with point histories. Production workspace records use a different key.
+
+After qualification, organisers can override the qualifiers with a reason, review or regenerate the random draw, or import it. Rewind qualification removes the downstream draw, keeps group results, and pauses progression for corrections. Before/after match records remain in the exportable change journal. Complete tournament data and workspace JSON exports both contain a restorable workspace. The guide describes every main screen and these recovery steps.

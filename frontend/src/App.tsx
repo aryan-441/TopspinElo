@@ -2,7 +2,7 @@ import { qualifierDraw } from './services/qualifierDraw';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Image, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { assignSeededGroups, createMatch, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, recordWorkspaceChanges, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
+import { demoMode, assignSeededGroups, createMatch, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, recordWorkspaceChanges, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
 import type { CategoryEntry, CategoryKind, Match, PageId, Player, Standing, TeamSystem, Tournament, TournamentCategory, TournamentGroup, Workspace } from './types';
 import { Overview } from './views/Overview';
 import { MatchCenter, LiveScoring } from './views/MatchCenter';
@@ -158,6 +158,7 @@ export default function App() {
                 byeEntryIds: bracketSlots.filter((id, i): id is string => !!id && !bracketSlots[i ^ 1]), tieBreaks: category.tieBreaks,
               };
               knockout.awaitingDraw = true;
+              knockout.qualifierPlaces = Object.fromEntries(qualifiers.map(q=>[q.entry.id,q.place]));
               generatedCategories.push(knockout);
               category.groupStage = { ...category.groupStage, advanced: true };
 
@@ -306,7 +307,7 @@ export default function App() {
           <button ref={mobileMenuRef} className="mobile-menu icon-button" onClick={() => setMobileNav(true)} aria-label="Open navigation" aria-expanded={mobileNav} aria-controls="rallydesk-sidebar"><Menu size={20} /></button>
           <div className="breadcrumb"><span>{workspace.clubName || 'Rallydesk'}</span><span className="breadcrumb-slash">/</span><b>{pageTitles[page]}</b></div>
           <div className="topbar-right">
-            <span className="preview-pill"><span /> Local preview</span>
+            <span className="preview-pill"><span /> {demoMode ? 'Demo · sample records' : 'Local preview'}</span>
             <button className="topbar-icon icon-button" aria-label="Notifications" onClick={() => setToast('You’re all caught up')}><Bell size={18} /><i /></button>
           </div>
         </header>
@@ -326,7 +327,7 @@ export default function App() {
           {page === 'players' && <PlayersView workspace={workspace} query={query} onQuery={setQuery} selectedId={selectedPlayerId} onSelect={setSelectedPlayerId} onAdd={() => setCreateDialog('player')} onMatch={(id) => { setSelectedPlayerId(null); setCreateDialog('match'); if (id) setToast('Choose this player in the match setup.'); }} onUpdatePlayer={(id, changes) => update((current) => ({ ...current, players: current.players.map((player) => player.id === id ? { ...player, ...changes } : player) }))} />}
           {page === 'referees' && <RefereesView workspace={workspace} onChange={replaceWorkspace} toast={setToast} />}
           {page === 'tournaments' && <TournamentsView workspace={workspace} players={playerById} selectedId={selectedTournamentId} onSelect={setSelectedTournamentId} onCreate={openTournamentSetup} onOpenMatch={setActiveMatchId} onChange={(next) => replaceWorkspace(next)} onSaveMatch={saveScoredMatch} onDeleteMatch={deleteMatch} toast={setToast} />}
-          {page === 'statistics' && <StatisticsView workspace={workspace} />}
+          {page === 'statistics' && <StatisticsView workspace={workspace} onOpenMatch={setActiveMatchId} />}
           {page === 'exports' && <ExportsView workspace={workspace} onToast={setToast} />}
           {page === 'settings' && <SettingsView workspace={workspace} clubName={workspace.clubName ?? ''} onSaveClubName={(name) => { update((current) => ({ ...current, clubName: name })); setToast(name ? `${name} saved` : 'Club name cleared'); }} onImportWorkspace={replaceWorkspace} onReset={reset} />}
           {page === 'about' && <AboutView />}{page === 'guide' && <ClubGuide navigate={setPage} />}

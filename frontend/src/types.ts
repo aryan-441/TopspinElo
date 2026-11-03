@@ -16,7 +16,7 @@ export type Player = {
   archivedAt?: string;
 };
 
-export type PointEvent = { serverId?: string; game?: number; reason?: string; reversedEventId?: string; recordedAt?: string; id: string; winnerId: string; score: string; time: string; kind: 'Point' | 'Fault' | 'Let' | 'Correction' };
+export type PointEvent = { reversedEvent?: PointEvent; serverId?: string; game?: number; reason?: string; reversedEventId?: string; recordedAt?: string; id: string; winnerId: string; score: string; time: string; kind: 'Point' | 'Fault' | 'Let' | 'Correction' };
 
 export type Match = {
   startRatings?: Record<string, number>;
@@ -72,6 +72,7 @@ export type TournamentGroup = { id: string; name: string; entryIds: string[] };
 export type GroupStageConfig = { distribution?: 'snake' | 'bands' | 'random'; drawSeed?: string; groupCount: number; advancePerGroup: number; advanceToKnockout?: boolean; groups?: TournamentGroup[]; advanced?: boolean };
 export type TournamentCategory = {
   awaitingDraw?: boolean;
+  qualifierPlaces?: Record<string, number>;
   id: string;
   name: string;
   kind: CategoryKind;
