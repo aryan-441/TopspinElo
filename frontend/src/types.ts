@@ -1,13 +1,13 @@
-export type PageId = 'overview' | 'matches' | 'tournaments' | 'players' | 'referees' | 'statistics' | 'exports' | 'settings' | 'about';
+export type PageId = 'overview' | 'matches' | 'tournaments' | 'players' | 'referees' | 'statistics' | 'exports' | 'settings' | 'about' | 'guide';
 export type MatchStatus = 'In progress' | 'Scheduled' | 'Completed' | 'Postponed' | 'Not played';
 
 export type Player = {
   id: string;
   name: string;
   initials: string;
-  hand: 'Right' | 'Left';
-  grip: 'Shakehand' | 'Penhold';
-  style: string;
+  hand: 'Right' | 'Left' | null;
+  grip: 'Shakehand' | 'Penhold' | null;
+  style: string | null;
   rating: number;
   wins: number;
   losses: number;
@@ -16,9 +16,11 @@ export type Player = {
   archivedAt?: string;
 };
 
-export type PointEvent = { id: string; winnerId: string; score: string; time: string; kind: 'Point' | 'Fault' | 'Let' | 'Correction' };
+export type PointEvent = { serverId?: string; game?: number; reason?: string; reversedEventId?: string; recordedAt?: string; id: string; winnerId: string; score: string; time: string; kind: 'Point' | 'Fault' | 'Let' | 'Correction' };
 
 export type Match = {
+  startRatings?: Record<string, number>;
+  completedAt?: string;
   id: string;
   playerOneId: string;
   playerTwoId: string;
@@ -67,8 +69,9 @@ export type CategoryKind = 'Singles' | 'Doubles' | 'Team';
 export type TeamSystem = 'new_swaythling' | 'corbillon' | 'olympic' | 'best_of_7' | 'best_of_9';
 export type CategoryEntry = { id: string; name: string; playerIds: string[]; seed?: number; doublesPlayerIds?: string[] };
 export type TournamentGroup = { id: string; name: string; entryIds: string[] };
-export type GroupStageConfig = { groupCount: number; advancePerGroup: number; advanceToKnockout?: boolean; groups?: TournamentGroup[]; advanced?: boolean };
+export type GroupStageConfig = { distribution?: 'snake' | 'bands' | 'random'; drawSeed?: string; groupCount: number; advancePerGroup: number; advanceToKnockout?: boolean; groups?: TournamentGroup[]; advanced?: boolean };
 export type TournamentCategory = {
+  awaitingDraw?: boolean;
   id: string;
   name: string;
   kind: CategoryKind;

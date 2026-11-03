@@ -1,5 +1,5 @@
 import { initialWorkspace } from '../data/seed';
-import type { CategoryEntry, Match, Player, TeamSystem, Tournament, TournamentCategory, Workspace } from '../types';
+import type { CategoryEntry, GroupStageConfig, Match, Player, TeamSystem, Tournament, TournamentCategory, Workspace } from '../types';
 import { teamMatchSequence } from './tableTennisRules';
 
 const STORAGE_KEY = 'rallydesk-workspace-v2';
@@ -79,7 +79,7 @@ export function resetWorkspace() {
   return structuredClone(initialWorkspace);
 }
 
-export function createPlayer(name: string, hand: Player['hand'], grip: Player['grip'], style: string): Player {
+export function createPlayer(name: string, hand: Player['hand'] = null, grip: Player['grip'] = null, style: Player['style'] = null): Player {
   const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('');
   return { id: crypto.randomUUID(), name: name.trim(), initials, hand, grip, style, rating: 1000, wins: 0, losses: 0, pointsWon: 0, recent: [] };
 }
@@ -96,27 +96,34 @@ function seedRankOrder(size: number): number[] {
   return order;
 }
 
-function shuffle<T>(values: T[]): T[] {
+function shuffle<T>(values: T[], random = Math.random): T[] {
   const result = [...values];
-  for (let index = result.length - 1; index > 0; index -= 1) { const swap = Math.floor(Math.random() * (index + 1)); [result[index], result[swap]] = [result[swap], result[index]]; }
+  for (let index = result.length - 1; index > 0; index -= 1) { const swap = Math.floor(random() * (index + 1)); [result[index], result[swap]] = [result[swap], result[index]]; }
   return result;
 }
 
-export function assignSeededGroups(entries: CategoryEntry[], groupCount: number) {
+export function assignSeededGroups(entries: CategoryEntry[], groupCount: number, options: Pick<GroupStageConfig, 'distribution' | 'drawSeed'> = {}) {
   if (!Number.isInteger(groupCount) || groupCount < 2 || groupCount > Math.floor(entries.length / 2)) throw new Error('Choose at least two groups, with at least two entrants per group.');
   if (groupCount > 26) throw new Error('Choose no more than 26 groups.');
   const groups = Array.from({ length: groupCount }, (_, index) => ({ id: crypto.randomUUID(), name: `Group ${String.fromCharCode(65 + index)}`, entryIds: [] as string[] }));
   const seeded = entries.filter((entry) => Number.isInteger(entry.seed)).sort((a, b) => a.seed! - b.seed!);
-  const unseeded = shuffle(entries.filter((entry) => !Number.isInteger(entry.seed)));
-  const groupOrder = shuffle(groups);
-  const topSeeds = seeded.slice(0, groupCount);
-  topSeeds.forEach((entry, index) => groupOrder[index].entryIds.push(entry.id));
-  const seededGroups = new Map(topSeeds.map((entry, index) => [entry.id, groupOrder[index]]));
-  const remaining = [...seeded.slice(groupCount), ...unseeded];
-  for (const entry of remaining) {
-    const smallest = Math.min(...groups.map((group) => group.entryIds.length));
-    const eligible = shuffle(groups.filter((group) => group.entryIds.length === smallest && (!Number.isInteger(entry.seed) || !seededGroups.has(entry.id) || seededGroups.get(entry.id) !== group)));
-    (eligible.length ? eligible[0] : shuffle(groups.filter((group) => group.entryIds.length === smallest))[0]).entryIds.push(entry.id);
+  let state = 2166136261;
+  for (const char of options.drawSeed ?? '') {
+    state = Math.imul(state ^ char.charCodeAt(0), 16777619);
+  }
+  const random = options.drawSeed ? () => {
+    state = (Math.imul(1664525, state) + 1013904223) >>> 0;
+    return state / 4294967296;
+  } : Math.random;
+  const unseeded = entries.filter((entry) => !Number.isInteger(entry.seed));
+  const order = options.distribution === 'random'
+    ? shuffle(entries, random)
+    : [...seeded, ...shuffle(unseeded, random)];
+  for (let start = 0; start < order.length; start += groupCount) {
+    const band = order.slice(start, start + groupCount);
+    const placements = options.distribution === 'bands' ? shuffle(band, random) : band;
+    const reverse = (start / groupCount) % 2 === 1;
+    placements.forEach((entry, i) => groups[reverse ? groupCount - 1 - i : i].entryIds.push(entry.id));
   }
   return groups;
 }
@@ -137,7 +144,7 @@ export function createTournament(input: Pick<Tournament, 'name' | 'format' | 'da
   const categoryInput: TournamentCategory[] = input.categories?.length ? input.categories : [{ id: crypto.randomUUID(), name: 'Open singles', kind: 'Singles', format: input.format, entries: orderedEntrants.map((id) => ({ id, name: '', playerIds: [id] })) }];
   const categories = categoryInput.map((category) => {
     const entryCount = category.entries.length;
-    const groupStage = category.groupStage ? { ...category.groupStage, groups: category.groupStage.groups?.length ? category.groupStage.groups : assignSeededGroups(category.entries, category.groupStage.groupCount), advanced: false } : undefined;
+    const groupStage = category.groupStage ? { ...category.groupStage, groups: category.groupStage.groups?.length ? category.groupStage.groups : assignSeededGroups(category.entries, category.groupStage.groupCount, category.groupStage), advanced: false } : undefined;
     const size = 2 ** Math.ceil(Math.log2(Math.max(2, entryCount)));
       const seeded = category.entries.filter((entry) => entry.seed).sort((a, b) => a.seed! - b.seed!);
     const unseeded = shuffle(category.entries.filter((entry) => !entry.seed));

@@ -68,7 +68,7 @@ def backup_file(filename):
 class Player:
  
 
-    def __init__(self, name, grip, playing_hand, play_style, player_id=None):
+    def __init__(self, name, grip=None, playing_hand=None, play_style=None, player_id=None):
         # Assign permanent ID
         if player_id is not None:
             self.player_id = player_id
@@ -111,9 +111,6 @@ class Player:
         required_fields = {
             "player_id",
             "name",
-            "grip",
-            "playing_hand",
-            "play_style",
             "elo_rating",
             "matches_won",
             "matches_lost",
@@ -133,13 +130,13 @@ class Player:
         if not isinstance(player_data["name"], str) or not player_data["name"].strip():
             raise ValueError("'name' must be a non-empty string.")
 
-        if player_data["grip"] not in ALLOWED_GRIPS:
+        if player_data.get("grip") not in (*ALLOWED_GRIPS, None):
             raise ValueError(f"Invalid grip: {player_data['grip']!r}")
 
-        if player_data["playing_hand"] not in ALLOWED_PLAYING_HANDS:
+        if player_data.get("playing_hand") not in (*ALLOWED_PLAYING_HANDS, None):
             raise ValueError(f"Invalid playing hand: {player_data['playing_hand']!r}")
 
-        if player_data["play_style"] not in ALLOWED_PLAY_STYLES:
+        if player_data.get("play_style") not in (*ALLOWED_PLAY_STYLES, None):
             raise ValueError(f"Invalid play style: {player_data['play_style']!r}")
 
         number_fields = (
@@ -167,9 +164,9 @@ class Player:
 
         player = Player(
             name=player_data["name"],
-            grip=player_data["grip"],
-            playing_hand=player_data["playing_hand"],
-            play_style=player_data["play_style"],
+            grip=player_data.get("grip"),
+            playing_hand=player_data.get("playing_hand"),
+            play_style=player_data.get("play_style"),
             player_id=player_data["player_id"]
         )
 
@@ -356,20 +353,23 @@ class StorageManager:
         return save_bound_state
 
 
-def add_player(players, name, grip, playing_hand, play_style):
+def add_player(players, name, grip=None, playing_hand=None, play_style=None):
     name = name.strip()
     if not name:
         print("Player name cannot be empty.")
         return
-    if grip not in ALLOWED_GRIPS:
+    grip = None if grip == '' else grip
+    playing_hand = None if playing_hand == '' else playing_hand
+    play_style = None if play_style == '' else play_style
+    if grip not in (*ALLOWED_GRIPS, None):
         print("Invalid grip.")
         return
 
-    if playing_hand not in ALLOWED_PLAYING_HANDS:
+    if playing_hand not in (*ALLOWED_PLAYING_HANDS, None):
         print("Invalid playing hand.")
         return
 
-    if play_style not in ALLOWED_PLAY_STYLES:
+    if play_style not in (*ALLOWED_PLAY_STYLES, None):
         print("Invalid play style.")
         return
 

@@ -1,19 +1,19 @@
 import { useRef, useState } from 'react';
 import { Activity, AlertTriangle, ArrowDownToLine, ArrowRight, Check, Database, FileArchive, FileJson2, FileSpreadsheet, HardDriveDownload, Info, Mail, RefreshCw, ShieldCheck, Trophy, Upload, Users } from 'lucide-react';
-import type { Workspace } from '../types';
+import type { PageId, Workspace } from '../types';
 import { Dialog } from '../components/Dialog';
 
 export function AboutView() {
   return <div className="page-content utility-page about-page">
     <section className="about-hero utility-card">
       <div className="about-mark" aria-hidden="true"><i /><i /><i /></div>
-      <div><span className="eyebrow">TABLE TENNIS · CLUB OPERATIONS</span><h2>Rallydesk</h2><p>A calmer way to run club matches, organise tournaments, and understand the results.</p></div>
+      <div><span className="eyebrow">TABLE TENNIS · CLUB OPERATIONS</span><h2>Rallydesk</h2><p>Free to use and free of ads. Amid the noise of a tournament hall, one desk keeps track of who plays next and what happened at the table.</p></div>
     </section>
     <div className="about-grid">
-      <article className="utility-card about-card"><Users size={19} /><h3>Made for your club</h3><p>Start with an empty workspace, add the players you know, and name your club when you’re ready. Rallydesk doesn’t come with sample people or a prefilled club.</p></article>
-      <article className="utility-card about-card"><Trophy size={19} /><h3>From a match to a full draw</h3><p>Create one-off matches or tournaments with generated draws, then keep scores and standings together as play progresses.</p></article>
+      <article className="utility-card about-card"><Users size={19} /><h3>Made for your club</h3><p>Players can revisit a close match point by point. Coaches can use the same record to discern where a game turned and choose what to practise next.</p></article>
+      <article className="utility-card about-card"><Trophy size={19} /><h3>From a match to a full draw</h3><p>Referees record a point once. Organisers see the score and standings without copying numbers between draw sheets.</p></article>
       <article className="utility-card about-card"><Activity size={19} /><h3>Results you can review</h3><p>Player records and statistics are calculated from match results. Export tools help you keep a copy of the workspace data.</p></article>
-      <article className="utility-card about-card"><Info size={19} /><h3>Preview status</h3><p>This version stores its workspace in this browser. Accounts, cloud synchronisation, and production privacy controls are part of the planned release work.</p></article>
+      <article className="utility-card about-card"><Info size={19} /><h3>Behind the desk</h3><p>Your workspace lives in this browser. Rallydesk is being developed as an open-source project. Explore the <a href="https://github.com/aryan-441/table-tennis-manager">project source on GitHub</a>. Accounts, cloud synchronisation, and production privacy controls are part of the planned release work.</p></article>
     </div>
     <section className="utility-card about-support"><div><span className="eyebrow">NEED A HAND?</span><h3>Talk to the Rallydesk team</h3><p>Questions, feedback, or a problem to report? Send us a note.</p></div><a className="button button-primary" href="mailto:rallydesksupport@gmail.com"><Mail size={16} /> Email support <ArrowRight size={14} /></a></section>
   </div>;
@@ -27,12 +27,12 @@ export function ExportsView({ workspace, onToast }: { workspace: Workspace; onTo
   };
   const exportPlayers = () => {
     const header = 'player_id,name,hand,grip,style,rating,wins,losses,points_won';
-    const rows = workspace.players.map((player) => [player.id, player.name, player.hand, player.grip, player.style, player.rating, player.wins, player.losses, player.pointsWon].map((value) => `"${String(value).replaceAll('"', '""')}"`).join(','));
+    const rows = workspace.players.map((player) => [player.id, player.name, player.hand, player.grip, player.style, player.rating, player.wins, player.losses, player.pointsWon].map((value) => `"${String(value ?? '').replaceAll('"', '""')}"`).join(','));
     downloadFile(`rallydesk-players-${new Date().toISOString().slice(0, 10)}.csv`, [header, ...rows].join('\n'), 'text/csv'); onToast('Player list downloaded');
   };
   const exportMatches = () => {
     const header = 'match_id,tournament,category,status,player_one,player_two,format,table,referee,games_one,games_two';
-    const rows = workspace.matches.map((match) => [match.id, match.tournamentName ?? '', match.category ?? '', match.status, workspace.players.find((p) => p.id === match.playerOneId)?.name ?? '', workspace.players.find((p) => p.id === match.playerTwoId)?.name ?? '', match.format, match.table ?? '', workspace.referees.find((referee) => referee.id === match.refereeId)?.name ?? '', match.gamesWon[match.playerOneId] ?? 0, match.gamesWon[match.playerTwoId] ?? 0].map((value) => `"${String(value).replaceAll('"', '""')}"`).join(','));
+    const rows = workspace.matches.map((match) => [match.id, match.tournamentName ?? '', match.category ?? '', match.status, workspace.players.find((p) => p.id === match.playerOneId)?.name ?? '', workspace.players.find((p) => p.id === match.playerTwoId)?.name ?? '', match.format, match.table ?? '', workspace.referees.find((referee) => referee.id === match.refereeId)?.name ?? '', match.gamesWon[match.playerOneId] ?? 0, match.gamesWon[match.playerTwoId] ?? 0].map((value) => `"${String(value ?? '').replaceAll('"', '""')}"`).join(','));
     downloadFile(`rallydesk-matches-${new Date().toISOString().slice(0, 10)}.csv`, [header, ...rows].join('\n'), 'text/csv'); onToast('Match summary downloaded');
   };
   const exportActivity = () => { downloadFile(`rallydesk-activity-log-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ schemaVersion: 1, exportedAt: new Date().toISOString(), source: 'Rallydesk local preview', records: workspace.activityLog ?? [] }, null, 2), 'application/json'); onToast('Activity log downloaded'); };
@@ -86,4 +86,20 @@ function downloadFile(name: string, body: string, type: string) {
   const url = URL.createObjectURL(new Blob([body], { type }));
   const link = document.createElement('a'); link.href = url; link.download = name; link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function ClubGuide({navigate}: {navigate: (page: PageId) => void}) {
+  const chapters: [PageId,string,string][] = [
+    ['overview','Start here','Check the day’s activity and open a match or tournament.'],
+    ['players','Register players','Add a name, then open the profile to set playing details, check results or remove the player from the active roster.'],
+    ['tournaments','Build the draw','Create a tournament, choose singles, doubles or teams and register entrants. For singles group stages, open Edit group tables in setup. Remove a player with ×, then add them to another group.'],
+    ['matches','Score and review','Open the match, record the toss and score points, faults or lets. Use undo to correct a point. The timeline shows who scored and any recorded correction reasons.'],
+    ['referees','Staff the tables','Register officials and assign fixtures. The referee desk lists assigned matches.'],
+    ['tournaments','Confirm the knockout stage','After the qualifying fixtures finish, open the tournament. Review the random draw or import a draw for that category. Check opening opponents and byes, then apply.'],
+    ['tournaments','Change a running event','Open Draw & matches to edit group tables, assign a table or correct a match. Review affected fixtures before applying. The Audit log records tournament interventions.'],
+    ['statistics','Study a player','Open Statistics to compare results, ratings and recent form. Use the player analysis filters to narrow the sample.'],
+    ['exports','Take your data home','Download the complete workspace JSON for recovery. CSV exports are useful for working with individual tables.'],
+    ['settings','Manage the workspace','Use Settings to name the club or restore a saved workspace.']
+  ];
+  return <main className="page-content"><header className="page-intro"><div><p className="eyebrow">CLUB HANDBOOK</p><h2>From registration to the final point</h2></div></header><div className="about-grid">{chapters.map(([page,title,copy],i) => <article key={title} className="utility-card about-card"><small>SECTION {i+1}</small><h3>{title}</h3><p>{copy}</p><button className="button button-outline" onClick={() => navigate(page)}>Open {page}</button></article>)}</div></main>
 }

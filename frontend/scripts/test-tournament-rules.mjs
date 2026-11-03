@@ -11,6 +11,55 @@ try {
   const bundlePath = join(tempDir, 'store.cjs');
   await writeFile(bundlePath, bundle.outputFiles[0].contents);
   const store = createRequire(import.meta.url)(bundlePath);
+  const profile = store.createPlayer('New entrant');
+  assert.deepEqual([profile.hand, profile.grip, profile.style], [null, null, null]);
+  const entrants = Array.from({ length: 10 }, (_, i) => ({ id: String(i + 1), seed: i + 1 }));
+  const placements = (options) => store.assignSeededGroups(entrants, 3, options).map(group => group.entryIds);
+  assert.deepEqual(placements({ distribution: 'snake' }), [['1','6','7'], ['2','5','8'], ['3','4','9','10']]);
+  for (const distribution of ['bands', 'random']) {
+    const options = { distribution, drawSeed: 'club-finals' };
+    assert.deepEqual(placements(options), placements(options));
+    assert.equal(new Set(placements(options).flat()).size, entrants.length);
+  }
+  const drawBundle = await build({entryPoints:['src/services/qualifierDraw.ts'],bundle:true,platform:'node',format:'cjs',write:false});
+  const drawPath = join(tempDir,'qualifiers.cjs');
+  await writeFile(drawPath,drawBundle.outputFiles[0].contents);
+  const {qualifierDraw} = createRequire(import.meta.url)(drawPath);
+  for(const groupCount of [2,3,4,5,7,8,10]) for(const perGroup of [1,2,3]) {
+    const groups=Array.from({length:groupCount},(_,i)=>({id:String(i),name:String(i),entryIds:Array.from({length:perGroup},(_,j)=>i+'-'+j)}));
+    const qualifiers=groups.flatMap(g=>g.entryIds.map((id,i)=>({entry:{id},place:i+1})));
+    const {bracketSlots}=qualifierDraw(qualifiers,groups,perGroup);
+    assert.equal(bracketSlots.length,2**Math.ceil(Math.log2(qualifiers.length)));
+    assert.deepEqual(bracketSlots.filter(Boolean).sort(),qualifiers.map(q=>q.entry.id).sort());
+    for(let i=0;i<bracketSlots.length;i+=2){
+      const [a,b]=bracketSlots.slice(i,i+2);
+      assert.ok(a || b);
+      if(perGroup===2 && a && b){
+        assert.notEqual(a.split('-')[0],b.split('-')[0]);
+        assert.notEqual(a.split('-')[1],b.split('-')[1]);
+      }
+    }
+  }
+  const analysisBundle = await build({
+    entryPoints:['src/views/PlayerAnalysis.tsx'],bundle:true,platform:'node',format:'cjs',
+    jsx:'automatic',write:false,plugins:[{name:'test-render',setup(builder){
+      builder.onResolve({filter:/^react(?:\/jsx-runtime)?$/},args=>({path:createRequire(import.meta.url).resolve(args.path),external:true}));
+    }}]
+  });
+  const analysisPath=join(tempDir,'analysis.cjs');
+  await writeFile(analysisPath,analysisBundle.outputFiles[0].contents);
+  const require=createRequire(import.meta.url);
+  const {PlayerAnalysis}=require(analysisPath);
+  const render=(matches)=>require('react-dom/server').renderToStaticMarkup(require('react').createElement(PlayerAnalysis,{workspace:{
+    players:[{...profile,id:'a'},{...profile,id:'b',name:'Opponent'}],tournaments:[],matches
+  }}));
+  const scored={playerOneId:'a',playerTwoId:'b',winnerId:'a',status:'Completed',id:'m',format:'Best of 1',gamesToWin:1,pointsPerGame:11,gamesWon:{a:1,b:0},
+    gameResults:[{one:12,two:10,winnerId:'a'}],events:[{id:'p',kind:'Point',game:1,score:'11–10',serverId:'a',winnerId:'a'}]};
+  const scoredPage=render([scored]);
+  assert.match(scoredPage,/Serving<\/small><strong>100%/);
+  assert.match(scoredPage,/Deuce games won<\/small><strong>100%/);
+  assert.match(scoredPage,/Deuce points won<\/small><strong>100%/);
+  assert.match(render([{...scored,events:[]}]),/Serving<\/small><strong>—/);
   const rules = await build({ entryPoints: ['src/services/tableTennisRules.ts'], bundle: true, platform: 'node', format: 'cjs', write: false });
   const rulesPath = join(tempDir, 'rules.cjs');
   await writeFile(rulesPath, rules.outputFiles[0].contents);

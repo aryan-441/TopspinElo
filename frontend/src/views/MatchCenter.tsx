@@ -47,7 +47,7 @@ function MatchRow({ match, players, referee, onOpen, showReferee, onEdit, onDele
     {showReferee && <td><span className="table-label">{referee?.name ?? 'Unassigned'}</span></td>}
     <td><StatusPill status={match.status} /></td>
     <td><span className={`score-chip ${match.status === 'In progress' ? 'score-chip--live' : ''}`}>{scoreOne}<i>–</i>{scoreTwo}</span></td>
-    <td><div className="row-actions"><button className="row-open" aria-label={`Open ${one?.name} versus ${two?.name}`} onClick={(event) => { event.stopPropagation(); onOpen(); }}><ArrowRight size={16} /></button>{showReferee && <><button className="icon-button" aria-label="Edit match data" onClick={(event) => { event.stopPropagation(); onEdit(); }}><Pencil size={14} /></button><button className="icon-button" aria-label="Remove match" onClick={(event) => { event.stopPropagation(); onDelete(); }}><Trash2 size={14} /></button></>}</div></td>
+    <td><div className="row-actions"><button className="row-open" title="Open score and match log" aria-label={`Open score and match log for ${one?.name} versus ${two?.name}`} onClick={(event) => { event.stopPropagation(); onOpen(); }}>Log <ArrowRight size={16} /></button>{showReferee && <><button className="icon-button" aria-label="Edit match data" onClick={(event) => { event.stopPropagation(); onEdit(); }}><Pencil size={14} /></button><button className="icon-button" aria-label="Remove match" onClick={(event) => { event.stopPropagation(); onDelete(); }}><Trash2 size={14} /></button></>}</div></td>
   </tr>;
 }
 
@@ -131,7 +131,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
     const doublesOrder = isDoubles ? [server, receiver, servers.find((id) => id !== server)!, receivers.find((id) => id !== receiver)!] : undefined;
     const nextOneLabel = lineupOne.map((id) => players.get(id)?.name).filter(Boolean).join(' & ');
     const nextTwoLabel = lineupTwo.map((id) => players.get(id)?.name).filter(Boolean).join(' & ');
-    updateMatch({ ...match, status: 'In progress', tossWinnerId: tossWinner, serverId: server, doublesOrder, sideOnePlayerIds: lineupOne, sideTwoPlayerIds: lineupTwo, sideOneLabel: nextOneLabel, sideTwoLabel: nextTwoLabel, doublesNominationPending: false });
+    updateMatch({ ...match, status: 'In progress', startRatings: { [one.id]: one.rating, [two.id]: two.rating }, tossWinnerId: tossWinner, serverId: server, doublesOrder, sideOnePlayerIds: lineupOne, sideTwoPlayerIds: lineupTwo, sideOneLabel: nextOneLabel, sideTwoLabel: nextTwoLabel, doublesNominationPending: false });
     toast('Match started');
   };
 
@@ -140,7 +140,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
     const before = { ...match.score };
     const nextScore = { ...before, [winnerId]: (before[winnerId] ?? 0) + 1 };
     const nextServer = serverForNextPoint(match, before, match.serverId);
-    const event: Match['events'][number] = { id: crypto.randomUUID(), winnerId, score: `${nextScore[one.id]}–${nextScore[two.id]}`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), kind };
+    const event: Match['events'][number] = { id: crypto.randomUUID(), serverId: match.serverId, game: (match.gameResults?.length ?? 0) + 1, recordedAt: new Date().toISOString(), winnerId, score: `${nextScore[one.id]}–${nextScore[two.id]}`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), kind };
     updateMatch({ ...match, score: nextScore, serverId: nextServer, events: [event, ...match.events] });
     if (kind === 'Fault') toast('Fault recorded · point awarded to receiver');
   };
@@ -153,7 +153,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
   };
 
   const undoPoint = (reason: string) => {
-    const latestPoint = match.events.find((event) => event.kind === 'Point' || event.kind === 'Fault');
+    const latestPoint = scoreOne + scoreTwo > 0 ? match.events.find(event => (event.kind === 'Point' || event.kind === 'Fault') && (event.game == null || event.game === (match.gameResults?.length ?? 0) + 1)) : undefined;
     if (!latestPoint) { toast('There is no point to undo'); setUndoOpen(false); return; }
     const [oneScore, twoScore] = latestPoint.score.split('–').map(Number);
     const beforeScore = latestPoint.winnerId === one.id ? { ...match.score, [one.id]: Math.max(0, oneScore - 1) } : { ...match.score, [two.id]: Math.max(0, twoScore - 1) };
@@ -163,7 +163,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
     const serviceInterval = atDeuceBeforePoint ? 1 : match.pointsPerGame === 11 ? 2 : 5;
     const serverChangedAfterPoint = totalAfter % serviceInterval === 0;
     const previousServerId = serverChangedAfterPoint ? match.doublesOrder?.length === 4 ? match.doublesOrder[(match.doublesOrder.indexOf(match.serverId) + 3) % 4] : match.serverId === match.playerOneId ? match.playerTwoId : match.playerOneId : match.serverId;
-    const next = { ...match, score: beforeScore, serverId: previousServerId, events: [{ id: crypto.randomUUID(), winnerId: latestPoint.winnerId, score: latestPoint.score, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), kind: 'Correction' as const }, ...match.events.filter((event) => event.id !== latestPoint.id)] };
+    const next = { ...match, score: beforeScore, serverId: previousServerId, events: [{ id: crypto.randomUUID(), winnerId: latestPoint.winnerId, score: latestPoint.score, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), reason, reversedEventId: latestPoint.id, kind: 'Correction' as const }, ...match.events.filter((event) => event.id !== latestPoint.id)] };
     updateMatch(next); setUndoOpen(false); toast(`Last point removed · ${reason}`);
   };
 
@@ -174,7 +174,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
     const completedGame = { one: scoreOne, two: scoreTwo, winnerId: gameWinner };
     const nextOrder = match.doublesOrder?.length === 4 ? nextDoublesGameOrder(match.doublesOrder) ?? undefined : undefined;
     const nextServer = nextOrder?.[0] ?? (match.serverId === match.playerOneId ? match.playerTwoId : match.playerOneId);
-    updateMatch({ ...match, gamesWon: nextGames, gameResults: [...(match.gameResults ?? []), completedGame], score: matchWon ? match.score : { [one.id]: 0, [two.id]: 0 }, status: matchWon ? 'Completed' : 'In progress', winnerId: matchWon ? gameWinner : undefined, serverId: nextServer, doublesOrder: nextOrder, awaitingDoublesServerChoice: !matchWon && Boolean(nextOrder), events: match.events });
+    updateMatch({ ...match, gamesWon: nextGames, completedAt: matchWon ? new Date().toISOString() : undefined, gameResults: [...(match.gameResults ?? []), completedGame], score: matchWon ? match.score : { [one.id]: 0, [two.id]: 0 }, status: matchWon ? 'Completed' : 'In progress', winnerId: matchWon ? gameWinner : undefined, serverId: nextServer, doublesOrder: nextOrder, awaitingDoublesServerChoice: !matchWon && Boolean(nextOrder), events: match.events });
     toast(matchWon ? 'Match result recorded' : 'Game confirmed · next game is ready');
   };
 
@@ -199,9 +199,9 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
         <div className={`scorecard ${match.status === 'Completed' ? 'scorecard--complete' : ''}`}>
           <div className="scorecard-top"><span><i className={inProgress ? 'score-live-dot' : 'score-done-dot'} />{match.status === 'Completed' ? 'FINAL SCORE' : inProgress ? `GAME ${currentGameIndex}` : 'MATCH RESULT'}</span><span>{match.status === 'Completed' ? 'Recorded' : `${match.pointsPerGame} POINT GAME`}</span></div>
           <div className="scorecard-players">
-            <div className="scorecard-player"><div className="scorecard-person"><span className={`score-big-avatar ${matchWinner?.id === one.id ? 'score-big-avatar--winner' : ''}`}>{one.initials}</span><div><b>{one.name}</b>{match.sideOneTeamName && <small>{match.sideOneTeamName} · A/B/C lineup</small>}<small>{one.style} <span>·</span> {one.hand.toLowerCase()} handed</small></div></div><span className="game-score">{match.gamesWon[one.id] ?? 0}</span><span className={`point-score ${!inProgress || servingSideId !== one.id ? 'point-score--muted' : ''}`}>{scoreOne}</span></div>
+            <div className="scorecard-player"><div className="scorecard-person"><span className={`score-big-avatar ${matchWinner?.id === one.id ? 'score-big-avatar--winner' : ''}`}>{one.initials}</span><div><b>{one.name}</b>{match.sideOneTeamName && <small>{match.sideOneTeamName} · A/B/C lineup</small>}<small>{[one.style, one.hand && one.hand.toLowerCase() + ' handed'].filter(Boolean).join(' · ') || 'Playing details not specified'}</small></div></div><span className="game-score">{match.gamesWon[one.id] ?? 0}</span><span className={`point-score ${!inProgress || servingSideId !== one.id ? 'point-score--muted' : ''}`}>{scoreOne}</span></div>
             <div className="scorecard-divider"><span /><span>SETS</span><span>POINTS</span></div>
-            <div className="scorecard-player"><div className="scorecard-person"><span className={`score-big-avatar score-big-avatar--second ${matchWinner?.id === two.id ? 'score-big-avatar--winner' : ''}`}>{two.initials}</span><div><b>{two.name}</b>{match.sideTwoTeamName && <small>{match.sideTwoTeamName} · X/Y/Z lineup</small>}<small>{two.style} <span>·</span> {two.hand.toLowerCase()} handed</small></div></div><span className="game-score">{match.gamesWon[two.id] ?? 0}</span><span className={`point-score point-score--second ${!inProgress || servingSideId !== two.id ? 'point-score--muted' : ''}`}>{scoreTwo}</span></div>
+            <div className="scorecard-player"><div className="scorecard-person"><span className={`score-big-avatar score-big-avatar--second ${matchWinner?.id === two.id ? 'score-big-avatar--winner' : ''}`}>{two.initials}</span><div><b>{two.name}</b>{match.sideTwoTeamName && <small>{match.sideTwoTeamName} · X/Y/Z lineup</small>}<small>{[two.style, two.hand && two.hand.toLowerCase() + ' handed'].filter(Boolean).join(' · ') || 'Playing details not specified'}</small></div></div><span className="game-score">{match.gamesWon[two.id] ?? 0}</span><span className={`point-score point-score--second ${!inProgress || servingSideId !== two.id ? 'point-score--muted' : ''}`}>{scoreTwo}</span></div>
           </div>
           {match.status === 'Completed' && <div className="match-final-strip"><Check size={16} /><span><b>{matchWinner?.name}</b> won the match</span><span>{match.format} · {match.gamesWon[one.id]}–{match.gamesWon[two.id]}</span></div>}
           {inProgress && <div className="serve-bar"><span className="serve-ball">●</span><span><b>{servingPlayer.name}</b> to serve next</span><span className="serve-bar-note">Serve changes automatically</span></div>}
@@ -216,7 +216,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
       <aside className={`scoring-aside ${mobileActions ? 'scoring-aside--open' : ''}`}>
         <div className="aside-head"><div><p className="eyebrow">POINT BY POINT</p><h3>Match timeline</h3></div><span className="timeline-count">{match.events.length}</span><button className="timeline-mobile-close icon-button" onClick={() => setMobileActions(false)} aria-label="Close timeline"><X size={17} /></button></div>
         <div className="timeline-info"><span><Timer size={14} /> {match.events[0]?.time ?? 'Awaiting first point'}</span>{match.events.length > 12 && <button onClick={() => setShowAllEvents((shown) => !shown)}><ChevronDown size={14} /> {showAllEvents ? 'Show recent' : `All ${match.events.length} events`}</button>}</div>
-        <div className="timeline-list">{match.events.length ? (showAllEvents ? match.events : match.events.slice(0, 12)).map((event, index) => <div className={`timeline-event ${event.kind === 'Correction' ? 'timeline-event--correction' : ''}`} key={event.id}><div className="timeline-rail"><span className={`timeline-node timeline-node--${event.kind.toLowerCase()}`}>{event.kind === 'Let' ? '↻' : event.kind === 'Fault' ? '!' : event.kind === 'Correction' ? '↶' : index + 1}</span>{index < (showAllEvents ? match.events.length : Math.min(match.events.length, 12)) - 1 && <i />}</div><div className="timeline-copy"><b>{event.kind === 'Point' ? `${players.get(event.winnerId)?.name} won point` : event.kind === 'Fault' ? `Fault · point to ${players.get(event.winnerId)?.name}` : event.kind === 'Let' ? 'Let · replay point' : 'Point corrected'}</b><span>{event.score} <i>·</i> {event.time}</span></div></div>) : <div className="timeline-empty"><div className="timeline-empty-mark">○</div><b>No points recorded yet</b><span>The timeline will build as the match is scored.</span></div>}</div>
+        <div className="timeline-list">{match.events.length ? (showAllEvents ? match.events : match.events.slice(0, 12)).map((event, index) => <div className={`timeline-event ${event.kind === 'Correction' ? 'timeline-event--correction' : ''}`} key={event.id}><div className="timeline-rail"><span className={`timeline-node timeline-node--${event.kind.toLowerCase()}`}>{event.kind === 'Let' ? '↻' : event.kind === 'Fault' ? '!' : event.kind === 'Correction' ? '↶' : index + 1}</span>{index < (showAllEvents ? match.events.length : Math.min(match.events.length, 12)) - 1 && <i />}</div><div className="timeline-copy"><b>{event.kind === 'Point' ? `${players.get(event.winnerId)?.name} won point` : event.kind === 'Fault' ? `Fault · point to ${players.get(event.winnerId)?.name}` : event.kind === 'Let' ? 'Let · replay point' : 'Point taken back from ' + (players.get(event.winnerId)?.name ?? 'player') + ' · ' + (event.reason || 'Reason not recorded')}</b><span>{event.score} <i>·</i> {event.time}</span></div></div>) : <div className="timeline-empty"><div className="timeline-empty-mark">○</div><b>No points recorded yet</b><span>The timeline will build as the match is scored.</span></div>}</div>
         <div className="timeline-footer"><span><Clock3 size={14} /> Started {inProgress ? 'today' : 'not started'}</span><span>{match.events.length} recorded events</span></div>
       </aside>
       <button className="mobile-timeline-fab" onClick={() => setMobileActions(true)}><Timer size={16} /> Match timeline <span>{match.events.length}</span></button>

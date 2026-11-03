@@ -4,6 +4,20 @@
 
 A Python application for managing player profiles, table-tennis matches, and tournaments.
 
+## Running a club event
+
+Rallydesk keeps the draw, score sheet and standings together. Organisers register players once, referees score at the table, and coaches and players can revisit the points behind a result. The browser app is free to use and has no advertisements. Open **Club guide** for a walkthrough.
+
+- **Tournaments → Draw & matches** opens group allocation tables. Remove an entrant from one table and add them to another. Review the fixture changes before applying.
+- After qualification, confirm a random bracket or import the knockout draw. With two qualifiers per group, played opening fixtures pair a winner with a different group's runner-up. Other qualification counts use a shuffle. Byes fill the bracket to a power of two.
+- **Statistics → Player analysis** calculates results in the browser. Select a player, opponent, format, tournament or playing characteristic. Rates show their denominator. Older matches without server or game information contribute only to supported measures.
+- **Matches → Log** opens scoring and the match timeline. New corrections record a reason and identify the reversed event.
+- **Exports & recovery → Download workspace JSON** includes the saved players, matches, scoring events, referees, tournament configuration, groups, draws and activity journal. Restore that file through **Settings**.
+
+### Storage and privacy
+
+This browser edition saves records in local storage. Clearing browser data removes that copy. Anyone with access to the same browser profile can use the workspace. A downloaded backup contains readable player and match data. Statistics run locally. Draw recognition sends the selected document to the configured recognition service. Organiser and referee views are local interface modes. Hosted accounts and encrypted multi-device storage require separate implementation.
+
 ## Credits
 
 - **Backend:** Fully developed by Aryan Arora.

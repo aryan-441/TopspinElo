@@ -3,24 +3,24 @@
 :root {
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
   color: #1b2823;
-  background: #f2f3ed;
+  background: #eef4f5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   --ink: #1b2823;
-  --pine: #193b30;
-  --pine-deep: #122d24;
-  --pine-soft: #dce8dd;
-  --chalk: #f2f3ed;
+  --pine: #204c60;
+  --pine-deep: #17394a;
+  --pine-soft: #d9eaf0;
+  --chalk: #eef4f5;
   --paper: #fffefa;
   --paper-alt: #f8f8f3;
-  --orange: #e76e43;
+  --orange: #eb6745;
   --orange-light: #fbede6;
   --muted: #74817a;
   --muted-light: #a2aca4;
   --line: #dce1d8;
   --line-dark: #c9d1c8;
-  --green: #2f6e4f;
+  --green: #287281;
   --red: #b84d3f;
   --yellow: #b27c29;
   --mono: 'DM Mono', 'Consolas', monospace;
@@ -28,9 +28,9 @@
   --body: 'DM Sans', 'Segoe UI', sans-serif;
   --sidebar-width: 250px;
   --scrollbar-thumb: #aeb9ae;
-  --scrollbar-track: #f2f3ed;
+  --scrollbar-track: #eef4f5;
   --scrollbar-hover: #7e8e81;
-  --scrollbar-active: #193b30;
+  --scrollbar-active: #204c60;
 }
 
 * { box-sizing: border-box; }
@@ -1243,3 +1243,7 @@ main.page-wrap .page-content .stat-cell > b i { color: var(--text-positive); }
 }
 
 .group-stage-setup{display:grid;gap:12px;margin:14px 0;padding:14px;border:1px solid #dce5d8;border-radius:12px;background:#f7faf5}.group-import-tools{display:flex;align-items:center;flex-wrap:wrap;gap:9px}.group-import-tools small{color:#617165;font-size:11px}.group-standings{margin-top:16px}.group-standings h4{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px;color:#294735;font-size:14px}.group-standings h4 span{color:#617165;font-size:11px;font-weight:500}
+
+.group-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-block:1rem}.group-board caption,.group-workbench summary{font-weight:700;padding:.75rem}.group-board button,.group-board select{padding:.4rem}.group-workbench summary{cursor:pointer}
+
+.analysis-filters,.metric-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.8rem;margin-block:1rem}.analysis-filters label{display:grid;gap:.3rem}.analysis-filters select,.analysis-filters input{width:100%;padding:.45rem;border:1px solid var(--line);border-radius:5px}.metric-board>div{background:var(--pine-soft);padding:.85rem;display:grid;gap:.35rem;border-radius:8px}.metric-board strong{font:700 1.65rem var(--display);color:var(--pine-deep)}.metric-board span{font-size:.8rem}.metric-board meter{width:100%;accent-color:var(--orange)}

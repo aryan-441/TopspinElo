@@ -16,6 +16,7 @@ const entryLabel = (entry: CategoryEntry, players: Map<string, Player>) => entry
 
 export function TournamentsView({ workspace, players, selectedId, onSelect, onCreate, onOpenMatch, onChange, onSaveMatch, onDeleteMatch, toast }: Props) {
   const selected = workspace.tournaments.find((item) => item.id === selectedId);
+  const [editingGroups,setEditingGroups] = useState<{categoryId:string; groups: NonNullable<ImportPreview['groups']>} | null>(null);
   const [tab, setTab] = useState<TournamentTab>('Overview');
   const [reasonAction, setReasonAction] = useState<'pause' | 'resume' | null>(null);
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
@@ -28,12 +29,12 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
   const [deleteTournamentConfirm, setDeleteTournamentConfirm] = useState(false);
   const sorted = useMemo(() => [...workspace.tournaments].sort((a, b) => statusRank(a.status) - statusRank(b.status)), [workspace.tournaments]);
   const update = (next: Tournament) => onChange({ ...workspace, tournaments: workspace.tournaments.map((item) => item.id === next.id ? next : item) });
-  const importDraw = async (file?: File, allocation = false) => {
+  const importDraw = async (file?: File, allocation = false, categoryId?: string) => {
     if (!selected || !file) return;
     try {
       if (file.type === 'application/pdf' || file.type.startsWith('image/') || /\.(pdf|jpe?g|png|webp|tiff?)$/i.test(file.name)) {
         if (!allocation) {
-          const category = selected.categories.find((item) => item.format === 'Knockout' && item.kind === 'Singles');
+          const category = selected.categories.find((item) => item.format === 'Knockout' && item.kind === 'Singles' && (!categoryId || item.id === categoryId));
           if (!category) throw new Error('AI bracket import requires a singles Knockout category.');
           const body = new FormData(); body.append('file', file);
           const response = await fetch('/api/draw/recognize', { method: 'POST', body });
@@ -128,12 +129,12 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       const category = selected.categories.find((item) => item.id === draft.categoryId);
       const ids = draft.entryIds.filter((id): id is string => Boolean(id));
       const errors: string[] = [];
-      if (!category || draft.slots.length < 2 || draft.slots.length > 64 || new Set(ids).size !== category.entries.length || ids.length !== category.entries.length || draft.entryIds.some((id, index) => !id && !draft.byeSlots.includes(index + 1))) errors.push('Map every non-BYE slot to a distinct registered entrant.');
+      if (!category || draft.slots.length < 2 || new Set(ids).size !== category.entries.length || ids.length !== category.entries.length || draft.entryIds.some((id, index) => !id && !draft.byeSlots.includes(index + 1))) errors.push('Map every non-BYE slot to a distinct registered entrant.');
       if (workspace.matches.some((match) => match.tournamentId === selected.id && match.categoryId === draft.categoryId && (match.status !== 'Scheduled' || match.events.length))) errors.push('This category has started play; its draw cannot be replaced.');
       return errors;
     }
     if (importPreview.groupAssignments) return validateGroupSuggestions(importPreview.groupAssignments, importPreview.groupCategoryId, selected, workspace);
-    if (importPreview.groups) return validateGroupAllocation(importPreview.groups, selected.categories.find((category) => category.groupStage)?.id, selected, workspace);
+    if (importPreview.groups) return validateGroupAllocation(importPreview.groups, importPreview.groupCategoryId ?? selected.categories.find((category) => category.groupStage)?.id, selected, workspace);
     return validateImportPreview(importPreview.rows, selected, workspace, players);
   }, [importPreview, selected, workspace, players]);
   const applyImport = () => {
@@ -143,16 +144,16 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       const category = selected.categories.find((item) => item.id === draft.categoryId)!;
       const slots = draft.entryIds;
       const byeEntryIds = draft.byeSlots.flatMap((slot) => slots[(slot - 1) ^ 1] ? [slots[(slot - 1) ^ 1]!] : []);
-      const updatedCategory = { ...category, bracketSlots: slots, byeEntryIds };
+      const updatedCategory = { ...category, awaitingDraw:false, bracketSlots: slots, byeEntryIds };
       const replaced = workspace.matches.filter((match) => match.tournamentId === selected.id && match.categoryId === category.id);
       const replacedIds = new Set(replaced.map((match) => match.id));
       const fixtures = generateTournamentFixtures({ ...selected, categories: [updatedCategory] }, workspace.players);
-      const audit = { id: crypto.randomUUID(), action: 'AI bracket imported', target: `${slots.length} slots · ${fixtures.length} opening matches`, reason: `Reviewed import from ${importPreview.fileName}`, at: new Date().toISOString() };
+      const audit = { id: crypto.randomUUID(), action: 'Knockout draw confirmed', target: `${slots.length} slots · ${fixtures.length} opening matches`, reason: `Reviewed import from ${importPreview.fileName}`, at: new Date().toISOString() };
       onChange({ ...workspace, matches: [...fixtures, ...workspace.matches.filter((match) => !replacedIds.has(match.id))], tournaments: workspace.tournaments.map((item) => item.id === selected.id ? { ...selected, categories: selected.categories.map((current) => current.id === category.id ? updatedCategory : current), matchIds: [...selected.matchIds.filter((id) => !replacedIds.has(id)), ...fixtures.map((match) => match.id)], audit: [audit, ...selected.audit] } : item) });
-      setImportPreview(null); toast('Reviewed knockout bracket imported'); return;
+      setImportPreview(null); toast('Knockout draw confirmed'); return;
     }
     if (importPreview.groups || importPreview.groupAssignments) {
-      const base = selected.categories.find((category) => category.groupStage); if (!base) return;
+      const base = selected.categories.find((category) => category.groupStage && (!importPreview.groupCategoryId || category.id === importPreview.groupCategoryId)); if (!base) return;
       const replacementError = groupFixtureReplacementError(base, selected, workspace);
       if (replacementError) { toast(replacementError); return; }
       const importedGroups = importPreview.groups ?? (() => {
@@ -162,10 +163,17 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       })();
       const updatedGroupCategory = { ...base, groupStage: { ...base.groupStage!, groups: importedGroups, advanced: false } };
       const oldGroupIds = new Set(selectedMatches.filter((match) => isGroupFixture(match, base)).map((match) => match.id));
-      const fixtures = generateTournamentFixtures({ ...selected, categories: [updatedGroupCategory] }, workspace.players).map((match) => ({ ...match, tournamentId: selected.id, tournamentName: selected.name }));
+      const previousFixtures = selectedMatches.filter(m => oldGroupIds.has(m.id));
+      const fixtures = generateTournamentFixtures({ ...selected, categories: [updatedGroupCategory] }, workspace.players).map(match => {
+        const existing = previousFixtures.find(m => [m.playerOneId,m.playerTwoId].includes(match.playerOneId) && [m.playerOneId,m.playerTwoId].includes(match.playerTwoId));
+        return existing ? { ...existing, round:match.round } : { ...match, tournamentId:selected.id, tournamentName:selected.name };
+      });
+      const retainedIds = new Set(fixtures.map(m=>m.id));
+      const affected = previousFixtures.filter(m=>!retainedIds.has(m.id) && (m.events.length || m.status!=='Scheduled'));
+      if (affected.length && !window.confirm('This allocation removes '+affected.length+' started or resolved fixtures from current standings. Their previous records will be kept in the workspace change journal. Apply these group changes?')) return;
       const retainedMatches = workspace.matches.filter((match) => !oldGroupIds.has(match.id));
       const fixtureIds = selected.matchIds.filter((id) => !oldGroupIds.has(id));
-      const audit = { id: crypto.randomUUID(), action: 'Group allocation imported', target: `${importedGroups.length} groups · ${base.entries.length} entrants · ${fixtures.length} fixtures regenerated`, reason: `Imported from ${importPreview.fileName}; untouched scheduled group fixtures were regenerated before play`, at: new Date().toISOString() };
+      const audit = { id: crypto.randomUUID(), action: 'Group allocation imported', target: `${importedGroups.length} groups · ${base.entries.length} entrants · ${fixtures.length} fixtures regenerated`, reason: `Imported from ${importPreview.fileName}; existing pairings retained their scores and officials`, at: new Date().toISOString() };
       onChange({ ...workspace, matches: [...fixtures, ...retainedMatches], tournaments: workspace.tournaments.map((item) => item.id === selected.id ? { ...selected, categories: selected.categories.map((category) => category.id === base.id ? updatedGroupCategory : category), matchIds: [...fixtureIds, ...fixtures.map((match) => match.id)], audit: [audit, ...selected.audit] } : item) });
       setImportPreview(null); toast('Group allocation imported'); return;
     }
@@ -280,6 +288,15 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       <div className="tournament-detail-top"><button className="back-link" onClick={() => onSelect(null)}><Undo2 size={14} /> All tournaments</button><div className="detail-actions"><button className="button button-outline" onClick={() => printTournamentDraw(selected, selectedMatches, players)}><Printer size={15} /> Print / Save PDF</button><button className="button button-outline" onClick={() => exportTournamentPackage(selected, workspace, players)}><Download size={15} /> Export package</button><button className="button button-outline" onClick={() => { setTournamentJson(JSON.stringify(selected, null, 2)); setTournamentJsonError(''); setEditingTournament(true); }}><Pencil size={14} /> Edit event data</button><button className="button button-outline" onClick={() => setDeleteTournamentConfirm(true)}><Trash2 size={14} /> Delete tournament</button><button className="button button-outline" onClick={() => setReasonAction(selected.progressPaused ? 'resume' : 'pause')}>{selected.progressPaused ? <Play size={15} /> : <Pause size={15} />}{selected.progressPaused ? 'Resume progression' : 'Pause progression'}</button><button className="button button-primary" onClick={() => { const nextMatch = selected.matchIds.map((id) => workspace.matches.find((match) => match.id === id)).filter((match): match is Match => Boolean(match && match.status !== 'Completed')).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0]; if (nextMatch) onOpenMatch(nextMatch.id); else toast('No playable match is scheduled yet'); }}><CircleHelp size={15} /> Open next match</button></div></div>
       <section className="tournament-detail-hero"><div className="detail-emblem"><Trophy size={22} /></div><div className="detail-title"><div className="detail-title-top"><TournamentStatus status={selected.status} /><span className="format-tag">{selected.format}</span><span className="detail-created">Created {selected.date}</span></div><h2>{selected.name}</h2><p><CalendarDays size={14} /> {selected.date}<i /> <Users size={14} /> {selected.entrantIds.length} entrants<i />{selected.venue}</p><div className="category-chip-row">{categoryNames(selected).map((category) => <span className="category-chip" key={category}>{category}</span>)}<span className="category-chip category-chip--tables">{selected.tableCount ?? 1} tables</span></div></div><div className="detail-progress"><span>EVENT PROGRESS</span><b>{selected.completed}<small> / {selected.matchIds.length || selected.rounds}</small></b><div className="mini-progress"><i style={{ width: `${selected.matchIds.length ? Math.min(100, selected.completed / selected.matchIds.length * 100) : 0}%` }} /></div><small>{selected.matchIds.length ? 'matches complete' : 'rounds to play'}</small></div></section>
       <div className="tournament-tabs" role="tablist" aria-label="Tournament sections">{(['Overview', 'Draw & matches', 'Standings', 'Audit log'] as TournamentTab[]).map((item) => <button key={item} role="tab" aria-selected={tab === item} className={tab === item ? 'tournament-tab tournament-tab--active' : 'tournament-tab'} onClick={() => setTab(item)}>{item}{item === 'Audit log' && <span>{selected.audit.length}</span>}</button>)}</div>
+      {selected.categories.filter(c=>c.awaitingDraw).map(c=><section key={c.id} className="utility-card"><h3>{c.name} · qualifiers ready</h3><p>Review the random draw or import the bracket for these qualifiers before play.</p><button className="button button-primary" onClick={()=>{
+        const ids=c.bracketSlots ?? []; setImportPreview({fileName:'Generated qualifier draw',rows:[],bracketDraft:{categoryId:c.id,slots:ids.map(id=>c.entries.find(e=>e.id===id)?.name || players.get(id||'')?.name || null),entryIds:ids,byeSlots:ids.flatMap((id,i)=>id?[]:[i+1])}});
+      }}>Review random draw</button> <label className="button button-outline">Import knockout draw<input type="file" hidden accept=".pdf,.png,.jpg,.jpeg" onChange={e=>{void importDraw(e.target.files?.[0],false,c.id);e.target.value=''}}/></label></section>)}
+      {tab==='Draw & matches' && selected.categories.filter(c=>c.groupStage?.groups).map(c=><button key={c.id} className="button button-outline" onClick={()=>setEditingGroups({categoryId:c.id,groups:structuredClone(c.groupStage!.groups!)})}>Edit group tables · {c.name}</button>)}
+      {editingGroups && <Dialog title="Edit group tables" eyebrow="TOURNAMENT DRAW" size="wide" onClose={()=>setEditingGroups(null)}><div className="group-board">{editingGroups.groups.map(g=>{
+        const entries=selected.categories.find(c=>c.id===editingGroups.categoryId)!.entries;
+        const change=(ids:string[])=>setEditingGroups({...editingGroups,groups:editingGroups.groups.map(item=>item.id===g.id?{...g,entryIds:ids}:item)});
+        return <section key={g.id} className="utility-card"><table className="data-table"><caption>{g.name}</caption><tbody>{g.entryIds.map(id=><tr key={id}><td>{entries.find(e=>e.id===id)?.name || players.get(id)?.name}</td><td><button aria-label={'Remove '+(players.get(id)?.name || id)} onClick={()=>change(g.entryIds.filter(i=>i!==id))}>×</button></td></tr>)}</tbody></table><label>＋ Add player<select value="" onChange={e=>change([...g.entryIds,e.target.value])}><option value="">Choose unassigned player</option>{entries.filter(e=>!editingGroups.groups.some(g=>g.entryIds.includes(e.id))).map(e=><option key={e.id} value={e.id}>{entryLabel(e,players)}</option>)}</select></label></section>
+      })}</div><button className="button button-primary" onClick={()=>{setImportPreview({fileName:'Organiser group edits',rows:[],groupCategoryId:editingGroups.categoryId,groups:editingGroups.groups});setEditingGroups(null)}}>Review fixture changes</button></Dialog>}
       {tab === 'Overview' && <TournamentOverview tournament={selected} matches={selectedMatches} players={players} onOpenMatch={onOpenMatch} onTab={setTab} onEditField={() => { if (canEditField) setFieldEditOpen(true); else { setTournamentJson(JSON.stringify(selected, null, 2)); setTournamentJsonError(''); setEditingTournament(true); } }} canEditField={canEditField} />}
       {tab === 'Draw & matches' && <TournamentDraw matches={workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id))} tournamentGroups={selected.categories.flatMap((category) => category.groupStage?.groups ?? [])} hasKnockout={selected.categories.some((category) => category.format === 'Knockout' && category.kind === 'Singles')} players={players} onOpenMatch={onOpenMatch} onImport={(file) => importDraw(file)} onReschedule={setScheduleEdit} onEditMatch={setEditingMatch} onDeleteMatch={onDeleteMatch} onImportAllocation={(file) => importDraw(file, true)} />}
       {tab === 'Standings' && <TournamentStandings tournament={selected} players={players} matches={workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id))} />}
@@ -316,9 +333,9 @@ function TournamentDraw({ matches, tournamentGroups, hasKnockout, players, onOpe
 
 function ImportDrawDialog({ preview, entrants, categories, errors, onChange, onBracketChange, onGroupChange, onAddGroupRow, onRemoveGroupRow, onClose, onApply }: { preview: ImportPreview; entrants: DrawEntrant[]; categories: string[]; errors: string[]; onChange: (rowIndex: number, key: 'playerOneId' | 'playerTwoId' | 'category', value: string) => void; onBracketChange: (slotIndex: number, entryId: string | null) => void; onGroupChange: (rowIndex: number, key: 'entryId' | 'groupName', value: string) => void; onAddGroupRow: () => void; onRemoveGroupRow: (rowIndex: number) => void; onClose: () => void; onApply: () => void }) {
   const groupEntrants = entrants.filter((entrant) => entrant.categoryId === preview.groupCategoryId);
-  return <Dialog title="Review imported draw" eyebrow="NON-DESTRUCTIVE PREVIEW" onClose={onClose} size="wide">
-    <div className="import-review-summary"><FileSpreadsheet size={17} /><span><b>{preview.fileName}</b><small>{preview.bracketDraft ? `${preview.bracketDraft.slots.length} knockout slots · AI (beta) review` : preview.groupAssignments ? `${preview.groupAssignments.length} OCR name suggestions · nothing has changed yet` : preview.groups ? `${preview.groups.length} groups · ${preview.groups.reduce((sum, group) => sum + group.entryIds.length, 0)} assignments found · nothing has changed yet` : `${preview.rows.length} fixtures found · nothing has been added yet`}</small></span></div>
-    {preview.bracketDraft && <div className="import-review-errors"><p>AI (beta) may misread names, BYEs and slots. Review each row before applying. Later-round connectors are not interpreted.</p>{errors.length > 0 && <ul role="alert">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}<div className="import-review-table-wrap" role="region" aria-label="Review knockout bracket slots" tabIndex={0}><table className="data-table import-review-table"><thead><tr><th>SLOT</th><th>SCANNED</th><th>ROSTER PLAYER</th></tr></thead><tbody>{preview.bracketDraft.slots.map((name, index) => <tr key={index}><td>{index + 1}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : name || 'Not read'}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : <select value={preview.bracketDraft!.entryIds[index] ?? ''} onChange={(event) => onBracketChange(index, event.target.value || null)}><option value="">Choose registered player</option>{entrants.filter((entry) => entry.categoryId === preview.bracketDraft!.categoryId).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select>}</td></tr>)}</tbody></table></div></div>}
+  return <Dialog title="Review draw" eyebrow="NON-DESTRUCTIVE PREVIEW" onClose={onClose} size="wide">
+    <div className="import-review-summary"><FileSpreadsheet size={17} /><span><b>{preview.fileName}</b><small>{preview.bracketDraft ? `${preview.bracketDraft.slots.length} knockout slots · awaiting confirmation` : preview.groupAssignments ? `${preview.groupAssignments.length} OCR name suggestions · nothing has changed yet` : preview.groups ? `${preview.groups.length} groups · ${preview.groups.reduce((sum, group) => sum + group.entryIds.length, 0)} assignments found · nothing has changed yet` : `${preview.rows.length} fixtures found · nothing has been added yet`}</small></span></div>
+    {preview.bracketDraft && <div className="import-review-errors"><p>Review the qualifiers, opening opponents and byes before confirming. You can change the player in each occupied slot.</p>{errors.length > 0 && <ul role="alert">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}<div className="import-review-table-wrap" role="region" aria-label="Review knockout bracket slots" tabIndex={0}><table className="data-table import-review-table"><thead><tr><th>SLOT</th><th>PROPOSED</th><th>ROSTER PLAYER</th></tr></thead><tbody>{preview.bracketDraft.slots.map((name, index) => <tr key={index}><td>{index + 1}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : name || 'Not read'}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : <select value={preview.bracketDraft!.entryIds[index] ?? ''} onChange={(event) => onBracketChange(index, event.target.value || null)}><option value="">Choose registered player</option>{entrants.filter((entry) => entry.categoryId === preview.bracketDraft!.categoryId).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select>}</td></tr>)}</tbody></table></div></div>}
     {(preview.groups || preview.groupAssignments) && <div className="import-review-errors"><div><b>{preview.groupAssignments ? 'Review OCR suggestions and map each name' : 'Review imported allocation'}</b>
       {errors.length > 0 && <ul role="alert">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}
       {preview.groups && <ul>{preview.groups.map((group) => <li key={group.id}>{group.name}: {group.entryIds.map((id) => entrants.find((entrant) => entrant.id === id)?.name ?? id).join(', ')}</li>)}</ul>}
@@ -396,12 +413,7 @@ function printTournamentDraw(tournament: Tournament, matches: Match[], players: 
 function slug(value: string) { return value.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'event'; }
 
 function groupFixtureReplacementError(category: TournamentCategory, tournament: Tournament, workspace: Workspace): string | undefined {
-  const groups = category.groupStage?.groups ?? [];
-  const groupMatches = workspace.matches.filter((match) => (match.tournamentId === tournament.id || tournament.matchIds.includes(match.id)) && isGroupFixture(match, category));
-  if (groupMatches.some((match) => match.status !== 'Scheduled' || match.events.length > 0)) return 'This group stage already has played or in-progress matches. The allocation was not changed.';
-  const entryIds = new Set(groups.flatMap((group) => group.entryIds));
-  const names = category.entries.filter((entry) => entryIds.has(entry.id)).flatMap((entry) => [entry.name, ...entry.playerIds.map((id) => workspace.players.find((player) => player.id === id)?.name ?? '')]).filter(Boolean).map((name) => name.toLocaleLowerCase());
-  if (tournament.audit.some((item) => item.action === 'Match schedule overridden' && names.some((name) => item.target.toLocaleLowerCase().includes(name)))) return 'A player in this group stage has a schedule override. Restore or record the schedule change before replacing the group allocation.';
+  if (category.groupStage?.advanced && tournament.categories.some(c=>c.name===category.name+' · Knockout' && workspace.matches.some(m=>m.tournamentId===tournament.id && m.categoryId===c.id))) return 'A knockout draw already uses these results. Review the event before replacing its qualifying groups.';
   return undefined;
 }
 
@@ -417,7 +429,7 @@ function validateGroupAllocation(groups: { id: string; name: string; entryIds: s
   if (category.groupStage.advanced) errors.push('This group stage has already advanced and cannot be replaced.');
   if (groups.length !== category.groupStage.groupCount || groups.some((group) => group.entryIds.length < 2)) errors.push('Allocation must match the configured group count and contain at least two entrants per group.');
   const ids = groups.flatMap((group) => group.entryIds);
-  if (new Set(ids).size !== category.entries.length || category.entries.some((entry) => !ids.includes(entry.id))) errors.push('The allocation must include every category entrant exactly once.');
+  if (ids.length !== category.entries.length || new Set(ids).size !== category.entries.length || category.entries.some((entry) => !ids.includes(entry.id))) errors.push('The allocation must include every category entrant exactly once.');
   const replacementError = groupFixtureReplacementError(category, tournament, workspace);
   if (replacementError) errors.push(replacementError);
   return errors;
