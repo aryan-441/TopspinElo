@@ -1,0 +1,25 @@
+const {chromium}=require(process.env.RALLYDESK_PLAYWRIGHT_PATH || 'playwright');
+const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({executablePath:process.env.RALLYDESK_BROWSER_EXECUTABLE,headless:true});try{
+const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://127.0.0.1:5173/?demo',{waitUntil:'networkidle'});
+await page.getByRole('button',{name:'Players',exact:true}).click();await page.locator('.row-open').first().click();
+await page.getByRole('button',{name:'Edit profile',exact:true}).click();await page.getByLabel('Name',{exact:true}).fill('QA Edited Player');await page.getByRole('dialog').locator('select').nth(0).selectOption('');await page.getByRole('dialog').locator('select').nth(1).selectOption('');await page.getByLabel('Style',{exact:true}).fill('');await page.getByRole('button',{name:'Save changes',exact:true}).click();
+await page.getByRole('button',{name:'Remove from active roster',exact:true}).click();await page.getByRole('button',{name:/Removed \(1\)/}).click();await page.locator('.row-open').first().click();await page.getByRole('button',{name:'Restore to roster',exact:true}).click();
+await page.getByRole('button',{name:'Referees',exact:true}).click();await page.getByLabel('Referee name',{exact:true}).fill('QA Referee');await page.getByRole('button',{name:'Add referee',exact:true}).click();
+const referee=await page.evaluate(()=>JSON.parse(localStorage.getItem('rallydesk-demo-v1')).referees.find(r=>r.name==='QA Referee'));
+await page.locator('.referee-match-row select').first().selectOption(referee.id);
+assert.ok(await page.evaluate(id=>JSON.parse(localStorage.getItem('rallydesk-demo-v1')).matches.some(m=>m.refereeId===id),referee.id));
+await page.getByRole('button',{name:'Remove QA Referee',exact:true}).click();assert.ok(await page.evaluate(id=>JSON.parse(localStorage.getItem('rallydesk-demo-v1')).matches.every(m=>m.refereeId!==id),referee.id));
+await page.evaluate(()=>{const w=JSON.parse(localStorage.getItem('rallydesk-demo-v1'));const m=w.matches.find(m=>m.status==='Scheduled');m.gamesToWin=1;m.format='Best of 1';delete m.tournamentId;delete m.categoryId;w.matches=[m];w.tournaments=[];localStorage.setItem('rallydesk-demo-v1',JSON.stringify(w));});await page.reload();await page.getByRole('button',{name:'Matches',exact:true}).click();
+await page.locator('.match-row .row-open').first().click();await page.getByRole('button',{name:'Start match',exact:true}).click();
+await page.locator('.point-button').first().click();await page.locator('.point-button').first().click();
+let match=await page.evaluate(()=>JSON.parse(localStorage.getItem('rallydesk-demo-v1')).matches[0]);assert.equal(match.serverId,match.playerTwoId);
+await page.getByRole('button',{name:'Undo last point',exact:true}).click();console.log('UNDO_DIALOG',await page.getByRole('dialog').innerText());
+await page.getByRole('dialog').locator('input,textarea').first().fill('QA correction');await page.getByRole('dialog').getByRole('button',{name:/Undo|Confirm/}).last().click();
+match=await page.evaluate(()=>JSON.parse(localStorage.getItem('rallydesk-demo-v1')).matches[0]);assert.equal(match.score[match.playerOneId],1);assert.ok(match.events.some(e=>e.reason==='QA correction'));
+for(let i=1;i<11;i++)await page.locator('.point-button').first().click();await page.getByRole('button',{name:'Confirm game result',exact:true}).click();
+match=await page.evaluate(()=>JSON.parse(localStorage.getItem('rallydesk-demo-v1')).matches[0]);assert.equal(match.status,'Completed');assert.equal(match.gameResults[0].one,11);
+await page.reload();assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('rallydesk-demo-v1')).matches[0].status),'Completed');assert.deepEqual(errors,[]);
+console.log(JSON.stringify({playerEditArchiveRestore:true,optionalAttributes:true,refereeAddAssignRemove:true,serviceRotation:true,reasonedUndo:true,scoringCompletionPersistence:true,errors}));
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

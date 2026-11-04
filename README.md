@@ -48,6 +48,8 @@ Run the backend test suite:
 
 `python -m unittest -v`
 
+Current verification and next-phase gates are recorded in [the 4 November 2026 QA report](docs/QA_2026-11-04.md). Repeatable browser acceptance checks are available with `npm --prefix frontend run test:browser`; setup and coverage limits are documented in that report.
+
 ## Frontend preview
 
 The React, TypeScript, and Vite frontend lives in `frontend/`. It provides organiser and referee views, player profiles, match scoring, category draws for singles/doubles/teams, seeded brackets, referee assignment, statistics, imports/exports, settings, and About/support pages. New workspaces are empty; organisers add their own names and club details. Organiser edits are recorded in an exportable activity journal with before/after snapshots. Player profiles can be edited, removed from the active roster, and restored while their old match IDs remain valid.

@@ -1,5 +1,7 @@
 # Rallydesk / Table Tennis Manager — Comprehensive QA Report
 
+Historical report. See [4 November 2026 verification](docs/QA_2026-11-04.md) for the current executed checks, fixes, and readiness gaps. Earlier missing-dependency and unimplemented-OCR statements below describe the earlier run.
+
 **Run date:** 1 November 2026  
 **Workspace tested:** `table_tennis_app-full-project`  
 **Scope:** Python tournament engine, documented React local preview, and project acceptance/feature brief.

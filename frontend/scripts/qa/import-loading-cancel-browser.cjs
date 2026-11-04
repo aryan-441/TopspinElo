@@ -1,0 +1,11 @@
+const {chromium}=require(process.env.RALLYDESK_PLAYWRIGHT_PATH || 'playwright');
+(async()=>{const browser=await chromium.launch({executablePath:process.env.RALLYDESK_BROWSER_EXECUTABLE,headless:true});try{
+const page=await browser.newPage({viewport:{width:1100,height:800}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:5173/?demo');
+await page.evaluate(()=>{const w=JSON.parse(localStorage.getItem('rallydesk-demo-v1'));w.matches=[];const t=w.tournaments[0];t.matchIds=[];t.completed=0;t.format='Knockout';t.categories[0].format='Knockout';delete t.categories[0].groupStage;localStorage.setItem('rallydesk-demo-v1',JSON.stringify(w))});
+let calls=0;await page.route('**/api/draw/recognize',async route=>{calls++;if(calls===1){await new Promise(r=>setTimeout(r,1200));try{await route.fulfill({status:200,contentType:'application/json',body:'{}'})}catch{}}else await route.fulfill({status:422,contentType:'application/json',body:JSON.stringify({detail:'The sample scan could not be recognised.'})})});
+await page.reload();await page.getByRole('button',{name:'Tournaments',exact:true}).click();await page.getByRole('button',{name:/Harbour Club Cup/}).click();await page.getByRole('tab',{name:'Draw & matches'}).click();
+const input=page.locator('input[type=file][accept*="application/pdf"]').last();const file={name:'bracket.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\n')};
+await input.setInputFiles(file);await page.getByRole('heading',{name:'Reading draw'}).waitFor();await page.getByRole('button',{name:'Cancel import'}).click();await page.getByRole('heading',{name:'Reading draw'}).waitFor({state:'hidden'});await new Promise(r=>setTimeout(r,1500));if(await page.getByRole('heading',{name:'Review draw'}).count())throw Error('Cancelled scan opened review');
+await input.setInputFiles(file);await page.getByRole('heading',{name:'Draw could not be read'}).waitFor();await page.getByRole('dialog').getByText('The sample scan could not be recognised.').waitFor();if(errors.length)throw Error(errors.join(' | '));console.log(JSON.stringify({cancelStopsReview:true,failureVisible:true,errors}));
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});
+
