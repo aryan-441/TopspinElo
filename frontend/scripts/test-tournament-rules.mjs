@@ -59,7 +59,7 @@ try {
   assert.match(scoredPage,/Serving<\/small><strong>100%/);
   assert.match(scoredPage,/Deuce games won<\/small><strong>100%/);
   assert.match(scoredPage,/Deuce points won<\/small><strong>100%/);
-  assert.match(render([{...scored,events:[]}]),/Serving<\/small><strong>—/);
+  assert.match(render([{...scored,events:[]}]),/Serving<\/small><strong>-/);
   const metricsBundle=await build({entryPoints:['src/services/playerMetrics.ts','src/services/tournamentRecovery.ts','src/data/demo.ts'],bundle:true,platform:'node',format:'cjs',write:false,outdir:'out'});
   const loaded={};
   for(const file of metricsBundle.outputFiles){

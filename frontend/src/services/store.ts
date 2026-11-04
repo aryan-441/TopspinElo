@@ -4,7 +4,7 @@ import type { CategoryEntry, GroupStageConfig, Match, Player, TeamSystem, Tourna
 import { teamMatchSequence } from './tableTennisRules';
 
 export const demoMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('demo');
-const STORAGE_KEY = demoMode ? 'rallydesk-demo-v1' : 'rallydesk-workspace-v2';
+export const STORAGE_KEY = demoMode ? 'rallydesk-demo-v1' : 'rallydesk-workspace-v2';
 
 export function loadWorkspace(): Workspace {
   try {

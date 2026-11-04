@@ -35,6 +35,7 @@ export type Match = {
   category?: string;
   categoryId?: string;
   refereeId?: string;
+  organiserScoringReason?: string;
   startsAt: string;
   format: string;
   pointsPerGame: 11 | 21;
@@ -113,6 +114,6 @@ export type Tournament = {
   audit: { id: string; action: string; target: string; reason: string; at: string }[];
 };
 
-export type Referee = { id: string; name: string; email?: string; active: boolean };
+export type Referee = { id: string; name: string; email?: string; active: boolean; unavailableReason?: string };
 export type WorkspaceActivity = { id: string; at: string; entity: 'player' | 'match' | 'tournament' | 'referee' | 'workspace'; entityId: string; action: 'created' | 'updated' | 'deleted'; summary: string; before?: unknown; after?: unknown };
 export type Workspace = { clubName?: string; players: Player[]; matches: Match[]; tournaments: Tournament[]; referees: Referee[]; activityLog: WorkspaceActivity[] };
