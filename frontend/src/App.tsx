@@ -246,6 +246,7 @@ export default function App() {
     return replayRatings({ ...current, matches, players, tournaments });
   });
   const openMatchSetup = () => {
+    if (workspaceRole !== 'organiser') return;
     if (activePlayers.length < 2) { setPage('players'); setToast('Add at least two active players before setting up a match'); return; }
     setCreateDialog('match');
   };
@@ -318,13 +319,13 @@ export default function App() {
           <div className="breadcrumb"><span>{workspace.clubName || 'Rallydesk'}</span><span className="breadcrumb-slash">/</span><b>{pageTitles[page]}</b></div>
           <div className="topbar-right">
             <span className="preview-pill"><span /> {demoMode ? 'Demo · sample records' : 'Local preview'}</span>
-            <button className="topbar-icon icon-button" aria-label="Notifications" onClick={() => setToast('You’re all caught up')}><Bell size={18} /><i /></button>
+            <button className="topbar-icon icon-button" aria-label="Notifications" onClick={() => setToast('You’re all caught up')}><Bell size={18} /></button>
           </div>
         </header>
 
         <main className="page-wrap">
           <div className="page-toolbar">
-            <div className="mobile-page-title"><span className="eyebrow">{workspaceRole === 'referee' ? 'REFEREE DESK' : workspace.clubName || 'YOUR CLUB'} · {new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()).toUpperCase()}</span><h1>{workspaceRole === 'referee' && page === 'matches' ? 'Referee desk' : pageTitles[page]}</h1></div>
+            <div className="mobile-page-title"><span className="eyebrow">{workspaceRole === 'referee' ? 'REFEREE DESK' : workspace.clubName || 'YOUR CLUB'} · {new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()).toUpperCase()}</span><h1 className={['tournaments', 'referees'].includes(page) ? 'sr-only' : undefined}>{workspaceRole === 'referee' && page === 'matches' ? 'Referee desk' : pageTitles[page]}</h1></div>
             {workspaceRole === 'organiser' && <div className="quick-actions-wrap">
               <button className="button button-primary" onClick={openMatchSetup}><Plus size={17} strokeWidth={2.5} /> New match</button>
               <button className="button button-icon" onClick={() => setShowQuickActions((value) => !value)} aria-label="More create actions"><span>···</span></button>

@@ -251,36 +251,3 @@ def recognize_draw(file: UploadFile = File(...)) -> dict[str, Any]:
         raise HTTPException(422, "No numbered entrant list was recognized. Use the manual entrant form or try a clearer scan.")
     return {"beta": True, "sourceName": file.filename, "pages": page_count, "entries": entries,
             "structureDraft": structure, "warnings": structure["review"]["notes"]}
-
-
-@app.post("/api/groups/recognize")
-def recognize_groups(file: UploadFile = File(...)) -> dict[str, Any]:
-    """Suggest player rosters from sectioned group/pool sheets for organiser review."""
-    if file.content_type != "application/pdf" or not (file.filename or "").lower().endswith(".pdf"):
-        raise HTTPException(415, "AI import accepts PDF files only, up to 20 MB.")
-    data = file.file.read(MAX_UPLOAD_BYTES + 1)
-    if len(data) > MAX_UPLOAD_BYTES:
-        raise HTTPException(413, "The beta importer accepts files up to 20 MB.")
-    if not data.startswith(b"%PDF-"):
-        raise HTTPException(415, "This file is not a valid PDF.")
-    lines, scans, page_count = draw_document_lines(data, file.content_type, min_words=4)
-    if scans:
-        try:
-            with _recognition_lock:
-                engine = group_ocr_engine()
-                for page_number, image in scans:
-                    lines.extend(recognize(image, page_number, engine))
-        except (NotImplementedError, RuntimeError) as exc:
-            raise HTTPException(503, "Scanned group PDFs are temporarily unavailable on this device. Export a selectable-text PDF or use the group CSV/JSON template.") from exc
-    groups = extract_group_assignments(lines)
-    if not groups or sum(len(group["entries"]) for group in groups) < 2:
-        raise HTTPException(422, "No sectioned group roster was recognized. Use a sheet with headings such as ‘Group A’ followed by player names, or import CSV/JSON.")
-    warnings = [
-                "OCR suggestions only: map every name to the tournament roster and confirm the group allocation before applying it.",
-                "This parser expects explicit Group A / Pool 1 section headings. It has not been qualified on representative group-table scans.",
-            ]
-    model_configured = bool(os.environ.get("GROUP_OCR_REC_MODEL_DIR", "").strip())
-    if scans and not model_configured:
-        warnings.append("No fine-tuned group recogniser is configured; suggestions use the general English OCR model.")
-    return {"beta": True, "recognizer": "embedded-text" if not scans else "fine-tuned" if model_configured else "base-fallback",
-            "sourceName": file.filename, "pages": page_count, "groups": groups, "warnings": warnings}
