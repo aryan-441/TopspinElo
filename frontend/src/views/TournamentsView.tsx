@@ -57,6 +57,10 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
   const [rewindReason,setRewindReason] = useState('');
   const [reasonAction, setReasonAction] = useState<'pause' | 'resume' | null>(null);
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
+  const [importLoading, setImportLoading] = useState<{ fileName: string; kind: string } | null>(null);
+  const [importFailure, setImportFailure] = useState<{ fileName: string; message: string } | null>(null);
+  const importAbortRef = useRef<AbortController | null>(null);
+  const [bracketNotice, setBracketNotice] = useState('');
   const [scheduleEdit, setScheduleEdit] = useState<Match | null>(null);
   const [fieldEditOpen, setFieldEditOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
@@ -68,13 +72,19 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
   const update = (next: Tournament) => onChange({ ...workspace, tournaments: workspace.tournaments.map((item) => item.id === next.id ? next : item) });
   const importDraw = async (file?: File, allocation = false, categoryId?: string) => {
     if (!selected || !file) return;
+    importAbortRef.current?.abort();
+    const controller = new AbortController();
+    importAbortRef.current = controller;
+    setImportFailure(null);
+    setBracketNotice('');
+    setImportLoading({ fileName: file.name, kind: /\.(pdf|jpe?g|png|webp|tiff?)$/i.test(file.name) ? 'Reading names and bracket positions' : 'Reading draw file' });
     try {
       if (file.type === 'application/pdf' || file.type.startsWith('image/') || /\.(pdf|jpe?g|png|webp|tiff?)$/i.test(file.name)) {
         if (!allocation) {
           const category = selected.categories.find((item) => item.format === 'Knockout' && item.kind === 'Singles' && (!categoryId || item.id === categoryId));
           if (!category) throw new Error('AI bracket import requires a singles Knockout category.');
           const body = new FormData(); body.append('file', file);
-          const response = await fetch('/api/draw/recognize', { method: 'POST', body });
+          const response = await fetch('/api/draw/recognize', { method: 'POST', body, signal: controller.signal });
           const result = await response.json();
           if (!response.ok) throw new Error(result.detail ?? 'Could not read this knockout draw.');
           const draft = result.structureDraft as { bracketSlots: (string | null)[]; byeSlotNumbers: number[]; review: { missingSlots: number[]; duplicateSlots: number[] } };
@@ -86,17 +96,18 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
         if (!category?.groupStage) throw new Error('This tournament has no group-stage category to receive the scan.');
         if (category.groupStage.advanced) throw new Error('This group stage has already advanced; edit the event data to change its historic allocation.');
         const body = new FormData(); body.append('file', file);
-        const response = await fetch('/api/groups/recognize', { method: 'POST', body });
+        const response = await fetch('/api/groups/recognize', { method: 'POST', body, signal: controller.signal });
         const result = await response.json();
         if (!response.ok) throw new Error(result.detail ?? 'Could not read group sections from this scan.');
         const groupAssignments: GroupSuggestion[] = (result.groups ?? []).flatMap((group: { name: string; entries: { name: string; confidence: number | null; page: number }[] }) => group.entries.map((entry) => {
           const matches = category.entries.filter((candidate) => entryLabel(candidate, players).trim().toLocaleLowerCase() === entry.name.trim().toLocaleLowerCase());
           return { groupName: group.name, playerName: entry.name, confidence: entry.confidence, page: entry.page, entryId: matches.length === 1 ? matches[0].id : '' };
         }));
-        if (!groupAssignments.length) throw new Error('No group player names were recognized.');
+        if (!groupAssignments.length) throw new Error('No group player names were recognised.');
         setImportPreview({ fileName: file.name, rows: [], groupAssignments, groupCategoryId: category.id, recognizer: result.recognizer, warnings: result.warnings ?? [] }); return;
       }
       const contents = await file.text();
+      if (controller.signal.aborted) return;
       const rows = file.name.toLowerCase().endsWith('.json')
         ? (() => { const data = JSON.parse(contents); return Array.isArray(data) ? data : data.matches ?? data.workspace?.matches; })()
         : parseDrawCsv(contents);
@@ -159,8 +170,19 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
         };
       });
       setImportPreview({ fileName: file.name, rows: mappedRows });
-    } catch (error) { toast(error instanceof Error ? error.message : 'Could not read that draw file'); }
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        const message = error instanceof TypeError && /fetch/i.test(error.message)
+          ? 'The draw recognition service did not respond. Check that the local recognition service is running, then try again.'
+          : error instanceof Error ? error.message : 'Could not read that draw file';
+        setImportFailure({ fileName: file.name, message });
+        toast(message);
+      }
+    } finally {
+      if (importAbortRef.current === controller) { importAbortRef.current = null; setImportLoading(null); }
+    }
   };
+  const cancelImportLoading = () => { importAbortRef.current?.abort(); importAbortRef.current = null; setImportLoading(null); };
   const missingNames = importPreview && selected ? missingDrawNames(importPreview, selected) : [];
   const stageMissingPlayers = () => {
     if (!importPreview || !selected || !missingNames.length) return;
@@ -275,6 +297,24 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
   };
   const reviewState = importPreview && selected ? pendingImportState(importPreview, selected, workspace) : null;
   const reviewEntrants: DrawEntrant[] = reviewState ? reviewState.tournament.categories.flatMap((category) => category.entries.map((entry) => ({ id: entry.id, name: entryLabel(entry, reviewState.players), categoryId: category.id, categoryName: category.name, kind: category.kind, playerIds: entry.playerIds }))) : [];
+  const changeBracketSlot = (slotIndex: number, entryId: string | null) => {
+    if (!importPreview?.bracketDraft) return;
+    const ids = [...importPreview.bracketDraft.entryIds];
+    const previous = ids[slotIndex];
+    if (previous === entryId) return;
+    const otherSlot = entryId ? ids.findIndex((id, index) => index !== slotIndex && id === entryId) : -1;
+    if (otherSlot >= 0) {
+      ids[otherSlot] = previous;
+      ids[slotIndex] = entryId;
+      const firstName = reviewEntrants.find((entrant) => entrant.id === previous)?.name ?? 'Empty slot';
+      const secondName = reviewEntrants.find((entrant) => entrant.id === entryId)?.name ?? 'Player';
+      setBracketNotice(`Swapped ${firstName} and ${secondName} between slots ${slotIndex + 1} and ${otherSlot + 1}.`);
+    } else {
+      ids[slotIndex] = entryId;
+      setBracketNotice(`Slot ${slotIndex + 1} updated.`);
+    }
+    setImportPreview({ ...importPreview, bracketDraft: { ...importPreview.bracketDraft, entryIds: ids } });
+  };
   const selectedMatches = selected ? workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id)) : [];
   const canEditField = Boolean(selected && selected.categories.length === 1 && selected.categories[0].kind === 'Singles');
   const saveField = (entrantIds: string[], reason: string) => {
@@ -400,7 +440,9 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       {tab === 'Standings' && <TournamentStandings tournament={selected} players={players} matches={workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id))} />}
       {tab === 'Audit log' && <TournamentAudit tournament={selected} />}
     </>}
-    {importPreview && selected && <ImportDrawDialog preview={importPreview} entrants={reviewEntrants} categories={categoryNames(selected)} errors={importErrors} missingNames={missingNames} onAddPlayers={stageMissingPlayers} onBracketChange={(slotIndex, entryId) => setImportPreview((current) => current?.bracketDraft ? { ...current, bracketDraft: { ...current.bracketDraft, entryIds: current.bracketDraft.entryIds.map((id, index) => index === slotIndex ? entryId : id) } } : current)} onGroupChange={(rowIndex, key, value) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.map((row, index) => index === rowIndex ? { ...row, [key]: value } : row) } : current)} onAddGroupRow={() => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: [...current.groupAssignments, { groupName: current.groupAssignments.at(-1)?.groupName ?? 'Group A', playerName: '', confidence: null, page: null, entryId: '' }] } : current)} onRemoveGroupRow={(rowIndex) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.filter((_, index) => index !== rowIndex) } : current)} onChange={(rowIndex, key, value) => setImportPreview((current) => current ? { ...current, rows: current.rows.map((row, index) => rowIndex === index ? { ...row, [key]: value, ...(key === 'playerOneId' ? { oneMatch: 'manual' } : key === 'playerTwoId' ? { twoMatch: 'manual' } : {}) } : row) } : current)} onClose={() => setImportPreview(null)} onApply={applyImport} />}
+    {importLoading && <Dialog title="Reading draw" eyebrow="IMPORT IN PROGRESS" onClose={cancelImportLoading}><div className="import-loading" role="status" aria-live="polite"><span className="import-spinner" aria-hidden="true" /><div><strong>{importLoading.kind}</strong><p>{importLoading.fileName}</p><small>Recognising a PDF or image can take a little while. The review will open when the scan is ready.</small></div></div><div className="dialog-actions"><button className="button button-quiet" onClick={cancelImportLoading}>Cancel import</button></div></Dialog>}
+    {importFailure && <Dialog title="Draw could not be read" eyebrow="IMPORT NEEDS ATTENTION" onClose={() => setImportFailure(null)}><div className="import-failure" role="alert"><AlertTriangle size={20} /><div><strong>{importFailure.fileName}</strong><p>{importFailure.message}</p></div></div><div className="dialog-actions"><button className="button button-primary" onClick={() => setImportFailure(null)}>Close and try again</button></div></Dialog>}
+    {importPreview && selected && <ImportDrawDialog preview={importPreview} entrants={reviewEntrants} categories={categoryNames(selected)} errors={importErrors} missingNames={missingNames} bracketNotice={bracketNotice} onAddPlayers={stageMissingPlayers} onBracketChange={changeBracketSlot} onGroupChange={(rowIndex, key, value) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.map((row, index) => index === rowIndex ? { ...row, [key]: value } : row) } : current)} onAddGroupRow={() => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: [...current.groupAssignments, { groupName: current.groupAssignments.at(-1)?.groupName ?? 'Group A', playerName: '', confidence: null, page: null, entryId: '' }] } : current)} onRemoveGroupRow={(rowIndex) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.filter((_, index) => index !== rowIndex) } : current)} onChange={(rowIndex, key, value) => setImportPreview((current) => current ? { ...current, rows: current.rows.map((row, index) => rowIndex === index ? { ...row, [key]: value, ...(key === 'playerOneId' ? { oneMatch: 'manual' } : key === 'playerTwoId' ? { twoMatch: 'manual' } : {}) } : row) } : current)} onClose={() => setImportPreview(null)} onApply={applyImport} />}
     {scheduleEdit && selected && <ScheduleDialog match={scheduleEdit} tableCount={selected.tableCount ?? 1} onClose={() => setScheduleEdit(null)} onSave={saveSchedule} />}
     {fieldEditOpen && selected && <EditFieldDialog tournament={selected} players={workspace.players} pendingFixtureCount={selectedMatches.length} onClose={() => setFieldEditOpen(false)} onSave={saveField} />}
     {editingMatch && <MatchRecordEditor match={editingMatch} workspace={workspace} onClose={() => setEditingMatch(null)} onSave={(match) => { onSaveMatch(match); setEditingMatch(null); toast('Match corrected and the former record retained in the journal'); }} />}
@@ -429,17 +471,25 @@ function TournamentDraw({ workspace, matches, tournamentGroups, hasKnockout, pla
   </section>;
 }
 
-function ImportDrawDialog({ preview, entrants, categories, errors, missingNames, onAddPlayers, onChange, onBracketChange, onGroupChange, onAddGroupRow, onRemoveGroupRow, onClose, onApply }: { preview: ImportPreview; entrants: DrawEntrant[]; categories: string[]; errors: string[]; missingNames: { name: string; categoryId: string }[]; onAddPlayers: () => void; onChange: (rowIndex: number, key: 'playerOneId' | 'playerTwoId' | 'category', value: string) => void; onBracketChange: (slotIndex: number, entryId: string | null) => void; onGroupChange: (rowIndex: number, key: 'entryId' | 'groupName', value: string) => void; onAddGroupRow: () => void; onRemoveGroupRow: (rowIndex: number) => void; onClose: () => void; onApply: () => void }) {
+function ImportDrawDialog({ preview, entrants, categories, errors, missingNames, bracketNotice, onAddPlayers, onChange, onBracketChange, onGroupChange, onAddGroupRow, onRemoveGroupRow, onClose, onApply }: { preview: ImportPreview; entrants: DrawEntrant[]; categories: string[]; errors: string[]; missingNames: { name: string; categoryId: string }[]; bracketNotice: string; onAddPlayers: () => void; onChange: (rowIndex: number, key: 'playerOneId' | 'playerTwoId' | 'category', value: string) => void; onBracketChange: (slotIndex: number, entryId: string | null) => void; onGroupChange: (rowIndex: number, key: 'entryId' | 'groupName', value: string) => void; onAddGroupRow: () => void; onRemoveGroupRow: (rowIndex: number) => void; onClose: () => void; onApply: () => void }) {
   const groupEntrants = entrants.filter((entrant) => entrant.categoryId === preview.groupCategoryId);
-  return <Dialog title="Review draw" eyebrow="NON-DESTRUCTIVE PREVIEW" onClose={onClose} size="wide">
+  const bracketEntrants = preview.bracketDraft ? entrants.filter((entrant) => entrant.categoryId === preview.bracketDraft!.categoryId) : [];
+  const omittedEntrants = preview.bracketDraft ? bracketEntrants.filter((entrant) => !preview.bracketDraft!.entryIds.includes(entrant.id) && !preview.pendingPlayers?.some((pending) => pending.entryId === entrant.id)) : [];
+  return <Dialog title="Review draw" eyebrow="NON-DESTRUCTIVE PREVIEW" onClose={onClose} size={preview.bracketDraft ? 'review' : 'wide'}>
     <div className="import-review-summary"><FileSpreadsheet size={17} /><span><b>{preview.fileName}</b><small>{preview.bracketDraft ? `${preview.bracketDraft.slots.length} knockout slots · awaiting confirmation` : preview.groupAssignments ? `${preview.groupAssignments.length} OCR name suggestions · nothing has changed yet` : preview.groups ? `${preview.groups.length} groups · ${preview.groups.reduce((sum, group) => sum + group.entryIds.length, 0)} assignments found · nothing has changed yet` : `${preview.rows.length} fixtures found · nothing has been added yet`}</small></span></div>
     {missingNames.length > 0 && <div className="import-missing-players" role="alert"><AlertTriangle size={21} /><div><strong>{missingNames.length} {missingNames.length === 1 ? 'name is' : 'names are'} not in this tournament</strong><p>{missingNames.map((item) => item.name).join(', ')}</p><p>Add these entrants to the tournament and create any missing player profiles, or cancel the import. New profiles will have no hand, grip or playing style until you fill them in. Nothing is saved until you apply the reviewed draw.</p><button className="button button-primary" type="button" onClick={onAddPlayers}><UserRoundPlus size={15} /> Add {missingNames.length === 1 ? 'player' : 'players'} to this import</button></div></div>}
     {Boolean(preview.pendingPlayers?.length) && <p className="import-staged-note"><Check size={15} /> {preview.pendingPlayers!.length} {preview.pendingPlayers!.length === 1 ? 'entrant' : 'entrants'} staged. They will be saved only when you apply the draw.</p>}
-    {preview.bracketDraft && <div className="import-review-errors"><p>Review the qualifiers, opening opponents and byes before confirming. You can change the player in each occupied slot.</p>{entrants.filter((entry) => entry.categoryId === preview.bracketDraft!.categoryId && !preview.bracketDraft!.entryIds.includes(entry.id) && !preview.pendingPlayers?.some((pending) => pending.entryId === entry.id)).length > 0 && <p className="import-review-note">Entrants not in this bracket will leave this category when you apply it. Their player profiles and earlier records remain in the workspace.</p>}{errors.length > 0 && <ul role="alert">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}<div className="import-review-table-wrap" role="region" aria-label="Review knockout bracket slots" tabIndex={0}><table className="data-table import-review-table"><thead><tr><th>SLOT</th><th>PROPOSED</th><th>ROSTER PLAYER</th></tr></thead><tbody>{preview.bracketDraft.slots.map((name, index) => <tr key={index}><td>{index + 1}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : name || 'Not read'}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : <select value={preview.bracketDraft!.entryIds[index] ?? ''} onChange={(event) => onBracketChange(index, event.target.value || null)}><option value="">Choose registered player</option>{entrants.filter((entry) => entry.categoryId === preview.bracketDraft!.categoryId).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select>}</td></tr>)}</tbody></table></div></div>}
+    {preview.bracketDraft && <section className="bracket-review">
+      <div className="bracket-review-intro"><div><h3>Set the opening bracket</h3><p>Check each detected name and BYE. Choose a player for every occupied slot.</p><p>Choosing someone already placed in another slot swaps the two players automatically.</p></div><div className="bracket-review-count"><b>{preview.bracketDraft.slots.length}</b><span>SLOTS</span></div></div>
+      {omittedEntrants.length > 0 && <div className="bracket-review-caution"><AlertTriangle size={17} /><p><b>{omittedEntrants.length} {omittedEntrants.length === 1 ? 'entrant is' : 'entrants are'} outside this bracket.</b> Applying it removes {omittedEntrants.length === 1 ? 'that entrant' : 'them'} from this category. Their player profiles and previous results stay in the workspace.</p></div>}
+      {errors.length > 0 && <div className="import-review-errors" role="alert"><AlertTriangle size={17} /><div><b>Finish mapping before applying</b><ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul></div></div>}
+      <p className="bracket-swap-notice" role="status" aria-live="polite">{bracketNotice ? <><Check size={15} /> {bracketNotice}</> : 'Changes stay in this review until you apply the bracket.'}</p>
+      <div className="import-review-table-wrap" role="region" aria-label="Review knockout bracket slots" tabIndex={0}><table className="data-table import-review-table"><thead><tr><th>SLOT</th><th>DETECTED</th><th>FINAL PLAYER</th></tr></thead><tbody>{preview.bracketDraft.slots.map((name, index) => <tr key={index}><td><b>{index + 1}</b></td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? <span className="bye-tag">BYE</span> : name || <span className="import-missing">Not read</span>}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? <span className="bracket-bye-label">BYE · no match</span> : <select aria-label={`Player in slot ${index + 1}`} value={preview.bracketDraft!.entryIds[index] ?? ''} onChange={(event) => onBracketChange(index, event.target.value || null)}><option value="">Choose player</option>{bracketEntrants.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select>}</td></tr>)}</tbody></table></div>
+    </section>}
     {(preview.groups || preview.groupAssignments) && <div className="import-review-errors"><div><b>{preview.groupAssignments ? 'Review OCR suggestions and map each name' : 'Review imported allocation'}</b>
       {errors.length > 0 && <ul role="alert">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}
       {preview.groups && <ul>{preview.groups.map((group) => <li key={group.id}>{group.name}: {group.entryIds.map((id) => entrants.find((entrant) => entrant.id === id)?.name ?? id).join(', ')}</li>)}</ul>}
-      {preview.groupAssignments && <><p>OCR text is an unverified draft. Confirm every mapping; rows below 80% confidence deserve extra review. Add missed players, remove false detections, and correct group labels before applying. This beta expects clear “Group A” or “Pool 1” headings and has not been qualified on representative group scans. Recognizer: {preview.recognizer ?? 'unknown'}.</p>{preview.warnings?.length ? <ul>{preview.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : null}<div className="import-review-table-wrap" role="region" aria-label="Review OCR group allocation" tabIndex={0}><table className="data-table import-review-table"><thead><tr><th>GROUP</th><th>OCR NAME</th><th>CONFIDENCE</th><th>ROSTER MATCH</th><th /></tr></thead><tbody>{preview.groupAssignments.map((row, index) => <tr key={`${row.groupName}-${row.page ?? 'manual'}-${index}`}><td><label className="sr-only" htmlFor={`group-name-${index}`}>Group for {row.playerName || 'manual player entry'}</label><input id={`group-name-${index}`} value={row.groupName} onChange={(event) => onGroupChange(index, 'groupName', event.target.value)} /></td><td>{row.playerName || 'Manual roster entry'} {row.page !== null && <small>p. {row.page}</small>}</td><td>{row.confidence === null ? 'Manual / unknown' : `${Math.round(row.confidence * 100)}%`}</td><td><label className="sr-only" htmlFor={`group-map-${index}`}>Map {row.playerName || 'manual entry'} in {row.groupName} to a registered entrant</label><select id={`group-map-${index}`} value={row.entryId} onChange={(event) => onGroupChange(index, 'entryId', event.target.value)}><option value="">Choose roster player</option>{groupEntrants.map((entrant) => <option key={entrant.id} value={entrant.id}>{entrant.name}</option>)}</select></td><td><button type="button" className="icon-button" aria-label={`Remove ${row.playerName || 'manual'} suggestion`} onClick={() => onRemoveGroupRow(index)}><Trash2 size={14} /></button></td></tr>)}</tbody></table></div><button type="button" className="button button-outline" onClick={onAddGroupRow}><Plus size={14} /> Add missing player</button></>}
+      {preview.groupAssignments && <><p>OCR text is an unverified draft. Confirm every mapping; rows below 80% confidence deserve extra review. Add missed players, remove false detections, and correct group labels before applying. This beta expects clear “Group A” or “Pool 1” headings and has not been qualified on representative group scans. Recogniser: {preview.recognizer ?? 'unknown'}.</p>{preview.warnings?.length ? <ul>{preview.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : null}<div className="import-review-table-wrap" role="region" aria-label="Review OCR group allocation" tabIndex={0}><table className="data-table import-review-table"><thead><tr><th>GROUP</th><th>OCR NAME</th><th>CONFIDENCE</th><th>ROSTER MATCH</th><th /></tr></thead><tbody>{preview.groupAssignments.map((row, index) => <tr key={`${row.groupName}-${row.page ?? 'manual'}-${index}`}><td><label className="sr-only" htmlFor={`group-name-${index}`}>Group for {row.playerName || 'manual player entry'}</label><input id={`group-name-${index}`} value={row.groupName} onChange={(event) => onGroupChange(index, 'groupName', event.target.value)} /></td><td>{row.playerName || 'Manual roster entry'} {row.page !== null && <small>p. {row.page}</small>}</td><td>{row.confidence === null ? 'Manual / unknown' : `${Math.round(row.confidence * 100)}%`}</td><td><label className="sr-only" htmlFor={`group-map-${index}`}>Map {row.playerName || 'manual entry'} in {row.groupName} to a registered entrant</label><select id={`group-map-${index}`} value={row.entryId} onChange={(event) => onGroupChange(index, 'entryId', event.target.value)}><option value="">Choose roster player</option>{groupEntrants.map((entrant) => <option key={entrant.id} value={entrant.id}>{entrant.name}</option>)}</select></td><td><button type="button" className="icon-button" aria-label={`Remove ${row.playerName || 'manual'} suggestion`} onClick={() => onRemoveGroupRow(index)}><Trash2 size={14} /></button></td></tr>)}</tbody></table></div><button type="button" className="button button-outline" onClick={onAddGroupRow}><Plus size={14} /> Add missing player</button></>}
       <p className="import-review-note">Applying replaces this category’s generated group fixtures and any unsaved schedule choices. Imports are blocked if a group match has started or an entrant has a recorded schedule override.</p>
       </div></div>}
     {!preview.groups && !preview.groupAssignments && !preview.bracketDraft && <>
@@ -492,7 +542,7 @@ function exportTournamentPackage(tournament: Tournament, workspace: Workspace, p
   const activityLog = workspace.activityLog.filter((event) => event.entityId === tournament.id || matchIds.has(event.entityId));
   const packageData = { schemaVersion: 2, exportedAt: new Date().toISOString(), source: 'Rallydesk local preview', tournament, entrants: tournament.entrantIds.map((id) => players.get(id)).filter(Boolean), matches, activityLog };
   const url = URL.createObjectURL(new Blob([JSON.stringify(packageData, null, 2)], { type: 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = `rallydesk-${slug(tournament.name)}-tournament.json`; link.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const link = document.createElement('a'); link.href = url; link.download = `rallydesk-${slug(tournament.name)}-tournament.json`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function printTournamentDraw(tournament: Tournament, matches: Match[], players: Map<string, Player>) {
@@ -608,14 +658,14 @@ function downloadDrawTemplate(type: 'csv' | 'json', includeGroups = false) {
   const sample = { player_one: '', player_two: '', category: '', ...(includeGroups ? { group: 'Group A' } : {}), round: includeGroups ? 'Group A · Round 1' : 'Round 1', table: '', start_time: '' };
   const body = isCsv ? `${includeGroups ? 'player_one,player_two,category,group,round,table,start_time' : 'player_one,player_two,category,round,table,start_time'}\n` : JSON.stringify({ schema_version: 1, matches: [sample] }, null, 2);
   const url = URL.createObjectURL(new Blob([body], { type: isCsv ? 'text/csv;charset=utf-8' : 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = `rallydesk-draw-template.${type}`; link.click(); URL.revokeObjectURL(url);
+  const link = document.createElement('a'); link.href = url; link.download = `rallydesk-draw-template.${type}`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function downloadGroupAllocationTemplate(type: 'csv' | 'json') {
   const isCsv = type === 'csv';
   const body = isCsv ? 'group,player,seed\nGroup A,,\nGroup B,,\n' : JSON.stringify({ schema_version: 1, groups: [{ group: 'Group A', player: '', seed: 1 }, { group: 'Group B', player: '', seed: 2 }] }, null, 2);
   const url = URL.createObjectURL(new Blob([body], { type: isCsv ? 'text/csv;charset=utf-8' : 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = `rallydesk-group-allocation-template.${type}`; link.click(); URL.revokeObjectURL(url);
+  const link = document.createElement('a'); link.href = url; link.download = `rallydesk-group-allocation-template.${type}`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function TournamentStandings({ tournament, players, matches }: { tournament: Tournament; players: Map<string, Player>; matches: Match[] }) {

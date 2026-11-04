@@ -31,7 +31,7 @@ const workspaceNav: NavItem[] = [
   { id: 'about', label: 'About Rallydesk', icon: Info },
 ];
 const pageTitles: Record<PageId, string> = {
-  overview: 'Rallydesk', matches: 'Matches', tournaments: 'Tournaments', players: 'Players', referees: 'Referees', statistics: 'Statistics', exports: 'Exports & recovery', settings: 'Workspace settings', about: 'About Rallydesk', guide: 'Club guide',
+  overview: 'Rallydesk', matches: 'Matches', tournaments: 'Tournaments', players: 'Players', referees: 'Referees', statistics: 'Statistics', exports: 'Exports & recovery', settings: 'Settings', about: 'About Rallydesk', guide: 'Club guide',
 };
 
 type CreateDialog = 'player' | 'match' | 'tournament' | null;
@@ -484,7 +484,7 @@ function CategoryRegistration({ category, players, defaultFormat, manualEntrants
         const entry = recognized.get(slot);
         return [{ name: entry?.name ?? '', seed: '', sourceSlot: slot, confidence: entry?.confidence ?? undefined }];
       });
-      if (!rows.length) throw new Error('No entrant names were recognized. You can enter them manually below.');
+      if (!rows.length) throw new Error('No entrant names were recognised. You can enter them manually below.');
       setCvByeSlots(structure.byeSlotNumbers);
       updateManualEntrants(rows, structure.byeSlotNumbers);
       setCvError(`Beta draft: ${structure.entries.length} names in ${structure.bracketSlots.length} slots. BYEs: ${structure.byeSlotNumbers.join(', ') || 'none'}.${structure.review.missingSlots.length ? ` Fill the missing slots: ${structure.review.missingSlots.join(', ')}.` : ''} Review every name and BYE before creating the draw.`);

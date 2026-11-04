@@ -10,7 +10,7 @@ export function AboutView() {
       <div><span className="eyebrow">TABLE TENNIS · CLUB OPERATIONS</span><h2>Rallydesk</h2><p>Free to use and free of ads. Amid the noise of a tournament hall, one desk keeps track of who plays next and what happened at the table.</p></div>
     </section>
     <div className="about-grid">
-      <article className="utility-card about-card"><Users size={19} /><h3>Made for your club</h3><p>Players can revisit a close match point by point. Coaches can use the same record to discern where a game turned and choose what to practise next.</p></article>
+      <article className="utility-card about-card"><Users size={19} /><h3>Made for your club</h3><p>Players can revisit a close match point by point. Coaches can use the same record to discern where a game turned and plan the next training session.</p></article>
       <article className="utility-card about-card"><Trophy size={19} /><h3>From a match to a full draw</h3><p>Referees record a point once. Organisers see the score and standings without copying numbers between draw sheets.</p></article>
       <article className="utility-card about-card"><Activity size={19} /><h3>Results you can review</h3><p>Player records and statistics are calculated from match results. Export tools help you keep a copy of the workspace data.</p></article>
       <article className="utility-card about-card"><Info size={19} /><h3>Use Rallydesk as a product</h3><p>The product is free to use and has no advertisements. Reusing, changing, or distributing its code requires written permission. Ask at <a href="mailto:rallydesksupport@gmail.com">rallydesksupport@gmail.com</a> or through <a href="https://github.com/aryan-441/table-tennis-manager">GitHub</a>. Accounts, cloud synchronisation, and production privacy controls are part of the planned release work.</p></article>
@@ -20,10 +20,9 @@ export function AboutView() {
 }
 
 export function ExportsView({ workspace, onToast }: { workspace: Workspace; onToast: (message: string) => void }) {
-  const [busy, setBusy] = useState(false);
   const exportJson = () => {
-    setBusy(true);
-    window.setTimeout(() => { downloadFile(`rallydesk-workspace-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ schemaVersion: 2, exportedAt: new Date().toISOString(), source: 'Rallydesk local preview', workspace }, null, 2), 'application/json'); setBusy(false); onToast('Workspace JSON downloaded'); }, 180);
+    downloadFile(`rallydesk-workspace-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ schemaVersion: 2, exportedAt: new Date().toISOString(), source: 'Rallydesk local preview', workspace }, null, 2), 'application/json');
+    onToast('Workspace JSON downloaded');
   };
   const exportPlayers = () => {
     const header = 'player_id,name,hand,grip,style,rating,wins,losses,points_won';
@@ -44,7 +43,7 @@ export function ExportsView({ workspace, onToast }: { workspace: Workspace; onTo
   const exportActivity = () => { downloadFile(`rallydesk-activity-log-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ schemaVersion: 1, exportedAt: new Date().toISOString(), source: 'Rallydesk local preview', records: workspace.activityLog ?? [] }, null, 2), 'application/json'); onToast('Activity log downloaded'); };
   return <div className="page-content utility-page">
     <div className="page-intro"><div><p className="eyebrow">PORTABILITY & RECOVERY</p><h2>Your records, ready to move</h2><p>Export the preview workspace or download a spreadsheet-friendly summary.</p></div></div>
-    <section className="export-primary"><div className="export-art"><FileArchive size={25} /><span>JSON<br />CSV</span></div><div className="export-copy"><p className="eyebrow">WORKSPACE EXPORT</p><h3>Take a copy of your club data</h3><p>Includes player profiles, match timelines, tournament records and the change journal with before/after snapshots. This preview export stays on your device.</p><div className="export-includes"><span><Check size={13} /> Players</span><span><Check size={13} /> Matches</span><span><Check size={13} /> Tournaments</span><span><Check size={13} /> Full activity journal</span></div></div><button className="button button-primary" onClick={exportJson} disabled={busy}><ArrowDownToLine size={16} />{busy ? 'Preparing…' : 'Download workspace JSON'}</button></section>
+    <section className="export-primary"><div className="export-art"><FileArchive size={25} /><span>JSON<br />CSV</span></div><div className="export-copy"><p className="eyebrow">WORKSPACE EXPORT</p><h3>Take a copy of your club data</h3><p>Includes player profiles, match timelines, tournament records and the change journal with before/after snapshots. This preview export stays on your device.</p><div className="export-includes"><span><Check size={13} /> Players</span><span><Check size={13} /> Matches</span><span><Check size={13} /> Tournaments</span><span><Check size={13} /> Full activity journal</span></div></div><button className="button button-primary" onClick={exportJson}><ArrowDownToLine size={16} />Download workspace JSON</button></section>
     <div className="export-grid"><ExportTile icon={Activity} title="Every point and correction" description="Full point log with reasons and reversed event records" button="Download CSV" onClick={exportPoints}/><ExportTile icon={FileSpreadsheet} title="Player list" description={`${workspace.players.length} profiles · CSV format`} button="Download CSV" onClick={exportPlayers} /><ExportTile icon={FileSpreadsheet} title="Match summary" description={`${workspace.matches.length} matches · CSV format`} button="Download CSV" onClick={exportMatches} /><ExportTile icon={FileJson2} title="Complete tournament data" description={`${workspace.tournaments.length} events, matches, profiles and history · JSON format`} button="Download JSON" onClick={() => downloadFile(`rallydesk-tournaments-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ schemaVersion:2, exportedAt:new Date().toISOString(), workspace }, null, 2), 'application/json')} /><ExportTile icon={Activity} title="Change journal" description={`${workspace.activityLog?.length ?? 0} changes · JSON format`} button="Download log" onClick={exportActivity} /></div>
     <div className="export-note"><Info size={15} /><span><b>Local preview limitation.</b> Downloads include only the records saved in this browser. No account or cloud copy is connected yet.</span></div>
     <section className="recovery-block"><div><p className="eyebrow">RECOVERY PLAN</p><h3>Keep a copy before event day</h3><p>Before a tournament, export a fresh copy and keep it somewhere you can reach if your device is unavailable.</p></div><div className="recovery-steps"><span><b>01</b> Download the workspace</span><ArrowRight size={14} /><span><b>02</b> Store a second copy</span><ArrowRight size={14} /><span><b>03</b> Check it opens</span></div></section>
@@ -90,7 +89,8 @@ function isWorkspace(value: unknown): value is Workspace {
 
 function downloadFile(name: string, body: string, type: string) {
   const url = URL.createObjectURL(new Blob([body], { type }));
-  const link = document.createElement('a'); link.href = url; link.download = name; link.click();
+  const link = document.createElement('a'); link.href = url; link.download = name;
+  document.body.appendChild(link); link.click(); link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
@@ -112,8 +112,8 @@ export function ClubGuide({navigate}: {navigate: (page: PageId) => void}) {
     ['exports','Export every point','Download Every point and correction as CSV to review point winners, servers, game numbers, reasons and reversed events. Complete tournament data includes a full restorable workspace.'],
     ['statistics','Understand missing data','A dash means the sample cannot support the metric. Every percentage shows its denominator. Open Metric definitions for formulas, Point sample filters for serve and deuce subsets, and Trend data for the values behind the chart.'],
     ['matches','Read a match timeline','Select Log in the match list, or Show match history then Open match log in Statistics. On phones, use the Match timeline button. Undo requires a reason and retains the reversed event in the correction.'],
-    ['tournaments','Import a draw','Use the draw import in Draw & matches. Check every detected name and bye. If a name is outside the tournament, choose Add players in the review or cancel. Any new profile starts with hand, grip and style unspecified. The recognition service must be running for PDF and image recognition.'],
+    ['tournaments','Import a draw','Use Import knockout draw in Draw & matches. A reading indicator stays visible during PDF or image recognition; you can cancel the scan. Review every detected name and BYE. Choosing a player already in another slot swaps them. If a name is outside the tournament, add the player in review or cancel. New profiles start with hand, grip and style unspecified.'],
     ['settings','Manage the workspace','Use Settings to name the club or restore a saved workspace.']
   ];
-  return <main className="page-content"><header className="page-intro"><div><p className="eyebrow">CLUB HANDBOOK</p><h2>From registration to the final point</h2><p><a href="/palettes.html" target="_blank" rel="noreferrer">Explore the colour palette samples ↗</a></p></div></header><div className="about-grid">{chapters.map(([page,title,copy],i) => <article key={title} className="utility-card about-card"><small>SECTION {i+1}</small><h3>{title}</h3><p>{copy}</p><button className="button button-outline" onClick={() => navigate(page)}>Open {page}</button></article>)}</div></main>
+  return <main className="page-content"><header className="page-intro"><div><p className="eyebrow">CLUB HANDBOOK</p><h2>From registration to the final point</h2></div></header><div className="about-grid">{chapters.map(([page,title,copy],i) => <article key={title} className="utility-card about-card"><small>SECTION {i+1}</small><h3>{title}</h3><p>{copy}</p><button className="button button-outline" onClick={() => navigate(page)}>Open {page}</button></article>)}</div></main>
 }

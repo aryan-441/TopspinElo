@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
-type DialogProps = { title: string; eyebrow?: string; onClose: () => void; children: React.ReactNode; size?: 'standard' | 'wide' };
+type DialogProps = { title: string; eyebrow?: string; onClose: () => void; children: React.ReactNode; size?: 'standard' | 'wide' | 'review' };
 
 export function Dialog({ title, eyebrow, onClose, children, size = 'standard' }: DialogProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -37,7 +38,7 @@ export function Dialog({ title, eyebrow, onClose, children, size = 'standard' }:
     };
   }, []);
 
-  return (
+  return createPortal(
     <div ref={scrimRef} className="dialog-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section ref={dialogRef} className={`dialog dialog--${size}`} role="dialog" aria-modal="true" aria-labelledby="dialog-title">
         <header className="dialog-head">
@@ -46,6 +47,7 @@ export function Dialog({ title, eyebrow, onClose, children, size = 'standard' }:
         </header>
         {children}
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
