@@ -5,6 +5,7 @@ import re
 import os
 from io import BytesIO
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 import cv2
@@ -32,6 +33,7 @@ app.add_middleware(
 _ocr: PaddleOCR | None = None
 _group_ocr: PaddleOCR | None = None
 _bracket_ocr: PaddleOCR | None = None
+_recognition_lock = Lock()
 
 
 def bracket_ocr_engine() -> PaddleOCR:
@@ -90,6 +92,35 @@ def document_pages(data: bytes, content_type: str) -> list[np.ndarray]:
     if image is None:
         raise HTTPException(422, "The file is not a readable image.")
     return [image]
+
+
+def draw_document_lines(data: bytes, content_type: str) -> tuple[list[dict[str, Any]], list[tuple[int, np.ndarray]], int]:
+    """Read selectable PDF text directly and reserve OCR for scanned pages."""
+    if content_type != "application/pdf" and not data.startswith(b"%PDF"):
+        return [], [(1, image) for image in document_pages(data, content_type)], 1
+    try:
+        doc = fitz.open(stream=data, filetype="pdf")
+    except Exception as exc:
+        raise HTTPException(422, "Could not open this PDF. Try a clear scan or image export.") from exc
+    with doc:
+        if len(doc) > MAX_PAGES:
+            raise HTTPException(413, f"PDFs are limited to {MAX_PAGES} pages in the beta importer.")
+        lines: list[dict[str, Any]] = []
+        scans: list[tuple[int, np.ndarray]] = []
+        for page_number, page in enumerate(doc, start=1):
+            if len(page.get_text("words")) >= 15:
+                for block in page.get_text("dict")["blocks"]:
+                    for item in block.get("lines", []):
+                        text = "".join(span["text"] for span in item["spans"]).strip()
+                        if text:
+                            lines.append({"text": text, "confidence": 1.0, "page": page_number,
+                                          "x": item["bbox"][0], "y": item["bbox"][1],
+                                          "width": page.rect.width, "height": page.rect.height})
+                continue
+            pixmap = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5), alpha=False)
+            rgb = np.frombuffer(pixmap.samples, dtype=np.uint8).reshape(pixmap.height, pixmap.width, pixmap.n)
+            scans.append((page_number, cv2.cvtColor(rgb[:, :, :3], cv2.COLOR_RGB2BGR)))
+        return lines, scans, len(doc)
 
 
 def _result_dict(result: Any) -> dict[str, Any]:
@@ -192,16 +223,18 @@ def health() -> dict[str, Any]:
 
 
 @app.post("/api/draw/recognize")
-async def recognize_draw(file: UploadFile = File(...)) -> dict[str, Any]:
+def recognize_draw(file: UploadFile = File(...)) -> dict[str, Any]:
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(415, "Upload a PDF or a JPG, PNG, WEBP, or TIFF image.")
-    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    data = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "The beta importer accepts files up to 20 MB.")
-    pages = document_pages(data, file.content_type)
-    lines: list[dict[str, Any]] = []
-    for page_number, image in enumerate(pages, start=1):
-        lines.extend(recognize(image, page_number, bracket_ocr_engine()))
+    lines, scans, page_count = draw_document_lines(data, file.content_type)
+    if scans:
+        with _recognition_lock:
+            engine = bracket_ocr_engine()
+            for page_number, image in scans:
+                lines.extend(recognize(image, page_number, engine))
     if __package__:
         from .predict_bracket import draft
     else:
@@ -215,23 +248,24 @@ async def recognize_draw(file: UploadFile = File(...)) -> dict[str, Any]:
                for entry in structure["entries"]]
     if not entries:
         raise HTTPException(422, "No numbered entrant list was recognized. Use the manual entrant form or try a clearer scan.")
-    return {"beta": True, "sourceName": file.filename, "pages": len(pages), "entries": entries,
+    return {"beta": True, "sourceName": file.filename, "pages": page_count, "entries": entries,
             "structureDraft": structure, "warnings": structure["review"]["notes"]}
 
 
 @app.post("/api/groups/recognize")
-async def recognize_groups(file: UploadFile = File(...)) -> dict[str, Any]:
+def recognize_groups(file: UploadFile = File(...)) -> dict[str, Any]:
     """Suggest player rosters from sectioned group/pool sheets for organiser review."""
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(415, "Upload a PDF or a JPG, PNG, WEBP, or TIFF image.")
-    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    data = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "The beta importer accepts files up to 20 MB.")
     pages = document_pages(data, file.content_type)
     lines: list[dict[str, Any]] = []
-    engine = group_ocr_engine()
-    for page_number, image in enumerate(pages, start=1):
-        lines.extend(recognize(image, page_number, engine))
+    with _recognition_lock:
+        engine = group_ocr_engine()
+        for page_number, image in enumerate(pages, start=1):
+            lines.extend(recognize(image, page_number, engine))
     groups = extract_group_assignments(lines)
     if not groups or sum(len(group["entries"]) for group in groups) < 2:
         raise HTTPException(422, "No sectioned group roster was recognized. Use a sheet with headings such as ‘Group A’ followed by player names, or import CSV/JSON.")

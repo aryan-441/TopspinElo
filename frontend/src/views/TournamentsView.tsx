@@ -1,7 +1,7 @@
 import { qualifierDraw } from '../services/qualifierDraw';
 import { rewindQualification } from '../services/tournamentRecovery';
 import { matchAvailability } from '../services/matchAvailability';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, AlertTriangle, ArrowRight, CalendarClock, CalendarDays, Check, ChevronRight, Download, FileJson2, FileSpreadsheet, Pause, Pencil, Play, Plus, Printer, ShieldCheck, Trash2, Trophy, Undo2, UserRoundPlus, Users } from 'lucide-react';
 import type { CategoryEntry, Match, Player, Tournament, TournamentCategory, Workspace } from '../types';
 import { Dialog } from '../components/Dialog';
@@ -58,6 +58,7 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
   const [reasonAction, setReasonAction] = useState<'pause' | 'resume' | null>(null);
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
   const [importLoading, setImportLoading] = useState<{ fileName: string; kind: string } | null>(null);
+  const [importElapsed, setImportElapsed] = useState(0);
   const [importFailure, setImportFailure] = useState<{ fileName: string; message: string } | null>(null);
   const importAbortRef = useRef<AbortController | null>(null);
   const [bracketNotice, setBracketNotice] = useState('');
@@ -69,6 +70,12 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
   const [tournamentJsonError, setTournamentJsonError] = useState('');
   const [deleteTournamentConfirm, setDeleteTournamentConfirm] = useState(false);
   const sorted = useMemo(() => [...workspace.tournaments].sort((a, b) => statusRank(a.status) - statusRank(b.status)), [workspace.tournaments]);
+  useEffect(() => {
+    if (!importLoading) return;
+    const started = Date.now();
+    const interval = window.setInterval(() => setImportElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => window.clearInterval(interval);
+  }, [importLoading]);
   const update = (next: Tournament) => onChange({ ...workspace, tournaments: workspace.tournaments.map((item) => item.id === next.id ? next : item) });
   const importDraw = async (file?: File, allocation = false, categoryId?: string) => {
     if (!selected || !file) return;
@@ -77,7 +84,10 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
     importAbortRef.current = controller;
     setImportFailure(null);
     setBracketNotice('');
+    setImportElapsed(0);
     setImportLoading({ fileName: file.name, kind: /\.(pdf|jpe?g|png|webp|tiff?)$/i.test(file.name) ? 'Reading names and bracket positions' : 'Reading draw file' });
+    let timedOut = false;
+    const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 60000);
     try {
       if (file.type === 'application/pdf' || file.type.startsWith('image/') || /\.(pdf|jpe?g|png|webp|tiff?)$/i.test(file.name)) {
         if (!allocation) {
@@ -171,14 +181,17 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       });
       setImportPreview({ fileName: file.name, rows: mappedRows });
     } catch (error) {
-      if (!controller.signal.aborted) {
-        const message = error instanceof TypeError && /fetch/i.test(error.message)
+      if (timedOut || !controller.signal.aborted) {
+        const message = timedOut
+          ? 'The scan took over a minute. Try a smaller or clearer PDF or image, or use the CSV draw template.'
+          : error instanceof TypeError && /fetch/i.test(error.message)
           ? 'The draw recognition service did not respond. Check that the local recognition service is running, then try again.'
           : error instanceof Error ? error.message : 'Could not read that draw file';
         setImportFailure({ fileName: file.name, message });
         toast(message);
       }
     } finally {
+      window.clearTimeout(timeout);
       if (importAbortRef.current === controller) { importAbortRef.current = null; setImportLoading(null); }
     }
   };
@@ -440,7 +453,7 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       {tab === 'Standings' && <TournamentStandings tournament={selected} players={players} matches={workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id))} />}
       {tab === 'Audit log' && <TournamentAudit tournament={selected} />}
     </>}
-    {importLoading && <Dialog title="Reading draw" eyebrow="IMPORT IN PROGRESS" onClose={cancelImportLoading}><div className="import-loading" role="status" aria-live="polite"><span className="import-spinner" aria-hidden="true" /><div><strong>{importLoading.kind}</strong><p>{importLoading.fileName}</p><small>Recognising a PDF or image can take a little while. The review will open when the scan is ready.</small></div></div><div className="dialog-actions"><button className="button button-quiet" onClick={cancelImportLoading}>Cancel import</button></div></Dialog>}
+    {importLoading && <Dialog title="Reading draw" eyebrow="IMPORT IN PROGRESS" onClose={cancelImportLoading}><div className="import-loading" role="status" aria-live="polite"><span className="import-spinner" aria-hidden="true" /><div><strong>{importLoading.kind}</strong><p>{importLoading.fileName}</p><small>{importElapsed >= 20 ? 'This scan is taking longer than usual. You can cancel and try a smaller or clearer file.' : 'The review will open when the scan is ready.'} {importElapsed}s elapsed.</small></div></div><div className="dialog-actions"><button className="button button-quiet" onClick={cancelImportLoading}>Cancel import</button></div></Dialog>}
     {importFailure && <Dialog title="Draw could not be read" eyebrow="IMPORT NEEDS ATTENTION" onClose={() => setImportFailure(null)}><div className="import-failure" role="alert"><AlertTriangle size={20} /><div><strong>{importFailure.fileName}</strong><p>{importFailure.message}</p></div></div><div className="dialog-actions"><button className="button button-primary" onClick={() => setImportFailure(null)}>Close and try again</button></div></Dialog>}
     {importPreview && selected && <ImportDrawDialog preview={importPreview} entrants={reviewEntrants} categories={categoryNames(selected)} errors={importErrors} missingNames={missingNames} bracketNotice={bracketNotice} onAddPlayers={stageMissingPlayers} onBracketChange={changeBracketSlot} onGroupChange={(rowIndex, key, value) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.map((row, index) => index === rowIndex ? { ...row, [key]: value } : row) } : current)} onAddGroupRow={() => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: [...current.groupAssignments, { groupName: current.groupAssignments.at(-1)?.groupName ?? 'Group A', playerName: '', confidence: null, page: null, entryId: '' }] } : current)} onRemoveGroupRow={(rowIndex) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.filter((_, index) => index !== rowIndex) } : current)} onChange={(rowIndex, key, value) => setImportPreview((current) => current ? { ...current, rows: current.rows.map((row, index) => rowIndex === index ? { ...row, [key]: value, ...(key === 'playerOneId' ? { oneMatch: 'manual' } : key === 'playerTwoId' ? { twoMatch: 'manual' } : {}) } : row) } : current)} onClose={() => setImportPreview(null)} onApply={applyImport} />}
     {scheduleEdit && selected && <ScheduleDialog match={scheduleEdit} tableCount={selected.tableCount ?? 1} onClose={() => setScheduleEdit(null)} onSave={saveSchedule} />}
