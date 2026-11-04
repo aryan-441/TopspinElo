@@ -1,7 +1,7 @@
 import { qualifierDraw } from '../services/qualifierDraw';
 import { rewindQualification } from '../services/tournamentRecovery';
 import { useMemo, useRef, useState } from 'react';
-import { Activity, AlertTriangle, ArrowRight, CalendarClock, CalendarDays, Check, ChevronRight, CircleHelp, Download, FileJson2, FileSpreadsheet, Pause, Pencil, Play, Plus, Printer, ShieldCheck, Trash2, Trophy, Undo2, Users } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowRight, CalendarClock, CalendarDays, Check, ChevronRight, CircleHelp, Download, FileJson2, FileSpreadsheet, Pause, Pencil, Play, Plus, Printer, ShieldCheck, Trash2, Trophy, Undo2, UserRoundPlus, Users } from 'lucide-react';
 import type { CategoryEntry, Match, Player, Tournament, TournamentCategory, Workspace } from '../types';
 import { Dialog } from '../components/Dialog';
 import { MatchRecordEditor, StatusPill } from './MatchCenter';
@@ -9,12 +9,43 @@ import { createMatch, createTournament, generateCategoryRoundFixtures, generateT
 
 type Props = { workspace: Workspace; players: Map<string, Player>; selectedId: string | null; onSelect: (id: string | null) => void; onCreate: () => void; onOpenMatch: (id: string) => void; onChange: (next: Workspace) => void; onSaveMatch: (match: Match) => void; onDeleteMatch: (matchId: string) => void; toast: (message: string) => void };
 type TournamentTab = 'Overview' | 'Draw & matches' | 'Standings' | 'Audit log';
-type ImportRow = { rowNumber: number; sourceId: string; playerOneId: string; playerTwoId: string; round: string; table: string; category: string; startsAt: string; oneMatch: string; twoMatch: string; group: string };
+type ImportRow = { rowNumber: number; sourceId: string; sourceOne: string; sourceTwo: string; playerOneId: string; playerTwoId: string; round: string; table: string; category: string; startsAt: string; oneMatch: string; twoMatch: string; group: string };
 type GroupSuggestion = { groupName: string; playerName: string; confidence: number | null; page: number | null; entryId: string };
-type ImportPreview = { fileName: string; rows: ImportRow[]; groups?: { id: string; name: string; entryIds: string[] }[]; groupAssignments?: GroupSuggestion[]; groupCategoryId?: string; bracketDraft?: { categoryId: string; slots: (string | null)[]; byeSlots: number[]; entryIds: (string | null)[] }; recognizer?: string; warnings?: string[] };
+type PendingPlayer = { name: string; categoryId: string; playerId: string; entryId: string; newPlayer: boolean };
+type ImportPreview = { fileName: string; rows: ImportRow[]; pendingPlayers?: PendingPlayer[]; groups?: { id: string; name: string; entryIds: string[] }[]; groupAssignments?: GroupSuggestion[]; groupCategoryId?: string; bracketDraft?: { categoryId: string; slots: (string | null)[]; byeSlots: number[]; entryIds: (string | null)[] }; recognizer?: string; warnings?: string[] };
 type DrawEntrant = { id: string; name: string; categoryId: string; categoryName: string; kind: TournamentCategory['kind']; playerIds: string[] };
 const categoryNames = (tournament: Tournament) => (tournament.categories ?? []).map((category) => typeof category === 'string' ? category : category.name);
 const entryLabel = (entry: CategoryEntry, players: Map<string, Player>) => entry.name || entry.playerIds.map((id) => players.get(id)?.name ?? 'Unknown').join(' & ');
+const sameName = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
+function pendingImportState(preview: ImportPreview, tournament: Tournament, workspace: Workspace): { tournament: Tournament; workspace: Workspace; players: Map<string, Player> } {
+  const pending = preview.pendingPlayers ?? [];
+  if (!pending.length) return { tournament, workspace, players: new Map(workspace.players.map((player) => [player.id, player])) };
+  const added: Player[] = pending.filter((item) => item.newPlayer).map((item) => ({ id: item.playerId, name: item.name, initials: item.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join(''), hand: null, grip: null, style: null, rating: 1000, ratingBase: 1000, wins: 0, losses: 0, pointsWon: 0, recent: [] }));
+  const nextWorkspace = { ...workspace, players: [...workspace.players, ...added] };
+  const nextTournament = { ...tournament, entrantIds: [...new Set([...tournament.entrantIds, ...pending.map((item) => item.playerId)])], categories: tournament.categories.map((category) => {
+    const entries = pending.filter((item) => item.categoryId === category.id).map((item) => ({ id: item.entryId, name: '', playerIds: [item.playerId] }));
+    return entries.length ? { ...category, entries: [...category.entries, ...entries] } : category;
+  }) };
+  return { tournament: nextTournament, workspace: nextWorkspace, players: new Map(nextWorkspace.players.map((player) => [player.id, player])) };
+}
+function missingDrawNames(preview: ImportPreview, tournament: Tournament): { name: string; categoryId: string }[] {
+  const names: { name: string; categoryId: string }[] = [];
+  const add = (name: string, categoryId: string) => {
+    const category = tournament.categories.find((item) => item.id === categoryId);
+    if (!name.trim() || !category || category.kind !== 'Singles' || sameName(name, 'BYE') || names.some((item) => item.categoryId === categoryId && sameName(item.name, name))) return;
+    names.push({ name: name.trim(), categoryId });
+  };
+  if (preview.bracketDraft) preview.bracketDraft.slots.forEach((name, index) => {
+    if (name && !preview.bracketDraft!.entryIds[index] && !preview.bracketDraft!.byeSlots.includes(index + 1)) add(name, preview.bracketDraft!.categoryId);
+  });
+  else if (!preview.groups && !preview.groupAssignments) preview.rows.forEach((row) => {
+    const category = tournament.categories.find((item) => sameName(item.name, row.category));
+    if (!category) return;
+    if (!row.playerOneId && row.oneMatch === 'missing') add(row.sourceOne, category.id);
+    if (!row.playerTwoId && row.twoMatch === 'missing') add(row.sourceTwo, category.id);
+  });
+  return names;
+}
 
 export function TournamentsView({ workspace, players, selectedId, onSelect, onCreate, onOpenMatch, onChange, onSaveMatch, onDeleteMatch, toast }: Props) {
   const selected = workspace.tournaments.find((item) => item.id === selectedId);
@@ -103,7 +134,7 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
         const category = row.category || row.division || '';
         const groupValue = row.group || row.groupname || '';
         const first = matchEntrant(firstRaw, category); const second = matchEntrant(secondRaw, category);
-        const inferredCategory = category || (first.matched?.categoryId === second.matched?.categoryId ? first.matched?.categoryName ?? '' : '');
+        const inferredCategory = category || (first.matched?.categoryId && first.matched?.categoryId === second.matched?.categoryId ? first.matched.categoryName : first.matched?.categoryName ?? second.matched?.categoryName ?? (selected.categories.length === 1 ? selected.categories[0].name : ''));
         const enteredRound = row.round || row.roundname || (row.roundnumber ? `Round ${row.roundnumber}` : '');
         const targetCategory = selected.categories.find((item) => item.name.toLocaleLowerCase() === inferredCategory.toLocaleLowerCase());
         const roundGroup = targetCategory?.groupStage?.groups?.find((candidate) => candidate.name.toLocaleLowerCase() === groupValue.toLocaleLowerCase() || candidate.name.toLocaleLowerCase() === enteredRound.toLocaleLowerCase() || enteredRound.toLocaleLowerCase().startsWith(`${candidate.name.toLocaleLowerCase()} ·`));
@@ -113,6 +144,8 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
         return {
           rowNumber: index + 2,
           sourceId: row.matchid || row.id || '',
+          sourceOne: firstRaw,
+          sourceTwo: secondRaw,
           playerOneId: first.entryId,
           playerTwoId: second.entryId,
           round,
@@ -127,34 +160,70 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       setImportPreview({ fileName: file.name, rows: mappedRows });
     } catch (error) { toast(error instanceof Error ? error.message : 'Could not read that draw file'); }
   };
+  const missingNames = importPreview && selected ? missingDrawNames(importPreview, selected) : [];
+  const stageMissingPlayers = () => {
+    if (!importPreview || !selected || !missingNames.length) return;
+    const byName = new Map<string, { playerId: string; newPlayer: boolean }>();
+    const pending: PendingPlayer[] = [];
+    for (const item of missingNames) {
+      const key = item.name.toLocaleLowerCase();
+      let person = byName.get(key);
+      if (!person) {
+        const rosterMatches = workspace.players.filter((player) => sameName(player.name, item.name));
+        if (rosterMatches.length > 1) { toast(`${item.name} matches multiple roster profiles. Choose one manually before importing.`); return; }
+        person = { playerId: rosterMatches[0]?.id ?? crypto.randomUUID(), newPlayer: !rosterMatches.length };
+        byName.set(key, person);
+      }
+      const entryId = selected.categories.some((category) => category.entries.some((entry) => entry.id === person!.playerId)) ? crypto.randomUUID() : person.playerId;
+      pending.push({ name: item.name, categoryId: item.categoryId, playerId: person.playerId, entryId, newPlayer: person.newPlayer });
+      person.newPlayer = false;
+    }
+    const entryFor = (name: string, categoryId: string) => pending.find((item) => item.categoryId === categoryId && sameName(item.name, name))?.entryId;
+    setImportPreview({ ...importPreview, pendingPlayers: pending,
+      rows: importPreview.rows.map((row) => {
+        const categoryId = selected.categories.find((category) => sameName(category.name, row.category))?.id ?? '';
+        const one = !row.playerOneId && row.oneMatch === 'missing' ? entryFor(row.sourceOne, categoryId) : undefined;
+        const two = !row.playerTwoId && row.twoMatch === 'missing' ? entryFor(row.sourceTwo, categoryId) : undefined;
+        return { ...row, playerOneId: one ?? row.playerOneId, playerTwoId: two ?? row.playerTwoId, oneMatch: one ? 'added' : row.oneMatch, twoMatch: two ? 'added' : row.twoMatch };
+      }),
+      bracketDraft: importPreview.bracketDraft ? { ...importPreview.bracketDraft, entryIds: importPreview.bracketDraft.entryIds.map((id, index) => id ?? entryFor(importPreview.bracketDraft!.slots[index] ?? '', importPreview.bracketDraft!.categoryId) ?? null) } : undefined,
+    });
+  };
   const importErrors = useMemo(() => {
     if (!importPreview || !selected) return [];
+    const pendingState = pendingImportState(importPreview, selected, workspace);
     if (importPreview.bracketDraft) {
       const draft = importPreview.bracketDraft;
-      const category = selected.categories.find((item) => item.id === draft.categoryId);
+      const category = pendingState.tournament.categories.find((item) => item.id === draft.categoryId);
       const ids = draft.entryIds.filter((id): id is string => Boolean(id));
       const errors: string[] = [];
-      if (!category || draft.slots.length < 2 || new Set(ids).size !== category.entries.length || ids.length !== category.entries.length || draft.entryIds.some((id, index) => !id && !draft.byeSlots.includes(index + 1))) errors.push('Map every non-BYE slot to a distinct registered entrant.');
+      if (!category || draft.slots.length < 2 || (draft.slots.length & (draft.slots.length - 1)) !== 0 || ids.length < 2 || new Set(ids).size !== ids.length || ids.some((id) => !category.entries.some((entry) => entry.id === id)) || draft.entryIds.some((id, index) => !id && !draft.byeSlots.includes(index + 1))) errors.push('Map every non-BYE slot to a distinct entrant in this category.');
       if (workspace.matches.some((match) => match.tournamentId === selected.id && match.categoryId === draft.categoryId && (match.status !== 'Scheduled' || match.events.length))) errors.push('This category has started play; its draw cannot be replaced.');
       return errors;
     }
     if (importPreview.groupAssignments) return validateGroupSuggestions(importPreview.groupAssignments, importPreview.groupCategoryId, selected, workspace);
     if (importPreview.groups) return validateGroupAllocation(importPreview.groups, importPreview.groupCategoryId ?? selected.categories.find((category) => category.groupStage)?.id, selected, workspace);
-    return validateImportPreview(importPreview.rows, selected, workspace, players);
+    return validateImportPreview(importPreview.rows, pendingState.tournament, pendingState.workspace, pendingState.players);
   }, [importPreview, selected, workspace, players]);
   const applyImport = () => {
     if (!selected || !importPreview || importErrors.length) return;
+    const pendingState = pendingImportState(importPreview, selected, workspace);
+    const importTournament = pendingState.tournament;
+    const importWorkspace = pendingState.workspace;
+    const importPlayers = pendingState.players;
     if (importPreview.bracketDraft) {
       const draft = importPreview.bracketDraft;
-      const category = selected.categories.find((item) => item.id === draft.categoryId)!;
+      const category = importTournament.categories.find((item) => item.id === draft.categoryId)!;
       const slots = draft.entryIds;
       const byeEntryIds = draft.byeSlots.flatMap((slot) => slots[(slot - 1) ^ 1] ? [slots[(slot - 1) ^ 1]!] : []);
-      const updatedCategory = { ...category, awaitingDraw:false, bracketSlots: slots, byeEntryIds };
+      const updatedCategory = { ...category, awaitingDraw:false, entries: category.entries.filter((entry) => slots.includes(entry.id)), bracketSlots: slots, byeEntryIds };
       const replaced = workspace.matches.filter((match) => match.tournamentId === selected.id && match.categoryId === category.id);
       const replacedIds = new Set(replaced.map((match) => match.id));
-      const fixtures = generateTournamentFixtures({ ...selected, categories: [updatedCategory] }, workspace.players);
+      const fixtures = generateTournamentFixtures({ ...importTournament, categories: [updatedCategory] }, importWorkspace.players);
       const audit = { id: crypto.randomUUID(), action: 'Knockout draw confirmed', target: `${slots.length} slots · ${fixtures.length} opening matches`, reason: `Reviewed import from ${importPreview.fileName}`, at: new Date().toISOString() };
-      onChange({ ...workspace, matches: [...fixtures, ...workspace.matches.filter((match) => !replacedIds.has(match.id))], tournaments: workspace.tournaments.map((item) => item.id === selected.id ? { ...selected, categories: selected.categories.map((current) => current.id === category.id ? updatedCategory : current), matchIds: [...selected.matchIds.filter((id) => !replacedIds.has(id)), ...fixtures.map((match) => match.id)], audit: [audit, ...selected.audit] } : item) });
+      const updatedCategories = importTournament.categories.map((current) => current.id === category.id ? updatedCategory : current);
+      const entrantIds = [...new Set(updatedCategories.flatMap((item) => item.entries.flatMap((entry) => entry.playerIds)))];
+      onChange({ ...importWorkspace, matches: [...fixtures, ...workspace.matches.filter((match) => !replacedIds.has(match.id))], tournaments: workspace.tournaments.map((item) => item.id === selected.id ? { ...importTournament, entrantIds, categories: updatedCategories, matchIds: [...selected.matchIds.filter((id) => !replacedIds.has(id)), ...fixtures.map((match) => match.id)], audit: [audit, ...selected.audit] } : item) });
       setImportPreview(null); toast('Knockout draw confirmed'); return;
     }
     if (importPreview.groups || importPreview.groupAssignments) {
@@ -183,17 +252,17 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       setImportPreview(null); toast('Group allocation imported'); return;
     }
     const imported = importPreview.rows.map((row) => {
-      const category = selected.categories.find((item) => item.name === row.category)!;
+      const category = importTournament.categories.find((item) => item.name === row.category)!;
       const one = category.entries.find((entry) => entry.id === row.playerOneId)!;
       const two = category.entries.find((entry) => entry.id === row.playerTwoId)!;
-      const match = createMatch({ playerOneId: one.playerIds[0], playerTwoId: two.playerIds[0], format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3, tournamentId: selected.id, table: row.table || undefined }, workspace.players);
-      match.sideOneId = one.id; match.sideTwoId = two.id; match.sideOnePlayerIds = one.playerIds; match.sideTwoPlayerIds = two.playerIds; match.sideOneLabel = entryLabel(one, players); match.sideTwoLabel = entryLabel(two, players); match.gamesWon = { [one.id]: 0, [two.id]: 0 }; match.score = { [one.id]: 0, [two.id]: 0 }; match.tossWinnerId = one.id; match.categoryId = category.id;
+      const match = createMatch({ playerOneId: one.playerIds[0], playerTwoId: two.playerIds[0], format: 'Best of 5', pointsPerGame: 11, gamesToWin: 3, tournamentId: selected.id, table: row.table || undefined }, importWorkspace.players);
+      match.sideOneId = one.id; match.sideTwoId = two.id; match.sideOnePlayerIds = one.playerIds; match.sideTwoPlayerIds = two.playerIds; match.sideOneLabel = entryLabel(one, importPlayers); match.sideTwoLabel = entryLabel(two, importPlayers); match.gamesWon = { [one.id]: 0, [two.id]: 0 }; match.score = { [one.id]: 0, [two.id]: 0 }; match.tossWinnerId = one.id; match.categoryId = category.id;
       match.tournamentName = selected.name; match.round = row.round.trim(); match.category = category.name; match.startsAt = row.startsAt.trim() || 'TBD';
       return match;
     });
     const audit = { id: crypto.randomUUID(), action: 'Draw imported', target: `${imported.length} fixtures`, reason: `Imported from ${importPreview.fileName}`, at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-    const updatedTournament = { ...selected, matchIds: [...selected.matchIds, ...imported.map((match) => match.id)], audit: [audit, ...selected.audit] };
-    onChange({ ...workspace, matches: [...imported, ...workspace.matches], tournaments: workspace.tournaments.map((item) => item.id === selected.id ? updatedTournament : item) });
+    const updatedTournament = { ...importTournament, matchIds: [...selected.matchIds, ...imported.map((match) => match.id)], audit: [audit, ...selected.audit] };
+    onChange({ ...importWorkspace, matches: [...imported, ...workspace.matches], tournaments: workspace.tournaments.map((item) => item.id === selected.id ? updatedTournament : item) });
     setImportPreview(null); toast(`${imported.length} draw ${imported.length === 1 ? 'match' : 'matches'} imported`);
   };
   const saveSchedule = (startsAt: string, table: string, reason: string) => {
@@ -203,6 +272,8 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
     onChange({ ...workspace, matches: workspace.matches.map((match) => match.id === updatedMatch.id ? updatedMatch : match), tournaments: workspace.tournaments.map((item) => item.id === selected.id ? { ...item, audit: [audit, ...item.audit] } : item) });
     setScheduleEdit(null); toast('Match schedule updated and recorded');
   };
+  const reviewState = importPreview && selected ? pendingImportState(importPreview, selected, workspace) : null;
+  const reviewEntrants: DrawEntrant[] = reviewState ? reviewState.tournament.categories.flatMap((category) => category.entries.map((entry) => ({ id: entry.id, name: entryLabel(entry, reviewState.players), categoryId: category.id, categoryName: category.name, kind: category.kind, playerIds: entry.playerIds }))) : [];
   const selectedMatches = selected ? workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id)) : [];
   const canEditField = Boolean(selected && selected.categories.length === 1 && selected.categories[0].kind === 'Singles');
   const saveField = (entrantIds: string[], reason: string) => {
@@ -328,7 +399,7 @@ export function TournamentsView({ workspace, players, selectedId, onSelect, onCr
       {tab === 'Standings' && <TournamentStandings tournament={selected} players={players} matches={workspace.matches.filter((match) => match.tournamentId === selected.id || selected.matchIds.includes(match.id))} />}
       {tab === 'Audit log' && <TournamentAudit tournament={selected} />}
     </>}
-    {importPreview && selected && <ImportDrawDialog preview={importPreview} entrants={selected.categories.flatMap((category) => category.entries.map((entry) => ({ id: entry.id, name: entryLabel(entry, players), categoryId: category.id, categoryName: category.name, kind: category.kind, playerIds: entry.playerIds })))} categories={categoryNames(selected)} errors={importErrors} onBracketChange={(slotIndex, entryId) => setImportPreview((current) => current?.bracketDraft ? { ...current, bracketDraft: { ...current.bracketDraft, entryIds: current.bracketDraft.entryIds.map((id, index) => index === slotIndex ? entryId : id) } } : current)} onGroupChange={(rowIndex, key, value) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.map((row, index) => index === rowIndex ? { ...row, [key]: value } : row) } : current)} onAddGroupRow={() => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: [...current.groupAssignments, { groupName: current.groupAssignments.at(-1)?.groupName ?? 'Group A', playerName: '', confidence: null, page: null, entryId: '' }] } : current)} onRemoveGroupRow={(rowIndex) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.filter((_, index) => index !== rowIndex) } : current)} onChange={(rowIndex, key, value) => setImportPreview((current) => current ? { ...current, rows: current.rows.map((row, index) => rowIndex === index ? { ...row, [key]: value, ...(key === 'playerOneId' ? { oneMatch: 'manual' } : key === 'playerTwoId' ? { twoMatch: 'manual' } : {}) } : row) } : current)} onClose={() => setImportPreview(null)} onApply={applyImport} />}
+    {importPreview && selected && <ImportDrawDialog preview={importPreview} entrants={reviewEntrants} categories={categoryNames(selected)} errors={importErrors} missingNames={missingNames} onAddPlayers={stageMissingPlayers} onBracketChange={(slotIndex, entryId) => setImportPreview((current) => current?.bracketDraft ? { ...current, bracketDraft: { ...current.bracketDraft, entryIds: current.bracketDraft.entryIds.map((id, index) => index === slotIndex ? entryId : id) } } : current)} onGroupChange={(rowIndex, key, value) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.map((row, index) => index === rowIndex ? { ...row, [key]: value } : row) } : current)} onAddGroupRow={() => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: [...current.groupAssignments, { groupName: current.groupAssignments.at(-1)?.groupName ?? 'Group A', playerName: '', confidence: null, page: null, entryId: '' }] } : current)} onRemoveGroupRow={(rowIndex) => setImportPreview((current) => current?.groupAssignments ? { ...current, groupAssignments: current.groupAssignments.filter((_, index) => index !== rowIndex) } : current)} onChange={(rowIndex, key, value) => setImportPreview((current) => current ? { ...current, rows: current.rows.map((row, index) => rowIndex === index ? { ...row, [key]: value, ...(key === 'playerOneId' ? { oneMatch: 'manual' } : key === 'playerTwoId' ? { twoMatch: 'manual' } : {}) } : row) } : current)} onClose={() => setImportPreview(null)} onApply={applyImport} />}
     {scheduleEdit && selected && <ScheduleDialog match={scheduleEdit} tableCount={selected.tableCount ?? 1} onClose={() => setScheduleEdit(null)} onSave={saveSchedule} />}
     {fieldEditOpen && selected && <EditFieldDialog tournament={selected} players={workspace.players} pendingFixtureCount={selectedMatches.length} onClose={() => setFieldEditOpen(false)} onSave={saveField} />}
     {editingMatch && <MatchRecordEditor match={editingMatch} workspace={workspace} onClose={() => setEditingMatch(null)} onSave={(match) => { onSaveMatch(match); setEditingMatch(null); toast('Match corrected and the former record retained in the journal'); }} />}
@@ -357,11 +428,13 @@ function TournamentDraw({ matches, tournamentGroups, hasKnockout, players, onOpe
   </section>;
 }
 
-function ImportDrawDialog({ preview, entrants, categories, errors, onChange, onBracketChange, onGroupChange, onAddGroupRow, onRemoveGroupRow, onClose, onApply }: { preview: ImportPreview; entrants: DrawEntrant[]; categories: string[]; errors: string[]; onChange: (rowIndex: number, key: 'playerOneId' | 'playerTwoId' | 'category', value: string) => void; onBracketChange: (slotIndex: number, entryId: string | null) => void; onGroupChange: (rowIndex: number, key: 'entryId' | 'groupName', value: string) => void; onAddGroupRow: () => void; onRemoveGroupRow: (rowIndex: number) => void; onClose: () => void; onApply: () => void }) {
+function ImportDrawDialog({ preview, entrants, categories, errors, missingNames, onAddPlayers, onChange, onBracketChange, onGroupChange, onAddGroupRow, onRemoveGroupRow, onClose, onApply }: { preview: ImportPreview; entrants: DrawEntrant[]; categories: string[]; errors: string[]; missingNames: { name: string; categoryId: string }[]; onAddPlayers: () => void; onChange: (rowIndex: number, key: 'playerOneId' | 'playerTwoId' | 'category', value: string) => void; onBracketChange: (slotIndex: number, entryId: string | null) => void; onGroupChange: (rowIndex: number, key: 'entryId' | 'groupName', value: string) => void; onAddGroupRow: () => void; onRemoveGroupRow: (rowIndex: number) => void; onClose: () => void; onApply: () => void }) {
   const groupEntrants = entrants.filter((entrant) => entrant.categoryId === preview.groupCategoryId);
   return <Dialog title="Review draw" eyebrow="NON-DESTRUCTIVE PREVIEW" onClose={onClose} size="wide">
     <div className="import-review-summary"><FileSpreadsheet size={17} /><span><b>{preview.fileName}</b><small>{preview.bracketDraft ? `${preview.bracketDraft.slots.length} knockout slots · awaiting confirmation` : preview.groupAssignments ? `${preview.groupAssignments.length} OCR name suggestions · nothing has changed yet` : preview.groups ? `${preview.groups.length} groups · ${preview.groups.reduce((sum, group) => sum + group.entryIds.length, 0)} assignments found · nothing has changed yet` : `${preview.rows.length} fixtures found · nothing has been added yet`}</small></span></div>
-    {preview.bracketDraft && <div className="import-review-errors"><p>Review the qualifiers, opening opponents and byes before confirming. You can change the player in each occupied slot.</p>{errors.length > 0 && <ul role="alert">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}<div className="import-review-table-wrap" role="region" aria-label="Review knockout bracket slots" tabIndex={0}><table className="data-table import-review-table"><thead><tr><th>SLOT</th><th>PROPOSED</th><th>ROSTER PLAYER</th></tr></thead><tbody>{preview.bracketDraft.slots.map((name, index) => <tr key={index}><td>{index + 1}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : name || 'Not read'}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : <select value={preview.bracketDraft!.entryIds[index] ?? ''} onChange={(event) => onBracketChange(index, event.target.value || null)}><option value="">Choose registered player</option>{entrants.filter((entry) => entry.categoryId === preview.bracketDraft!.categoryId).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select>}</td></tr>)}</tbody></table></div></div>}
+    {missingNames.length > 0 && <div className="import-missing-players" role="alert"><AlertTriangle size={21} /><div><strong>{missingNames.length} {missingNames.length === 1 ? 'name is' : 'names are'} not in this tournament</strong><p>{missingNames.map((item) => item.name).join(', ')}</p><p>Add these entrants to the tournament and create any missing player profiles, or cancel the import. New profiles will have no hand, grip or playing style until you fill them in. Nothing is saved until you apply the reviewed draw.</p><button className="button button-primary" type="button" onClick={onAddPlayers}><UserRoundPlus size={15} /> Add {missingNames.length === 1 ? 'player' : 'players'} to this import</button></div></div>}
+    {Boolean(preview.pendingPlayers?.length) && <p className="import-staged-note"><Check size={15} /> {preview.pendingPlayers!.length} {preview.pendingPlayers!.length === 1 ? 'entrant' : 'entrants'} staged. They will be saved only when you apply the draw.</p>}
+    {preview.bracketDraft && <div className="import-review-errors"><p>Review the qualifiers, opening opponents and byes before confirming. You can change the player in each occupied slot.</p>{entrants.filter((entry) => entry.categoryId === preview.bracketDraft!.categoryId && !preview.bracketDraft!.entryIds.includes(entry.id) && !preview.pendingPlayers?.some((pending) => pending.entryId === entry.id)).length > 0 && <p className="import-review-note">Entrants not in this bracket will leave this category when you apply it. Their player profiles and earlier records remain in the workspace.</p>}{errors.length > 0 && <ul role="alert">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}<div className="import-review-table-wrap" role="region" aria-label="Review knockout bracket slots" tabIndex={0}><table className="data-table import-review-table"><thead><tr><th>SLOT</th><th>PROPOSED</th><th>ROSTER PLAYER</th></tr></thead><tbody>{preview.bracketDraft.slots.map((name, index) => <tr key={index}><td>{index + 1}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : name || 'Not read'}</td><td>{preview.bracketDraft!.byeSlots.includes(index + 1) ? 'BYE' : <select value={preview.bracketDraft!.entryIds[index] ?? ''} onChange={(event) => onBracketChange(index, event.target.value || null)}><option value="">Choose registered player</option>{entrants.filter((entry) => entry.categoryId === preview.bracketDraft!.categoryId).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select>}</td></tr>)}</tbody></table></div></div>}
     {(preview.groups || preview.groupAssignments) && <div className="import-review-errors"><div><b>{preview.groupAssignments ? 'Review OCR suggestions and map each name' : 'Review imported allocation'}</b>
       {errors.length > 0 && <ul role="alert">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}
       {preview.groups && <ul>{preview.groups.map((group) => <li key={group.id}>{group.name}: {group.entryIds.map((id) => entrants.find((entrant) => entrant.id === id)?.name ?? id).join(', ')}</li>)}</ul>}
