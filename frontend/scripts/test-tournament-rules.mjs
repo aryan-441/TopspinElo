@@ -168,7 +168,21 @@ try {
   assert.equal(firstRound[0].categoryId, 'singles', 'fixtures retain their category identity');
   assert.ok(firstRound[0].table, 'fixtures receive a configured venue table');
 
-  console.log('Tournament rules checks passed: five ITTF team orders, tie majorities, doubles service rotation, seeded byes, category/table assignment, and before/after activity journal.');
+  const availabilityBundle = await build({ entryPoints: ['src/services/matchAvailability.ts'], bundle: true, platform: 'node', format: 'cjs', write: false });
+  const availabilityPath = join(tempDir, 'match-availability.cjs');
+  await writeFile(availabilityPath, availabilityBundle.outputFiles[0].contents);
+  const { matchAvailability } = createRequire(import.meta.url)(availabilityPath);
+  const roundPlayers = Array.from({ length: 16 }, (_, index) => ({ id: `round-p${index}` }));
+  const fixture = (id, round, index, status = 'Scheduled') => ({ id, tournamentId: 'round-event', categoryId: 'round-singles', round: `Round ${round}`, status, playerOneId: `round-p${index * 2}`, playerTwoId: `round-p${index * 2 + 1}` });
+  const roundOne = Array.from({ length: 8 }, (_, index) => fixture(`r1-${index}`, 1, index, 'Completed'));
+  const roundTwo = Array.from({ length: 8 }, (_, index) => fixture(`r2-${index}`, 2, index));
+  const final = fixture('final', 3, 0);
+  const roundWorkspace = { players: roundPlayers, matches: [...roundOne, ...roundTwo, final], tournaments: [{ id: 'round-event', categories: [{ id: 'round-singles', format: 'Knockout' }] }] };
+  assert.ok(roundTwo.every((match) => matchAvailability(match, roundWorkspace).ready), 'every ready match in the same round can be chosen');
+  assert.equal(matchAvailability(final, roundWorkspace).ready, false, 'a later round waits for the previous round');
+  assert.equal(matchAvailability(roundTwo[7], { ...roundWorkspace, matches: [{ ...roundOne[0], status: 'Scheduled' }, ...roundOne.slice(1), ...roundTwo, final] }).ready, false, 'the current round waits until earlier results are known');
+
+  console.log('Tournament rules checks passed: team orders, seeded draws, match availability, and activity journal.');
 } finally {
   await rm(tempDir, { recursive: true, force: true });
 }

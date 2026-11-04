@@ -54,6 +54,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .import-missing-players p { margin: 0 0 11px; line-height: 1.5; }
 .import-missing-players p:first-of-type { font-weight: 700; overflow-wrap: anywhere; }
 .import-staged-note { display: flex; align-items: center; gap: 8px; margin: 12px 0; color: var(--pine-deep); font-weight: 700; }
+.match-waiting { color: var(--muted); font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+.match-row--waiting { cursor: default; background: var(--paper-alt); }
+.tournament-match-row:disabled { opacity: 1; background: var(--paper-alt); }
 
 .app-frame { display: flex; min-height: 100vh; }
 .sidebar { position: fixed; z-index: 20; inset: 0 auto 0 0; display: flex; flex-direction: column; width: var(--sidebar-width); padding: 22px 15px 14px; color: #e7eee7; background: var(--pine-deep); }

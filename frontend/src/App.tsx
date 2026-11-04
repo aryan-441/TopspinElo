@@ -1,5 +1,6 @@
 import { replayRatings, recordedPointsWon } from './services/resultEntry';
 import { qualifierDraw } from './services/qualifierDraw';
+import { matchAvailability } from './services/matchAvailability';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Image, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -84,6 +85,13 @@ export default function App() {
 
   const playerById = useMemo(() => new Map(workspace.players.map((player) => [player.id, player])), [workspace.players]);
   const activeMatch = workspace.matches.find((match) => match.id === activeMatchId) ?? null;
+  const openMatch = (id: string) => {
+    const match = workspace.matches.find((item) => item.id === id);
+    if (!match) return;
+    const availability = matchAvailability(match, workspace);
+    if (!availability.ready) { setToast(availability.reason ?? 'This match is not ready yet.'); return; }
+    setActiveMatchId(id);
+  };
 
   useEffect(() => {
     document.title = activeMatch ? 'Live scoring — Rallydesk' : page === 'overview' ? 'Rallydesk — Table Tennis Manager' : `${pageTitles[page]} — Rallydesk`;
@@ -323,12 +331,12 @@ export default function App() {
             </div>}
           </div>
 
-          {page === 'overview' && <Overview workspace={workspace} players={playerById} onOpenMatch={setActiveMatchId} onPage={setPage} onNewMatch={openMatchSetup} onNewTournament={openTournamentSetup} onNewPlayer={() => setCreateDialog('player')} />}
-          {page === 'matches' && <MatchCenter workspace={workspace} players={playerById} referees={workspace.referees ?? []} refereeDesk={workspaceRole === 'referee'} query={query} onQuery={setQuery} onOpenMatch={setActiveMatchId} onCreate={openMatchSetup} onSaveMatch={saveScoredMatch} onDeleteMatch={deleteMatch} />}
+          {page === 'overview' && <Overview workspace={workspace} players={playerById} onOpenMatch={openMatch} onPage={setPage} onNewMatch={openMatchSetup} onNewTournament={openTournamentSetup} onNewPlayer={() => setCreateDialog('player')} />}
+          {page === 'matches' && <MatchCenter workspace={workspace} players={playerById} referees={workspace.referees ?? []} refereeDesk={workspaceRole === 'referee'} query={query} onQuery={setQuery} onOpenMatch={openMatch} onCreate={openMatchSetup} onSaveMatch={saveScoredMatch} onDeleteMatch={deleteMatch} />}
           {page === 'players' && <PlayersView workspace={workspace} query={query} onQuery={setQuery} selectedId={selectedPlayerId} onSelect={setSelectedPlayerId} onAdd={() => setCreateDialog('player')} onMatch={(id) => { setSelectedPlayerId(null); setCreateDialog('match'); if (id) setToast('Choose this player in the match setup.'); }} onUpdatePlayer={(id, changes) => update((current) => ({ ...current, players: current.players.map((player) => player.id === id ? { ...player, ...changes } : player) }))} />}
           {page === 'referees' && <RefereesView workspace={workspace} onChange={replaceWorkspace} toast={setToast} />}
-          {page === 'tournaments' && <TournamentsView workspace={workspace} players={playerById} selectedId={selectedTournamentId} onSelect={setSelectedTournamentId} onCreate={openTournamentSetup} onOpenMatch={setActiveMatchId} onChange={(next) => replaceWorkspace(next)} onSaveMatch={saveScoredMatch} onDeleteMatch={deleteMatch} toast={setToast} />}
-          {page === 'statistics' && <StatisticsView workspace={workspace} onOpenMatch={setActiveMatchId} />}
+          {page === 'tournaments' && <TournamentsView workspace={workspace} players={playerById} selectedId={selectedTournamentId} onSelect={setSelectedTournamentId} onCreate={openTournamentSetup} onOpenMatch={openMatch} onChange={(next) => replaceWorkspace(next)} onSaveMatch={saveScoredMatch} onDeleteMatch={deleteMatch} toast={setToast} />}
+          {page === 'statistics' && <StatisticsView workspace={workspace} onOpenMatch={openMatch} />}
           {page === 'exports' && <ExportsView workspace={workspace} onToast={setToast} />}
           {page === 'settings' && <SettingsView workspace={workspace} clubName={workspace.clubName ?? ''} onSaveClubName={(name) => { update((current) => ({ ...current, clubName: name })); setToast(name ? `${name} saved` : 'Club name cleared'); }} onImportWorkspace={replaceWorkspace} onReset={reset} />}
           {page === 'about' && <AboutView />}{page === 'guide' && <ClubGuide navigate={setPage} />}

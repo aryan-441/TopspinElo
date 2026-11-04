@@ -1,11 +1,12 @@
 import { ArrowRight, Clock3, Radio, Trophy, Users } from 'lucide-react';
 import type { Match, Player, PageId, Workspace } from '../types';
+import { matchAvailability } from '../services/matchAvailability';
 
 type OverviewProps = { workspace: Workspace; players: Map<string, Player>; onOpenMatch: (id: string) => void; onPage: (page: PageId) => void; onNewMatch: () => void; onNewTournament: () => void; onNewPlayer: () => void };
 
 export function Overview({ workspace, players, onOpenMatch, onPage, onNewMatch, onNewTournament, onNewPlayer }: OverviewProps) {
   const live = workspace.matches.find((match) => match.status === 'In progress');
-  const upcoming = workspace.matches.filter((match) => match.status === 'Scheduled').slice(0, 4);
+  const upcoming = workspace.matches.filter((match) => match.status === 'Scheduled' && matchAvailability(match, workspace).ready).slice(0, 4);
   const activeTournament = workspace.tournaments.find((item) => item.status === 'Running');
   const completeMatches = workspace.matches.filter((match) => match.status === 'Completed').length;
   const overviewCategory = activeTournament?.categories[0];
@@ -35,7 +36,7 @@ export function Overview({ workspace, players, onOpenMatch, onPage, onNewMatch, 
     <div className="overview-columns">
       <section className="section-block schedule-block">
         <div className="section-head"><div><p className="eyebrow">THE NEXT ROTATION</p><h3>Up next</h3></div><button className="quiet-link" onClick={() => onPage('matches')}>Full schedule <ArrowRight size={14} /></button></div>
-        {upcoming.length ? <div className="schedule-list">{upcoming.map((match, index) => <ScheduleRow key={match.id} match={match} players={players} index={index} onOpen={() => onOpenMatch(match.id)} />)}</div> : <div className="inline-empty"><Clock3 size={18} /><span>No matches are waiting. Add one to the schedule.</span><button onClick={onNewMatch}>Create match</button></div>}
+        {upcoming.length ? <div className="schedule-list">{upcoming.map((match) => <ScheduleRow key={match.id} match={match} players={players} onOpen={() => onOpenMatch(match.id)} />)}</div> : <div className="inline-empty"><Clock3 size={18} /><span>No matches are waiting. Add one to the schedule.</span><button onClick={onNewMatch}>Create match</button></div>}
       </section>
       <section className="section-block standings-block">
         <div className="section-head"><div><p className="eyebrow">{activeTournament?.name ?? 'TOURNAMENT DESK'}</p><h3>Current standings</h3></div><button className="icon-button section-more" aria-label="Open tournament" onClick={() => onPage('tournaments')}><ArrowRight size={15} /></button></div>
@@ -51,7 +52,7 @@ export function Overview({ workspace, players, onOpenMatch, onPage, onNewMatch, 
   </div>;
 }
 
-function ScheduleRow({ match, players, index, onOpen }: { match: Match; players: Map<string, Player>; index: number; onOpen: () => void }) {
+function ScheduleRow({ match, players, onOpen }: { match: Match; players: Map<string, Player>; onOpen: () => void }) {
   const one = players.get(match.playerOneId); const two = players.get(match.playerTwoId);
-  return <button className="schedule-row" onClick={onOpen}><span className="schedule-time"><b>{match.startsAt}</b><small>{index === 0 ? 'NEXT' : match.table}</small></span><span className="schedule-match"><span><b>{one?.name ?? 'Player one'}</b><i>vs</i><b>{two?.name ?? 'Player two'}</b></span><small>{match.tournamentName ?? 'Friendly match'} <span>·</span> {match.format}</small></span><span className="schedule-table">{match.table ?? 'Unassigned'}</span><span className="schedule-arrow"><ArrowRight size={15} /></span></button>;
+  return <button className="schedule-row" onClick={onOpen}><span className="schedule-time"><b>{match.startsAt}</b><small>READY</small></span><span className="schedule-match"><span><b>{one?.name ?? 'Player one'}</b><i>vs</i><b>{two?.name ?? 'Player two'}</b></span><small>{match.tournamentName ?? 'Friendly match'} <span>·</span> {match.format}</small></span><span className="schedule-table">{match.table ?? 'Unassigned'}</span><span className="schedule-arrow"><ArrowRight size={15} /></span></button>;
 }
