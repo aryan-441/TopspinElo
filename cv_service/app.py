@@ -20,7 +20,6 @@ from paddleocr import PaddleOCR
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 MAX_PAGES = 12
-ALLOWED_TYPES = {"application/pdf", "image/jpeg", "image/png", "image/webp", "image/tiff"}
 
 app = FastAPI(title="Rallydesk CV beta", version="0.1.0")
 app.add_middleware(
@@ -60,7 +59,7 @@ def group_ocr_engine() -> PaddleOCR:
     global _group_ocr
     model_dir = os.environ.get("GROUP_OCR_REC_MODEL_DIR", "").strip()
     if not model_dir:
-        return ocr_engine()
+        return bracket_ocr_engine()
     if _group_ocr is None:
         if not Path(model_dir).is_dir():
             raise RuntimeError(f"GROUP_OCR_REC_MODEL_DIR is not a directory: {model_dir}")
@@ -94,7 +93,7 @@ def document_pages(data: bytes, content_type: str) -> list[np.ndarray]:
     return [image]
 
 
-def draw_document_lines(data: bytes, content_type: str) -> tuple[list[dict[str, Any]], list[tuple[int, np.ndarray]], int]:
+def draw_document_lines(data: bytes, content_type: str, min_words: int = 15) -> tuple[list[dict[str, Any]], list[tuple[int, np.ndarray]], int]:
     """Read selectable PDF text directly and reserve OCR for scanned pages."""
     if content_type != "application/pdf" and not data.startswith(b"%PDF"):
         return [], [(1, image) for image in document_pages(data, content_type)], 1
@@ -108,7 +107,7 @@ def draw_document_lines(data: bytes, content_type: str) -> tuple[list[dict[str, 
         lines: list[dict[str, Any]] = []
         scans: list[tuple[int, np.ndarray]] = []
         for page_number, page in enumerate(doc, start=1):
-            if len(page.get_text("words")) >= 15:
+            if len(page.get_text("words")) >= min_words:
                 for block in page.get_text("dict")["blocks"]:
                     for item in block.get("lines", []):
                         text = "".join(span["text"] for span in item["spans"]).strip()
@@ -224,11 +223,13 @@ def health() -> dict[str, Any]:
 
 @app.post("/api/draw/recognize")
 def recognize_draw(file: UploadFile = File(...)) -> dict[str, Any]:
-    if file.content_type not in ALLOWED_TYPES:
-        raise HTTPException(415, "Upload a PDF or a JPG, PNG, WEBP, or TIFF image.")
+    if file.content_type != "application/pdf" or not (file.filename or "").lower().endswith(".pdf"):
+        raise HTTPException(415, "AI import accepts PDF files only, up to 20 MB.")
     data = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "The beta importer accepts files up to 20 MB.")
+    if not data.startswith(b"%PDF-"):
+        raise HTTPException(415, "This file is not a valid PDF.")
     lines, scans, page_count = draw_document_lines(data, file.content_type)
     if scans:
         with _recognition_lock:
@@ -255,17 +256,22 @@ def recognize_draw(file: UploadFile = File(...)) -> dict[str, Any]:
 @app.post("/api/groups/recognize")
 def recognize_groups(file: UploadFile = File(...)) -> dict[str, Any]:
     """Suggest player rosters from sectioned group/pool sheets for organiser review."""
-    if file.content_type not in ALLOWED_TYPES:
-        raise HTTPException(415, "Upload a PDF or a JPG, PNG, WEBP, or TIFF image.")
+    if file.content_type != "application/pdf" or not (file.filename or "").lower().endswith(".pdf"):
+        raise HTTPException(415, "AI import accepts PDF files only, up to 20 MB.")
     data = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "The beta importer accepts files up to 20 MB.")
-    pages = document_pages(data, file.content_type)
-    lines: list[dict[str, Any]] = []
-    with _recognition_lock:
-        engine = group_ocr_engine()
-        for page_number, image in enumerate(pages, start=1):
-            lines.extend(recognize(image, page_number, engine))
+    if not data.startswith(b"%PDF-"):
+        raise HTTPException(415, "This file is not a valid PDF.")
+    lines, scans, page_count = draw_document_lines(data, file.content_type, min_words=4)
+    if scans:
+        try:
+            with _recognition_lock:
+                engine = group_ocr_engine()
+                for page_number, image in scans:
+                    lines.extend(recognize(image, page_number, engine))
+        except (NotImplementedError, RuntimeError) as exc:
+            raise HTTPException(503, "Scanned group PDFs are temporarily unavailable on this device. Export a selectable-text PDF or use the group CSV/JSON template.") from exc
     groups = extract_group_assignments(lines)
     if not groups or sum(len(group["entries"]) for group in groups) < 2:
         raise HTTPException(422, "No sectioned group roster was recognized. Use a sheet with headings such as ‘Group A’ followed by player names, or import CSV/JSON.")
@@ -274,7 +280,7 @@ def recognize_groups(file: UploadFile = File(...)) -> dict[str, Any]:
                 "This parser expects explicit Group A / Pool 1 section headings. It has not been qualified on representative group-table scans.",
             ]
     model_configured = bool(os.environ.get("GROUP_OCR_REC_MODEL_DIR", "").strip())
-    if not model_configured:
-        warnings.append("No fine-tuned group recognizer is configured; suggestions use the existing Marathi base OCR model.")
-    return {"beta": True, "recognizer": "fine-tuned" if model_configured else "base-fallback",
-            "sourceName": file.filename, "pages": len(pages), "groups": groups, "warnings": warnings}
+    if scans and not model_configured:
+        warnings.append("No fine-tuned group recogniser is configured; suggestions use the general English OCR model.")
+    return {"beta": True, "recognizer": "embedded-text" if not scans else "fine-tuned" if model_configured else "base-fallback",
+            "sourceName": file.filename, "pages": page_count, "groups": groups, "warnings": warnings}
