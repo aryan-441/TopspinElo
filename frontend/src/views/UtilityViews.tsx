@@ -113,7 +113,7 @@ export function ClubGuide({navigate}: {navigate: (page: PageId) => void}) {
     ['referees','Staff the tables','Register officials and assign fixtures. The referee desk lists assigned matches.'],
     ['tournaments','Confirm the knockout stage','After the qualifying fixtures finish, open the tournament. Review the random draw or import a draw for that category. Check opening opponents and byes, then apply.'],
     ['tournaments','Change a running event','Open Draw & matches to edit group tables, assign a table or correct a match. Review affected fixtures before applying. The Audit log records tournament interventions.'],
-    ['statistics','Study a player','Open Statistics to compare results, ratings and recent form. Use the player analysis filters to narrow the sample.'],
+    ['statistics','Study a player','Open Statistics to compare results, ratings and recent form. Use the player analysis filters to narrow the singles sample. Doubles, together shows partnership records, opponent pairs and scored-game totals.'],
     ['exports','Take your data home','Download the complete workspace JSON for recovery. CSV exports are useful for working with individual tables.'],
     ['tournaments','Recover after qualification','Use Rewind qualification to remove the downstream knockout and pause progression. Edit groups or results, then resume. The journal retains removed fixtures. Before confirming a draw, Override qualifiers records your decision and reason.'],
     ['exports','Export every point','Download Every point and correction as CSV to review point winners, servers, game numbers, reasons and reversed events. Complete tournament data includes a full restorable workspace.'],

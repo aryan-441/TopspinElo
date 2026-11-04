@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
-    "test": "node scripts/test-tournament-rules.mjs",
+    "test": "node scripts/test-tournament-rules.mjs && node scripts/test-doubles-metrics.mjs",
     "test:browser": "node scripts/run-browser-qa.cjs",
     "preview": "vite preview --host 127.0.0.1"
   },

@@ -33,17 +33,9 @@ export function PlayerAnalysis({workspace,onOpenMatch}: {workspace: Workspace; o
   const labels=['Matches won','Matches won after trailing in games','Games won','Recorded points won','Serving','Receiving','Deuce games won','Deuce points won','Deciding games won','Game points converted','Game points saved','Match points converted','Match points saved','Deciding deuce games won','Games won after trailing by 3+','Games lost after leading by 3+','Serving at deuce','Receiving at deuce','Points at 9–9','Points at 10–10'];
   const [breakdown,setBreakdown]=useState('Hand');
   const sections=new Map<string,Rate>();
-  const partners=new Map<string,Rate>();
   for(const m of matches){
     const key=facets(m)[breakdown] || 'Unspecified';
     const row=sections.get(key) ?? {won:0,total:0}; row.total++;row.won+=Number(m.winnerId===player);sections.set(key,row);
-  }
-  for(const m of workspace.matches){
-    if(m.status!=='Completed'||!m.winnerId) continue;
-    const side=[m.sideOnePlayerIds,m.sideTwoPlayerIds].find(ids=>ids?.length===2 && ids.includes(player));
-    const partner=side?.find(id=>id!==player); if(!partner) continue;
-    const row=partners.get(partner) ?? {won:0,total:0};
-    row.total++; row.won+=Number(m.winnerId===(side===m.sideOnePlayerIds ? m.sideOneId??m.playerOneId : m.sideTwoId??m.playerTwoId)); partners.set(partner,row);
   }
   let streak=0, longestWin=0, longestLoss=0;
   const trendRows=dated.map((m,i)=>{
@@ -93,7 +85,6 @@ export function PlayerAnalysis({workspace,onOpenMatch}: {workspace: Workspace; o
   <p>Average absolute game margin · {margins.length?(margins.reduce((sum,value)=>sum+Math.abs(value),0)/margins.length).toFixed(1):'—'} points. Smaller margins describe closer games.</p>
   <p>Game margin consistency · {deviation===null?'At least two scored games needed':deviation.toFixed(1)+' points standard deviation across '+margins.length+' games'}. Smaller values mean more similar game margins.</p>
   <details><summary>Compare two players · career singles</summary><select aria-label="Comparison player" value={compare} onChange={e=>setCompare(e.target.value)}><option value="">Select another player</option>{workspace.players.filter(p=>p.id!==player).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select>{compareIds.map(id=>{const p=workspace.players.find(p=>p.id===id);const rows=workspace.matches.filter(m=>m.status==='Completed'&&m.winnerId&&!m.teamTieId&&(m.sideOnePlayerIds?.length??1)===1&&(m.sideTwoPlayerIds?.length??1)===1&&[m.playerOneId,m.playerTwoId].includes(id));return <p key={id}>{p?.name} · {rows.filter(m=>m.winnerId===id).length} wins from {rows.length} matches · rating {p?.rating}</p>})}</details>
-  <details><summary>Doubles partnerships · all recorded doubles</summary>{partners.size?[...partners].map(([id,row])=><p key={id}>{workspace.players.find(p=>p.id===id)?.name} · {row.won} wins in {row.total} matches</p>):<p>No completed doubles matches with recorded lineups.</p>}</details>
   <h4>Recent results in order</h4><p>{trend.length?trend.slice(-20).map(w=>w?'W':'L').join(' · '):'No dated results in this selection.'}</p>
   <p>Largest recorded winning game margin: {largestMargin || '—'} points. Largest verified comeback: {bestComeback || '—'} points behind.</p>
   <button className="button button-outline" onClick={()=>setDetail(!detail)}>{detail?'Hide':'Show'} match history</button>{detail&&matches.map(m=><p key={m.id}>{date(m)||'Date unavailable'} · vs {opponent(m)?.name} · {m.winnerId===player?'Won':'Lost'} · {m.tournamentName||'Club match'} {onOpenMatch&&<button className="button button-quiet" onClick={()=>onOpenMatch(m.id)}>Open match log</button>}</p>)}</section>
