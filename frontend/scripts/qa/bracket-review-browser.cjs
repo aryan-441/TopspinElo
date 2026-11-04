@@ -10,7 +10,7 @@ await page.reload();await page.getByRole('button',{name:'Open navigation'}).clic
 await page.locator('input[type=file][accept*="application/pdf"]').last().setInputFiles({name:'bracket.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\n')});
 await page.getByRole('heading',{name:'Reading draw'}).waitFor();
 await page.getByText('Reading names and bracket positions').waitFor();
-await page.getByRole('heading',{name:'Review draw'}).waitFor();await page.screenshot({path:'.test-tmp/bracket-review-new-top.png'});
+await page.getByRole('heading',{name:'Review knockout draw'}).waitFor();await page.screenshot({path:'.test-tmp/bracket-review-new-top.png'});
 const slot8=page.getByRole('combobox',{name:'Player in slot 8'}),slot3=page.getByRole('combobox',{name:'Player in slot 3'});
 await slot8.selectOption(ids[2]);
 if(await slot3.inputValue()!==ids[7]||await slot8.inputValue()!==ids[2])throw Error('Occupied slots did not swap');

@@ -10,15 +10,15 @@ type MatchCenterProps = { workspace: Workspace; players: Map<string, Player>; re
 
 export function MatchCenter({ workspace, players, referees = [], refereeDesk = false, query, onQuery, onOpenMatch, onCreate, onSaveMatch, onDeleteMatch }: MatchCenterProps) {
   const [filter, setFilter] = useState<'All matches' | Match['status']>('All matches');
-  const [activeRefereeId, setActiveRefereeId] = useState(referees[0]?.id ?? '');
+  const [activeRefereeId, setActiveRefereeId] = useState(referees.find(referee => referee.active)?.id ?? '');
   const [resultMatch,setResultMatch] = useState<Match | null>(null);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [deletingMatch, setDeletingMatch] = useState<Match | null>(null);
   const rows = useMemo(() => workspace.matches.filter((match) => {
     const term = query.toLowerCase();
     const names = `${players.get(match.playerOneId)?.name ?? ''} ${players.get(match.playerTwoId)?.name ?? ''} ${match.tournamentName ?? ''}`.toLowerCase();
-    return (filter === 'All matches' || match.status === filter) && (!refereeDesk || !activeRefereeId || match.refereeId === activeRefereeId) && (!term || names.includes(term));
-  }), [workspace.matches, players, query, filter, refereeDesk, activeRefereeId]);
+    return (filter === 'All matches' || match.status === filter) && (!refereeDesk || Boolean(activeRefereeId && referees.some(referee => referee.id === activeRefereeId && referee.active) && match.refereeId === activeRefereeId)) && (!term || names.includes(term));
+  }), [workspace.matches, players, query, filter, refereeDesk, activeRefereeId, referees]);
   const active = workspace.matches.filter((match) => match.status === 'In progress').length;
   const scheduled = workspace.matches.filter((match) => match.status === 'Scheduled').length;
   const complete = workspace.matches.filter((match) => match.status === 'Completed').length;

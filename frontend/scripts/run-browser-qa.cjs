@@ -3,7 +3,7 @@ const {mkdirSync,writeFileSync}=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'../..');
 mkdirSync(path.join(root,'.test-tmp'),{recursive:true});
-const names=['browser-review','new-requests-browser','schedule-selection-browser','import-missing-browser','import-loading-cancel-browser','bracket-review-browser','responsive-language-check','core-workflows','backup-validation','doubles-browser'];
+const names=['browser-review','new-requests-browser','schedule-selection-browser','import-missing-browser','import-loading-cancel-browser','bracket-review-browser','responsive-language-check','core-workflows','backup-validation','doubles-browser','draw-creation-matrix','interface-boundaries','structured-imports'];
 const results=[];
 for(const name of names){
   const result=spawnSync(process.execPath,[path.join(__dirname,'qa',name+'.cjs')],{cwd:root,encoding:'utf8',timeout:180000});
