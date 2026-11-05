@@ -1,4 +1,5 @@
 import { MatchReceipt } from './components/MatchReceipt';
+import { brand } from './brand';
 import { STORAGE_KEY } from './services/store';
 import { ResultEntryDialog } from './components/ResultEntryDialog';
 import { replayRatings, recordedPointsWon } from './services/resultEntry';
@@ -32,10 +33,10 @@ const workspaceNav: NavItem[] = [
   { id: 'exports', label: 'Exports & recovery', icon: Download },
   { id: 'settings', label: 'Settings', icon: Settings2 },
   { id: 'guide', label: 'Club guide', icon: ClipboardList },
-  { id: 'about', label: 'About Rallydesk', icon: Info },
+  { id: 'about', label: 'About TopspinElo', icon: Info },
 ];
 const pageTitles: Record<PageId, string> = {
-  overview: 'Rallydesk', matches: 'Matches', tournaments: 'Tournaments', players: 'Players', referees: 'Referees', statistics: 'Statistics', exports: 'Exports & recovery', settings: 'Settings', about: 'About Rallydesk', guide: 'Club guide',
+  overview: brand.name, matches: 'Matches', tournaments: 'Tournaments', players: 'Players', referees: 'Referees', statistics: 'Statistics', exports: 'Exports & recovery', settings: 'Settings', about: `About ${brand.name}`, guide: 'Club guide',
 };
 
 type CreateDialog = 'player' | 'match' | 'tournament' | null;
@@ -113,7 +114,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    document.title = activeMatch ? 'Live scoring - Rallydesk' : page === 'overview' ? 'Rallydesk - Table Tennis Manager' : `${pageTitles[page]} - Rallydesk`;
+    document.title = activeMatch ? 'Live scoring - TopspinElo' : page === 'overview' ? `${brand.name} | ${brand.tagline}` : `${pageTitles[page]} - TopspinElo`;
   }, [activeMatch?.id, page]);
 
   const update = (mutator: (current: Workspace) => Workspace) => setWorkspace((current) => recordWorkspaceChanges(current, mutator(structuredClone(current))));
@@ -317,7 +318,7 @@ export default function App() {
     <div className="app-frame"><MatchReceipt workspace={workspace}/>
       {mobileNav && <button className="nav-scrim" aria-label="Close navigation" onClick={() => setMobileNav(false)} />}
       <aside ref={sidebarRef} id="rallydesk-sidebar" aria-label="Primary navigation" className={`sidebar ${mobileNav ? 'sidebar--open' : ''}`}>
-        <div className="brand-lockup"><span className="brand-mark"><i /><i /><i /></span><span>rally<span className="brand-light">desk</span><small>CLUB OPERATIONS</small></span><button ref={mobileCloseRef} className="mobile-close icon-button" onClick={() => setMobileNav(false)} aria-label="Close navigation"><X size={18} /></button></div>
+        <div className="brand-lockup"><img className="brand-symbol" src="/topspinelo-mark.svg" alt="" /><span>{brand.name}<small>{brand.tagline.toUpperCase()}</small></span><button ref={mobileCloseRef} className="mobile-close icon-button" onClick={() => setMobileNav(false)} aria-label="Close navigation"><X size={18} /></button></div>
         <div className="role-switch" aria-label="Choose workspace interface"><span className="role-switch-label">WORKSPACE VIEW</span><div role="group" aria-label="Workspace interface"><button type="button" aria-pressed={workspaceRole === 'organiser'} className={workspaceRole === 'organiser' ? 'role-switch-active' : ''} onClick={() => { setRole('organiser'); if (page === 'matches') setPage('overview'); }}>Organiser</button><button type="button" aria-pressed={workspaceRole === 'referee'} className={workspaceRole === 'referee' ? 'role-switch-active' : ''} onClick={() => { setRole('referee'); setPage('matches'); }}>Referee</button></div></div>
         <button className="club-switcher" onClick={() => setPage('settings')}><span className="club-monogram">{workspace.clubName?.trim().charAt(0).toUpperCase() || '＋'}</span><span><b>{workspace.clubName || 'Add your club name'}</b><small>Workspace settings</small></span><span className="switch-caret">⌄</span></button>
         <nav aria-label="Main navigation">
@@ -334,7 +335,7 @@ export default function App() {
       <div className="main-column">
         <header className="topbar">
           <button ref={mobileMenuRef} className="mobile-menu icon-button" onClick={() => setMobileNav(true)} aria-label="Open navigation" aria-expanded={mobileNav} aria-controls="rallydesk-sidebar"><Menu size={20} /></button>
-          <div className="breadcrumb"><span>{workspace.clubName || 'Rallydesk'}</span><span className="breadcrumb-slash">/</span><b>{pageTitles[page]}</b></div>
+          <div className="breadcrumb"><span>{workspace.clubName || 'TopspinElo'}</span><span className="breadcrumb-slash">/</span><b>{pageTitles[page]}</b></div>
           <div className="topbar-right">
             <span className="preview-pill"><span /> {demoMode ? 'Demo · sample records' : 'Local preview'}</span>
             <button className="topbar-icon icon-button" aria-label="Notifications" onClick={() => setToast('You’re all caught up')}><Bell size={18} /></button>
@@ -361,7 +362,7 @@ export default function App() {
           {page === 'settings' && <SettingsView workspace={workspace} clubName={workspace.clubName ?? ''} onSaveClubName={(name) => { update((current) => ({ ...current, clubName: name })); setToast(name ? `${name} saved` : 'Club name cleared'); }} onImportWorkspace={replaceWorkspace} onReset={reset} />}
           {page === 'about' && <AboutView />}{page === 'guide' && <ClubGuide navigate={setPage} />}
         </main>
-        <footer className="app-footer"><span>Rallydesk v3</span><span>© Aryan Arora 2026</span></footer>
+        <footer className="app-footer"><span>TopspinElo</span><span>© Aryan Arora 2026</span></footer>
       </div>
 
       {organiserResult && <ResultEntryDialog match={organiserResult} workspace={workspace} onClose={()=>setOrganiserResult(null)} onSave={next=>{saveScoredMatch(next);setOrganiserResult(null)}}/>}

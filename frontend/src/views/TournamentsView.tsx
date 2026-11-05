@@ -553,9 +553,9 @@ function exportTournamentPackage(tournament: Tournament, workspace: Workspace, p
   const matches = workspace.matches.filter((match) => match.tournamentId === tournament.id || tournament.matchIds.includes(match.id));
   const matchIds = new Set(matches.map((match) => match.id));
   const activityLog = workspace.activityLog.filter((event) => event.entityId === tournament.id || matchIds.has(event.entityId));
-  const packageData = { schemaVersion: 2, exportedAt: new Date().toISOString(), source: 'Rallydesk local preview', recoveryNote: 'The workspace field is a complete backup of this browser workspace, including other events. Restore it through Settings.', tournament, entrants: tournament.entrantIds.map((id) => players.get(id)).filter(Boolean), matches, referees: workspace.referees, activityLog, workspace };
+  const packageData = { schemaVersion: 2, exportedAt: new Date().toISOString(), source: 'TopspinElo local preview', recoveryNote: 'The workspace field is a complete backup of this browser workspace, including other events. Restore it through Settings.', tournament, entrants: tournament.entrantIds.map((id) => players.get(id)).filter(Boolean), matches, referees: workspace.referees, activityLog, workspace };
   const url = URL.createObjectURL(new Blob([JSON.stringify(packageData, null, 2)], { type: 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = `rallydesk-${slug(tournament.name)}-tournament.json`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const link = document.createElement('a'); link.href = url; link.download = `topspin-elo-${slug(tournament.name)}-tournament.json`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function printTournamentDraw(tournament: Tournament, matches: Match[], players: Map<string, Player>) {
@@ -671,14 +671,14 @@ function downloadDrawTemplate(type: 'csv' | 'json', includeGroups = false) {
   const sample = { player_one: '', player_two: '', category: '', ...(includeGroups ? { group: 'Group A' } : {}), round: includeGroups ? 'Group A · Round 1' : 'Round 1', table: '', start_time: '' };
   const body = isCsv ? `${includeGroups ? 'player_one,player_two,category,group,round,table,start_time' : 'player_one,player_two,category,round,table,start_time'}\n` : JSON.stringify({ schema_version: 1, matches: [sample] }, null, 2);
   const url = URL.createObjectURL(new Blob([body], { type: isCsv ? 'text/csv;charset=utf-8' : 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = `rallydesk-draw-template.${type}`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const link = document.createElement('a'); link.href = url; link.download = `topspin-elo-draw-template.${type}`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function downloadGroupAllocationTemplate(type: 'csv' | 'json') {
   const isCsv = type === 'csv';
   const body = isCsv ? 'group,player,seed\nGroup A,,\nGroup B,,\n' : JSON.stringify({ schema_version: 1, groups: [{ group: 'Group A', player: '', seed: 1 }, { group: 'Group B', player: '', seed: 2 }] }, null, 2);
   const url = URL.createObjectURL(new Blob([body], { type: isCsv ? 'text/csv;charset=utf-8' : 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = `rallydesk-group-allocation-template.${type}`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const link = document.createElement('a'); link.href = url; link.download = `topspin-elo-group-allocation-template.${type}`; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function TournamentStandings({ tournament, players, matches }: { tournament: Tournament; players: Map<string, Player>; matches: Match[] }) {

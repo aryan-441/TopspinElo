@@ -34,7 +34,7 @@ omitted:
 
 ## Overview
 
-Rallydesk is a product interface for table tennis club organisers. Keep it composed like a well-run club desk: calm, tactile, legible, and efficient during play. It is a product surface, not a marketing landing page. The signature is the deep pine navigation paired with a small warm-orange scoring accent.
+TopspinElo is a product interface for table tennis club organisers. Keep it composed like a well-run club desk: calm, tactile, legible, and efficient during play. It is a product surface, not a marketing landing page. The signature is the deep pine navigation paired with a small warm-orange scoring accent.
 
 The current runtime stylesheet is the token source of truth. `:root` variables in `src/styles.css` map the palette, type roles, sidebar width, and global scrollbar colors into the interface. This document records the intended values; update both documentation and stylesheet when the visual system deliberately changes.
 

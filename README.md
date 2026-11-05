@@ -6,7 +6,7 @@ A Python application for managing player profiles, table-tennis matches, and tou
 
 ## Running a club event
 
-Rallydesk keeps the draw, score sheet and standings together. Organisers register players once, referees score at the table, and coaches and players can revisit the points behind a result. The browser app is free to use and has no advertisements. Open **Club guide** for a walkthrough.
+TopspinElo keeps the draw, score sheet and standings together. Organisers register players once, referees score at the table, and coaches and players can revisit the points behind a result. The browser app is free to use and has no advertisements. Open **Club guide** for a walkthrough.
 
 - **Tournaments → Draw & matches** opens group allocation tables. Remove an entrant from one table and add them to another. Review the fixture changes before applying.
 - After qualification, confirm a random bracket or import the knockout draw. With two qualifiers per group, played opening fixtures pair a winner with a different group's runner-up. Other qualification counts use a shuffle. Byes fill the bracket to a power of two.
@@ -129,7 +129,7 @@ The approved product context and phased requirements for optional player attribu
 
 ## Source code terms
 
-Rallydesk is a free product for clubs, with no advertisements. The repository is available for source inspection and evaluation under the proprietary terms in [LICENSE](LICENSE). Reusing, modifying, deploying, redistributing, or incorporating its code requires the copyright owner's written permission. Request permission by emailing rallydesksupport@gmail.com or contacting the owner through [GitHub](https://github.com/aryan-441/table-tennis-manager).
+TopspinElo is a free product for clubs, with no advertisements. The repository is available for source inspection and evaluation under the proprietary terms in [LICENSE](LICENSE). Reusing, modifying, deploying, redistributing, or incorporating its code requires the copyright owner's written permission. Request permission by contacting the owner through [GitHub](https://github.com/aryan-441/TopspinElo).
 
 ## Recovery and demo
 

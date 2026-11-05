@@ -201,7 +201,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
   };
 
   return <div className="scoring-screen">
-    <header className="scoring-topbar"><button className="scoring-back" onClick={onBack}><ArrowLeft size={17} /> <span>Match desk</span></button><span className="scoring-brand">rally<span>desk</span></span><div className="scoring-top-right"><StatusPill status={match.status} /><button className="icon-button scoring-help" onClick={() => setHelpOpen(true)} aria-label="Scoring help"><CircleHelp size={18} /></button></div></header>
+    <header className="scoring-topbar"><button className="scoring-back" onClick={onBack}><ArrowLeft size={17} /> <span>Match desk</span></button><span className="scoring-brand">TopspinElo</span><div className="scoring-top-right"><StatusPill status={match.status} /><button className="icon-button scoring-help" onClick={() => setHelpOpen(true)} aria-label="Scoring help"><CircleHelp size={18} /></button></div></header>
     <main className="scoring-layout">
       {match.status === 'Not played' && <div className="not-played-banner"><b>Not played</b><span>The team tie was decided by the required majority of individual matches.</span></div>}
       <section className="scoring-main">
@@ -233,7 +233,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
       </aside>
       <button className="mobile-timeline-fab" onClick={() => setMobileActions(true)}><Timer size={16} /> Match timeline <span>{match.events.length}</span></button>
     </main>
-    <footer className="app-footer scoring-footer"><span>Rallydesk</span><a href="mailto:rallydesksupport@gmail.com">Support · rallydesksupport@gmail.com</a><span>© Aryan Arora 2026</span></footer>
+    <footer className="app-footer scoring-footer"><span>TopspinElo</span><a href="https://github.com/aryan-441/TopspinElo">Support on GitHub</a><span>© Aryan Arora 2026</span></footer>
     {undoOpen && <UndoDialog onClose={() => setUndoOpen(false)} onConfirm={undoPoint} />}
     {helpOpen && <ScoringHelpDialog onClose={() => setHelpOpen(false)} />}
   </div>;
@@ -265,7 +265,7 @@ function findGameWinner(match: Match): string | undefined {
 
 function ScoringHelpDialog({ onClose }: { onClose: () => void }) {
   return <Dialog title="Using the scorecard" eyebrow="SCORING GUIDE" onClose={onClose}>
-    <div className="scoring-help-copy"><p>Confirm who won the toss and whether they chose to serve or receive, then start the match.</p><p>Tap the player who won each point. Rallydesk rotates service, applies win-by-two at deuce, and records lets, faults and corrections in the timeline.</p><p>When a game reaches its winning score, confirm the game result to continue. The match is recorded when a player reaches the configured games-to-win total.</p></div>
+    <div className="scoring-help-copy"><p>Confirm who won the toss and whether they chose to serve or receive, then start the match.</p><p>Tap the player who won each point. TopspinElo rotates service, applies win-by-two at deuce, and records lets, faults and corrections in the timeline.</p><p>When a game reaches its winning score, confirm the game result to continue. The match is recorded when a player reaches the configured games-to-win total.</p></div>
     <div className="dialog-actions"><button className="button button-primary" onClick={onClose}>Got it</button></div>
   </Dialog>;
 }

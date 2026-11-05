@@ -4,7 +4,7 @@ The current website copy is written directly in the React source files below. Ch
 
 | Page or area | File | What to find |
 | --- | --- | --- |
-| About Rallydesk | frontend/src/views/UtilityViews.tsx | AboutView, at the top of the file: introduction, value statements, free/adless description and support |
+| About TopspinElo | frontend/src/views/UtilityViews.tsx | AboutView, at the top of the file: introduction, value statements, free/adless description and support |
 | Club guide | frontend/src/views/UtilityViews.tsx | ClubGuide: the chapters list contains each section's heading and paragraph |
 | Settings | frontend/src/views/UtilityViews.tsx | SettingsView |
 | Exports and recovery | frontend/src/views/UtilityViews.tsx | ExportsView |

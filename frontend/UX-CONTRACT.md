@@ -1,20 +1,20 @@
-# Rallydesk UX Contract
+# TopspinElo UX Contract
 
 ## Product scope
 
-Rallydesk helps a club organiser manage players, matches, tournament draws, results, statistics, and exports. The current React/Vite frontend is a local browser preview backed by localStorage. Firebase Auth and Firestore are planned but not connected; screens must describe the storage state truthfully.
+TopspinElo helps a club organiser manage players, matches, tournament draws, results, statistics, and exports. The current React/Vite frontend is a local browser preview backed by localStorage. Firebase Auth and Firestore are planned but not connected; screens must describe the storage state truthfully.
 
 ## Navigation
 
 - The persistent desktop sidebar and mobile drawer own product navigation.
 - Current page is indicated with `aria-current="page"` and the same label is used in the page heading and breadcrumb.
-- The document title identifies the active page and Rallydesk; live scoring has its own title.
-- Overview is the first page and identifies the product as Rallydesk.
-- About Rallydesk and support information are available through Manage navigation and the shared footer.
+- The document title identifies the active page and TopspinElo; live scoring has its own title.
+- Overview is the first page and identifies the product as TopspinElo.
+- About TopspinElo and support information are available through Manage navigation and the shared footer.
 - The local preview offers Organiser and Referee workspace views. Organiser navigation includes club, tournament, player, referee roster/assignment, statistics, export, and settings workflows; Referee navigation focuses on assigned matches and statistics.
 - This view switch is a navigation preference only. It is not authentication or an authorization boundary. Production sign-in and server-enforced role permissions are required before using it to protect organiser data or actions.
 - The selected view is saved locally when browser storage is available.
-- Footer on every app screen includes support email `rallydesksupport@gmail.com` and `© Aryan Arora 2026`.
+- Footer on every app screen includes support email `GitHub` and `© Aryan Arora 2026`.
 
 ## Empty and create flows
 
@@ -38,7 +38,7 @@ Rallydesk helps a club organiser manage players, matches, tournament draws, resu
 - Organisers retain authority over imported and generated draws. Imports require preview, validation, and confirmation. Unknown or ambiguous names need explicit mapping; importing must not silently overwrite workspace data.
 - The frontend imports structured CSV and JSON draws with category mapping, preview, validation, and confirmation. The CV draw importer is a beta: it uses the optional local PaddleOCR service to extract numbered entrant names and printed BYE labels from PDFs/images. It does not reconstruct bracket connector lines, and its results must remain editable and require organiser confirmation before creating a draw. If the service is unavailable, organisers can use the manual entrant name fields.
 - Organisers can print a tournament draw/schedule or use the browser print dialog's Save as PDF action to send a readable fixture list to players. The print layout includes known bye entries.
-- Before play begins, an organiser can change tournament entrants. Rallydesk rebuilds only that tournament's pending fixtures, requires a reason, and records the change in the audit log. Once any match is in progress, postponed, or completed, entrant/draw rebuilding is locked.
+- Before play begins, an organiser can change tournament entrants. TopspinElo rebuilds only that tournament's pending fixtures, requires a reason, and records the change in the audit log. Once any match is in progress, postponed, or completed, entrant/draw rebuilding is locked.
 - Pending match time/table changes require a reason and are recorded in the same tournament audit log. Completed match schedules cannot be edited.
 - Backup restore validates the file and previews its player, match, and tournament counts. It replaces browser data only after an explicit confirmation.
 - Workspace exports from Settings and Exports use the same versioned backup envelope accepted by Restore. Browser storage failures are caught and explained while the local preview remains usable.
