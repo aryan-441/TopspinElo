@@ -1,8 +1,8 @@
-# Table Tennis Manager
+# TopspinElo
 
 **Project date: 27 December 2025. Updated: 3 November 2026.**
 
-A Python application for managing player profiles, table-tennis matches, and tournaments.
+**Every match tells a story.** TopspinElo connects tournament organisation, regular club play, Elo ratings and player statistics. Development began in late 2025 as a Python application, with a Tkinter desktop interface originally planned. The browser app is the current product direction.
 
 ## Running a club event
 
