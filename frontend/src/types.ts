@@ -1,0 +1,119 @@
+export type PageId = 'overview' | 'matches' | 'tournaments' | 'players' | 'referees' | 'statistics' | 'exports' | 'settings' | 'about' | 'guide';
+export type MatchStatus = 'In progress' | 'Scheduled' | 'Completed' | 'Postponed' | 'Not played';
+
+export type Player = {
+  id: string;
+  name: string;
+  initials: string;
+  hand: 'Right' | 'Left' | null;
+  grip: 'Shakehand' | 'Penhold' | null;
+  style: string | null;
+  rating: number;
+  ratingBase?: number;
+  wins: number;
+  losses: number;
+  pointsWon: number;
+  recent: ('W' | 'L')[];
+  archivedAt?: string;
+};
+
+export type PointEvent = { reversedEvent?: PointEvent; serverId?: string; game?: number; reason?: string; reversedEventId?: string; recordedAt?: string; id: string; winnerId: string; score: string; time: string; kind: 'Point' | 'Fault' | 'Let' | 'Correction' };
+
+export type Match = {
+  resultDetail?: 'winner' | 'match-score' | 'game-scores' | 'point-by-point';
+  resultNote?: string;
+  startRatings?: Record<string, number>;
+  completedAt?: string;
+  id: string;
+  playerOneId: string;
+  playerTwoId: string;
+  status: MatchStatus;
+  tournamentId?: string;
+  tournamentName?: string;
+  round?: string;
+  table?: string;
+  category?: string;
+  categoryId?: string;
+  refereeId?: string;
+  organiserScoringReason?: string;
+  startsAt: string;
+  format: string;
+  pointsPerGame: 11 | 21;
+  gamesToWin: number;
+  gamesWon: Record<string, number>;
+  score: Record<string, number>;
+  serverId: string;
+  tossWinnerId: string;
+  events: PointEvent[];
+  winnerId?: string;
+  gameResults?: { one: number; two: number; winnerId: string }[];
+  bracketOrder?: number;
+  sideOneId?: string;
+  sideTwoId?: string;
+  sideOneLabel?: string;
+  sideTwoLabel?: string;
+  sideOneTeamName?: string;
+  sideTwoTeamName?: string;
+  sideOnePlayerIds?: string[];
+  sideTwoPlayerIds?: string[];
+  doublesOrder?: string[];
+  teamTieId?: string;
+  teamTieOrder?: number;
+  teamOneId?: string;
+  teamTwoId?: string;
+  sideOneTeamRosterIds?: string[];
+  sideTwoTeamRosterIds?: string[];
+  doublesNominationPending?: boolean;
+  awaitingDoublesServerChoice?: boolean;
+};
+
+export type Standing = { playerId: string; played: number; wins: number; losses: number; gamesWon: number; gamesLost: number; pointsFor: number; pointsAgainst: number };
+
+export type CategoryKind = 'Singles' | 'Doubles' | 'Team';
+export type TeamSystem = 'new_swaythling' | 'corbillon' | 'olympic' | 'best_of_7' | 'best_of_9';
+export type CategoryEntry = { id: string; name: string; playerIds: string[]; seed?: number; doublesPlayerIds?: string[] };
+export type TournamentGroup = { id: string; name: string; entryIds: string[] };
+export type GroupStageConfig = { distribution?: 'snake' | 'bands' | 'random'; drawSeed?: string; groupCount: number; advancePerGroup: number; advanceToKnockout?: boolean; groups?: TournamentGroup[]; advanced?: boolean };
+export type TournamentCategory = {
+  awaitingDraw?: boolean;
+  qualifierPlaces?: Record<string, number>;
+  id: string;
+  name: string;
+  kind: CategoryKind;
+  format: 'Group stage' | 'Round robin' | 'Knockout';
+  entries: CategoryEntry[];
+  seeds?: Record<string, number>;
+  bracketSlots?: (string | null)[];
+  byeEntryIds?: string[];
+  teamSystem?: TeamSystem;
+  standings?: Standing[];
+  tieBreaks?: string[];
+  groupStage?: GroupStageConfig;
+};
+
+export type Tournament = {
+  includeReferees?: boolean;
+  id: string;
+  name: string;
+  format: 'Group stage' | 'Round robin' | 'Knockout';
+  status: 'Running' | 'Upcoming' | 'Completed' | 'Paused';
+  date: string;
+  venue: string;
+  tableCount: number;
+  categories: TournamentCategory[];
+  entrantIds: string[];
+  seeds?: Record<string, number>;
+  bracketSlots?: (string | null)[];
+  byePlayerIds?: string[];
+  matchIds: string[];
+  rounds: number;
+  completed: number;
+  progressPaused: boolean;
+  tieBreaks: string[];
+  standings: Standing[];
+  audit: { id: string; action: string; target: string; reason: string; at: string }[];
+};
+
+export type Referee = { id: string; name: string; email?: string; active: boolean; unavailableReason?: string };
+export type WorkspaceActivity = { id: string; at: string; entity: 'player' | 'match' | 'tournament' | 'referee' | 'workspace'; entityId: string; action: 'created' | 'updated' | 'deleted'; summary: string; before?: unknown; after?: unknown };
+export type Workspace = { clubName?: string; players: Player[]; matches: Match[]; tournaments: Tournament[]; referees: Referee[]; activityLog: WorkspaceActivity[] };

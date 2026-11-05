@@ -1,0 +1,242 @@
+{
+  "recordedAt": "2026-11-04T13:32:45.585808+00:00",
+  "browserSuites": {
+    "date": "2026-11-04T13:31:48.681Z",
+    "results": [
+      {
+        "name": "browser-review",
+        "passed": true,
+        "output": "{\"errors\":[],\"overflow\":false,\"exportPlayers\":8,\"exportMatches\":12,\"restore\":\"passed\",\"groupEdit\":\"passed\"}\n"
+      },
+      {
+        "name": "new-requests-browser",
+        "passed": true,
+        "output": "NO REFEREE REQUIRED\n\nRecord a result\n\nZoe Tan vs Arjun Shah \u00c2\u00b7 Best of 3\n\nHow much detail?\nJust the winner\nOverall game score\nIndividual game scores\nWinner\nChoose winner\nZoe Tan\nArjun Shah\n\nWins and Elo update with any result. Game statistics need an overall score. Point totals need individual game scores. Service and pressure statistics need point-by-point scoring.\n\nCancel\nSave result\n{\"errors\":[],\"resultEntry\":\"passed\",\"refereeOption\":\"passed\",\"paletteSelection\":\"passed\",\"mobileOverflow\":false}\n"
+      },
+      {
+        "name": "schedule-selection-browser",
+        "passed": true,
+        "output": "{\"readyMatches\":8,\"eighthSelectable\":true,\"futureFinalDisabled\":true,\"errors\":[]}\n"
+      },
+      {
+        "name": "import-missing-browser",
+        "passed": true,
+        "output": "{\"csvFlow\":\"passed\",\"cancelUnchanged\":true,\"stagingUnchanged\":true,\"newPlayerDefaults\":\"null\",\"fixtures\":1,\"errors\":[]}\n"
+      },
+      {
+        "name": "import-loading-cancel-browser",
+        "passed": true,
+        "output": "{\"cancelStopsReview\":true,\"failureVisible\":true,\"errors\":[]}\n"
+      },
+      {
+        "name": "bracket-review-browser",
+        "passed": true,
+        "output": "LAYOUT { dialogTop: 22, dialogScroll: 0, headerTop: 43, scrimScroll: 0 }\n{\"loadingVisible\":true,\"occupiedSlotsSwapped\":true,\"reviewTableFits\":true,\"mobileOverflow\":false,\"saved\":true,\"errors\":[]}\n"
+      },
+      {
+        "name": "responsive-language-check",
+        "passed": true,
+        "output": "Edge: all pages fit 320/390/768/1440px; settings, guide, About copy passed\nWebKit: all pages fit 320/390/768/1440px; settings, guide, About copy passed\n"
+      },
+      {
+        "name": "core-workflows",
+        "passed": true,
+        "output": "UNDO_DIALOG CORRECTION\n\nUndo the last point?\n\nThis adds a correction to the match timeline and removes the most recent point from the score.\n\nReason for correction\nKeep point\nUndo point\n{\"playerEditArchiveRestore\":true,\"optionalAttributes\":true,\"refereeAddAssignRemove\":true,\"serviceRotation\":true,\"reasonedUndo\":true,\"scoringCompletionPersistence\":true,\"errors\":[]}\n"
+      },
+      {
+        "name": "backup-validation",
+        "passed": true,
+        "output": "{\"invalidBackupsRejected\":6,\"existingDataPreserved\":true,\"validRestore\":true,\"errors\":[]}\n"
+      },
+      {
+        "name": "doubles-browser",
+        "passed": true,
+        "output": "{\"partnership\":true,\"partialData\":true,\"mobile\":true,\"errors\":[]}\n"
+      },
+      {
+        "name": "draw-creation-matrix",
+        "passed": true,
+        "output": "PASS random knockout 4 fixtures\nPASS seeded knockout 4 fixtures\nPASS typed names 4 fixtures\nPASS snake uneven groups 7 fixtures\nPASS seed bands 12 fixtures\nPASS random groups only 12 fixtures\nPASS doubles pairs 2 fixtures\nPASS team new_swaythling 5 fixtures\nPASS team corbillon 5 fixtures\nPASS team olympic 5 fixtures\nPASS team best_of_7 7 fixtures\nPASS team best_of_9 9 fixtures\n"
+      },
+      {
+        "name": "interface-boundaries",
+        "passed": true,
+        "output": "{\"refereeEmptyRosterIsolated\":true,\"refereeCannotCreate\":true,\"singlesBeforeDoubles\":true,\"noFalseNotificationDot\":true,\"groupAiRemoved\":true,\"qualificationLocked\":true}\n"
+      },
+      {
+        "name": "structured-imports",
+        "passed": true,
+        "output": "PASS match list csv\nPASS match list json\nPASS group allocation csv\nPASS group allocation json\n"
+      }
+    ]
+  },
+  "creationMatrix": {
+    "at": "2026-11-04T13:31:30.083Z",
+    "results": [
+      {
+        "name": "random knockout",
+        "passed": true,
+        "entrants": 8,
+        "fixtures": 4
+      },
+      {
+        "name": "seeded knockout",
+        "passed": true,
+        "entrants": 8,
+        "fixtures": 4
+      },
+      {
+        "name": "typed names",
+        "passed": true,
+        "entrants": 8,
+        "fixtures": 4
+      },
+      {
+        "name": "snake uneven groups",
+        "passed": true,
+        "entrants": 8,
+        "fixtures": 7
+      },
+      {
+        "name": "seed bands",
+        "passed": true,
+        "entrants": 8,
+        "fixtures": 12
+      },
+      {
+        "name": "random groups only",
+        "passed": true,
+        "entrants": 8,
+        "fixtures": 12
+      },
+      {
+        "name": "doubles pairs",
+        "passed": true,
+        "entrants": 4,
+        "fixtures": 2
+      },
+      {
+        "name": "team new_swaythling",
+        "passed": true,
+        "entrants": 2,
+        "fixtures": 5
+      },
+      {
+        "name": "team corbillon",
+        "passed": true,
+        "entrants": 2,
+        "fixtures": 5
+      },
+      {
+        "name": "team olympic",
+        "passed": true,
+        "entrants": 2,
+        "fixtures": 5
+      },
+      {
+        "name": "team best_of_7",
+        "passed": true,
+        "entrants": 2,
+        "fixtures": 7
+      },
+      {
+        "name": "team best_of_9",
+        "passed": true,
+        "entrants": 2,
+        "fixtures": 9
+      }
+    ]
+  },
+  "structuredImports": {
+    "at": "2026-11-04T13:31:48.212Z",
+    "results": [
+      {
+        "group": false,
+        "format": "csv",
+        "fixtures": 5,
+        "passed": true
+      },
+      {
+        "group": false,
+        "format": "json",
+        "fixtures": 5,
+        "passed": true
+      },
+      {
+        "group": true,
+        "format": "csv",
+        "fixtures": 12,
+        "passed": true
+      },
+      {
+        "group": true,
+        "format": "json",
+        "fixtures": 12,
+        "passed": true
+      }
+    ]
+  },
+  "compiledBuildSmoke": {
+    "at": "2026-11-04T13:32:13.694Z",
+    "results": [
+      {
+        "width": 1440,
+        "pages": 10,
+        "errors": []
+      },
+      {
+        "width": 390,
+        "pages": 10,
+        "errors": []
+      }
+    ]
+  },
+  "pdfRejections": [
+    {
+      "case": "non-PDF",
+      "status": 415,
+      "expected": 415
+    },
+    {
+      "case": "fake PDF",
+      "status": 415,
+      "expected": 415
+    },
+    {
+      "case": "over limit",
+      "status": 413,
+      "expected": 413
+    }
+  ],
+  "visibleDownloadsPdf": {
+    "file": "open_singles_manual_test_draw.pdf",
+    "names": 27,
+    "slots": 32,
+    "byeSlots": [
+      2,
+      7,
+      14,
+      23,
+      30
+    ],
+    "resultsEnteredThroughUi": 26,
+    "roundFixtureCounts": [
+      11,
+      8,
+      4,
+      2,
+      1
+    ],
+    "status": "Completed",
+    "syntheticWinner": "Isla Norwood",
+    "method": "CUA browser control, independently checked downloaded tournament JSON"
+  },
+  "otherExecutedChecks": {
+    "frontendBuild": "passed",
+    "frontendRuleAndDoublesChecks": "passed",
+    "pythonApplicationUnitTests": {
+      "passed": 27,
+      "failed": 0
+    }
+  }
+}

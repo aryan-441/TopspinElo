@@ -1,0 +1,1869 @@
+{
+  "filename": "tt_holdout_05_10_59players_64slots.pdf",
+  "page_count": 1,
+  "page_size": {
+    "name": "A2",
+    "width_pt": 1190.55,
+    "height_pt": 1683.78
+  },
+  "orientation": "portrait",
+  "slot_count": 64,
+  "entrant_count": 59,
+  "bye_count": 5,
+  "draw_type": "single_elimination",
+  "document_status": "unplayed",
+  "title": "Kingshade Racquet Festival",
+  "visual_style": "annotated_photo / raster scanned",
+  "layout": "rtl",
+  "slots": [
+    {
+      "slot_number": 1,
+      "slot_type": "PLAYER",
+      "player_name": "Lana Ives",
+      "page": 1,
+      "opening_match_number": 1
+    },
+    {
+      "slot_number": 2,
+      "slot_type": "PLAYER",
+      "player_name": "Jacob Shrewsbury",
+      "page": 1,
+      "opening_match_number": 1
+    },
+    {
+      "slot_number": 3,
+      "slot_type": "PLAYER",
+      "player_name": "Simon Ashford",
+      "page": 1,
+      "opening_match_number": 2
+    },
+    {
+      "slot_number": 4,
+      "slot_type": "PLAYER",
+      "player_name": "Jenson Wakefield",
+      "page": 1,
+      "opening_match_number": 2
+    },
+    {
+      "slot_number": 5,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 3
+    },
+    {
+      "slot_number": 6,
+      "slot_type": "PLAYER",
+      "player_name": "Milo Underwood",
+      "page": 1,
+      "opening_match_number": 3
+    },
+    {
+      "slot_number": 7,
+      "slot_type": "PLAYER",
+      "player_name": "Hugh Maddock",
+      "page": 1,
+      "opening_match_number": 4
+    },
+    {
+      "slot_number": 8,
+      "slot_type": "PLAYER",
+      "player_name": "Jade Pennington",
+      "page": 1,
+      "opening_match_number": 4
+    },
+    {
+      "slot_number": 9,
+      "slot_type": "PLAYER",
+      "player_name": "Alec Burrows",
+      "page": 1,
+      "opening_match_number": 5
+    },
+    {
+      "slot_number": 10,
+      "slot_type": "PLAYER",
+      "player_name": "Estelle Strickland",
+      "page": 1,
+      "opening_match_number": 5
+    },
+    {
+      "slot_number": 11,
+      "slot_type": "PLAYER",
+      "player_name": "Ezra Whitlock",
+      "page": 1,
+      "opening_match_number": 6
+    },
+    {
+      "slot_number": 12,
+      "slot_type": "PLAYER",
+      "player_name": "Leah Wallis",
+      "page": 1,
+      "opening_match_number": 6
+    },
+    {
+      "slot_number": 13,
+      "slot_type": "PLAYER",
+      "player_name": "Francis Nash",
+      "page": 1,
+      "opening_match_number": 7
+    },
+    {
+      "slot_number": 14,
+      "slot_type": "PLAYER",
+      "player_name": "Imogen Halden",
+      "page": 1,
+      "opening_match_number": 7
+    },
+    {
+      "slot_number": 15,
+      "slot_type": "PLAYER",
+      "player_name": "Reece Parrish",
+      "page": 1,
+      "opening_match_number": 8
+    },
+    {
+      "slot_number": 16,
+      "slot_type": "PLAYER",
+      "player_name": "Ezra Houghton",
+      "page": 1,
+      "opening_match_number": 8
+    },
+    {
+      "slot_number": 17,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 9
+    },
+    {
+      "slot_number": 18,
+      "slot_type": "PLAYER",
+      "player_name": "Willow Bramble",
+      "page": 1,
+      "opening_match_number": 9
+    },
+    {
+      "slot_number": 19,
+      "slot_type": "PLAYER",
+      "player_name": "Owen Bramble",
+      "page": 1,
+      "opening_match_number": 10
+    },
+    {
+      "slot_number": 20,
+      "slot_type": "PLAYER",
+      "player_name": "Tobias Sullivan",
+      "page": 1,
+      "opening_match_number": 10
+    },
+    {
+      "slot_number": 21,
+      "slot_type": "PLAYER",
+      "player_name": "Alice Holman",
+      "page": 1,
+      "opening_match_number": 11
+    },
+    {
+      "slot_number": 22,
+      "slot_type": "PLAYER",
+      "player_name": "Jude Stockwell",
+      "page": 1,
+      "opening_match_number": 11
+    },
+    {
+      "slot_number": 23,
+      "slot_type": "PLAYER",
+      "player_name": "Josie Lockhart",
+      "page": 1,
+      "opening_match_number": 12
+    },
+    {
+      "slot_number": 24,
+      "slot_type": "PLAYER",
+      "player_name": "Amara Bradfield",
+      "page": 1,
+      "opening_match_number": 12
+    },
+    {
+      "slot_number": 25,
+      "slot_type": "PLAYER",
+      "player_name": "Penelope Calloway",
+      "page": 1,
+      "opening_match_number": 13
+    },
+    {
+      "slot_number": 26,
+      "slot_type": "PLAYER",
+      "player_name": "Delia Redmond",
+      "page": 1,
+      "opening_match_number": 13
+    },
+    {
+      "slot_number": 27,
+      "slot_type": "PLAYER",
+      "player_name": "Nina Truscott",
+      "page": 1,
+      "opening_match_number": 14
+    },
+    {
+      "slot_number": 28,
+      "slot_type": "PLAYER",
+      "player_name": "Juniper Crowhurst",
+      "page": 1,
+      "opening_match_number": 14
+    },
+    {
+      "slot_number": 29,
+      "slot_type": "PLAYER",
+      "player_name": "Bianca Costello",
+      "page": 1,
+      "opening_match_number": 15
+    },
+    {
+      "slot_number": 30,
+      "slot_type": "PLAYER",
+      "player_name": "Rhys Davenport",
+      "page": 1,
+      "opening_match_number": 15
+    },
+    {
+      "slot_number": 31,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 16
+    },
+    {
+      "slot_number": 32,
+      "slot_type": "PLAYER",
+      "player_name": "Reece Fairburn",
+      "page": 1,
+      "opening_match_number": 16
+    },
+    {
+      "slot_number": 33,
+      "slot_type": "PLAYER",
+      "player_name": "Avery Applegate",
+      "page": 1,
+      "opening_match_number": 17
+    },
+    {
+      "slot_number": 34,
+      "slot_type": "PLAYER",
+      "player_name": "Albert Pollard",
+      "page": 1,
+      "opening_match_number": 17
+    },
+    {
+      "slot_number": 35,
+      "slot_type": "PLAYER",
+      "player_name": "Orla Lockhart",
+      "page": 1,
+      "opening_match_number": 18
+    },
+    {
+      "slot_number": 36,
+      "slot_type": "PLAYER",
+      "player_name": "Camilla Hollis",
+      "page": 1,
+      "opening_match_number": 18
+    },
+    {
+      "slot_number": 37,
+      "slot_type": "PLAYER",
+      "player_name": "Audrey Southgate",
+      "page": 1,
+      "opening_match_number": 19
+    },
+    {
+      "slot_number": 38,
+      "slot_type": "PLAYER",
+      "player_name": "Paige Ellery",
+      "page": 1,
+      "opening_match_number": 19
+    },
+    {
+      "slot_number": 39,
+      "slot_type": "PLAYER",
+      "player_name": "Corey Shrewsbury",
+      "page": 1,
+      "opening_match_number": 20
+    },
+    {
+      "slot_number": 40,
+      "slot_type": "PLAYER",
+      "player_name": "Ruby Jarrow",
+      "page": 1,
+      "opening_match_number": 20
+    },
+    {
+      "slot_number": 41,
+      "slot_type": "PLAYER",
+      "player_name": "Celia Henshaw",
+      "page": 1,
+      "opening_match_number": 21
+    },
+    {
+      "slot_number": 42,
+      "slot_type": "PLAYER",
+      "player_name": "Stella Radcliffe",
+      "page": 1,
+      "opening_match_number": 21
+    },
+    {
+      "slot_number": 43,
+      "slot_type": "PLAYER",
+      "player_name": "Violet Crowhurst",
+      "page": 1,
+      "opening_match_number": 22
+    },
+    {
+      "slot_number": 44,
+      "slot_type": "PLAYER",
+      "player_name": "Lachlan Redmond",
+      "page": 1,
+      "opening_match_number": 22
+    },
+    {
+      "slot_number": 45,
+      "slot_type": "PLAYER",
+      "player_name": "Callum Costello",
+      "page": 1,
+      "opening_match_number": 23
+    },
+    {
+      "slot_number": 46,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 23
+    },
+    {
+      "slot_number": 47,
+      "slot_type": "PLAYER",
+      "player_name": "Delia Costello",
+      "page": 1,
+      "opening_match_number": 24
+    },
+    {
+      "slot_number": 48,
+      "slot_type": "PLAYER",
+      "player_name": "Logan Ingram",
+      "page": 1,
+      "opening_match_number": 24
+    },
+    {
+      "slot_number": 49,
+      "slot_type": "PLAYER",
+      "player_name": "Miles Fenwick",
+      "page": 1,
+      "opening_match_number": 25
+    },
+    {
+      "slot_number": 50,
+      "slot_type": "PLAYER",
+      "player_name": "Isabel Sayer",
+      "page": 1,
+      "opening_match_number": 25
+    },
+    {
+      "slot_number": 51,
+      "slot_type": "PLAYER",
+      "player_name": "Brandon Somerton",
+      "page": 1,
+      "opening_match_number": 26
+    },
+    {
+      "slot_number": 52,
+      "slot_type": "PLAYER",
+      "player_name": "Kit Bancroft",
+      "page": 1,
+      "opening_match_number": 26
+    },
+    {
+      "slot_number": 53,
+      "slot_type": "PLAYER",
+      "player_name": "Ari Grantham",
+      "page": 1,
+      "opening_match_number": 27
+    },
+    {
+      "slot_number": 54,
+      "slot_type": "PLAYER",
+      "player_name": "Sasha Rollins",
+      "page": 1,
+      "opening_match_number": 27
+    },
+    {
+      "slot_number": 55,
+      "slot_type": "PLAYER",
+      "player_name": "Elise Ives",
+      "page": 1,
+      "opening_match_number": 28
+    },
+    {
+      "slot_number": 56,
+      "slot_type": "PLAYER",
+      "player_name": "Lewis Shrewsbury",
+      "page": 1,
+      "opening_match_number": 28
+    },
+    {
+      "slot_number": 57,
+      "slot_type": "PLAYER",
+      "player_name": "Zella Jessop",
+      "page": 1,
+      "opening_match_number": 29
+    },
+    {
+      "slot_number": 58,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 29
+    },
+    {
+      "slot_number": 59,
+      "slot_type": "PLAYER",
+      "player_name": "Solomon Lennard",
+      "page": 1,
+      "opening_match_number": 30
+    },
+    {
+      "slot_number": 60,
+      "slot_type": "PLAYER",
+      "player_name": "Phoebe Thorne",
+      "page": 1,
+      "opening_match_number": 30
+    },
+    {
+      "slot_number": 61,
+      "slot_type": "PLAYER",
+      "player_name": "Juniper Winterbourne",
+      "page": 1,
+      "opening_match_number": 31
+    },
+    {
+      "slot_number": 62,
+      "slot_type": "PLAYER",
+      "player_name": "Isla Gregory",
+      "page": 1,
+      "opening_match_number": 31
+    },
+    {
+      "slot_number": 63,
+      "slot_type": "PLAYER",
+      "player_name": "Alice Bradfield",
+      "page": 1,
+      "opening_match_number": 32
+    },
+    {
+      "slot_number": 64,
+      "slot_type": "PLAYER",
+      "player_name": "Ellis Stonebridge",
+      "page": 1,
+      "opening_match_number": 32
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "round_label": "R1",
+      "matches": [
+        {
+          "round": 1,
+          "match_number": 1,
+          "match_id": "R1M1",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 1
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 2
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 2,
+          "match_id": "R1M2",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 3
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 4
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 3,
+          "match_id": "R1M3",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 5
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 6
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 4,
+          "match_id": "R1M4",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 7
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 8
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 5,
+          "match_id": "R1M5",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 9
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 10
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 3
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 6,
+          "match_id": "R1M6",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 11
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 12
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 3
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 7,
+          "match_id": "R1M7",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 13
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 14
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 4
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 8,
+          "match_id": "R1M8",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 15
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 16
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 4
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 9,
+          "match_id": "R1M9",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 17
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 18
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 5
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 10,
+          "match_id": "R1M10",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 19
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 20
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 5
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 11,
+          "match_id": "R1M11",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 21
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 22
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 6
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 12,
+          "match_id": "R1M12",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 23
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 24
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 6
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 13,
+          "match_id": "R1M13",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 25
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 26
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 7
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 14,
+          "match_id": "R1M14",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 27
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 28
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 7
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 15,
+          "match_id": "R1M15",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 29
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 30
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 8
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 16,
+          "match_id": "R1M16",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 31
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 32
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 8
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 17,
+          "match_id": "R1M17",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 33
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 34
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 9
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 18,
+          "match_id": "R1M18",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 35
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 36
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 9
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 19,
+          "match_id": "R1M19",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 37
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 38
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 10
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 20,
+          "match_id": "R1M20",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 39
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 40
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 10
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 21,
+          "match_id": "R1M21",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 41
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 42
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 11
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 22,
+          "match_id": "R1M22",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 43
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 44
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 11
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 23,
+          "match_id": "R1M23",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 45
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 46
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 12
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 24,
+          "match_id": "R1M24",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 47
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 48
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 12
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 25,
+          "match_id": "R1M25",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 49
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 50
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 13
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 26,
+          "match_id": "R1M26",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 51
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 52
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 13
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 27,
+          "match_id": "R1M27",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 53
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 54
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 14
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 28,
+          "match_id": "R1M28",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 55
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 56
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 14
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 29,
+          "match_id": "R1M29",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 57
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 58
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 15
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 30,
+          "match_id": "R1M30",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 59
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 60
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 15
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 31,
+          "match_id": "R1M31",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 61
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 62
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 16
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 32,
+          "match_id": "R1M32",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 63
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 64
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 16
+          },
+          "is_final": false
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "round_label": "R2",
+      "matches": [
+        {
+          "round": 2,
+          "match_number": 1,
+          "match_id": "R2M1",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 1
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 2
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 2,
+          "match_id": "R2M2",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 3
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 4
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 3,
+          "match_id": "R2M3",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 5
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 6
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 4,
+          "match_id": "R2M4",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 7
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 8
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 5,
+          "match_id": "R2M5",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 9
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 10
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 3
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 6,
+          "match_id": "R2M6",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 11
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 12
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 3
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 7,
+          "match_id": "R2M7",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 13
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 14
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 4
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 8,
+          "match_id": "R2M8",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 15
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 16
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 4
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 9,
+          "match_id": "R2M9",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 17
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 18
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 5
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 10,
+          "match_id": "R2M10",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 19
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 20
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 5
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 11,
+          "match_id": "R2M11",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 21
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 22
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 6
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 12,
+          "match_id": "R2M12",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 23
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 24
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 6
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 13,
+          "match_id": "R2M13",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 25
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 26
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 7
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 14,
+          "match_id": "R2M14",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 27
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 28
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 7
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 15,
+          "match_id": "R2M15",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 29
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 30
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 8
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 16,
+          "match_id": "R2M16",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 31
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 32
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 8
+          },
+          "is_final": false
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "round_label": "R3",
+      "matches": [
+        {
+          "round": 3,
+          "match_number": 1,
+          "match_id": "R3M1",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 1
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 2
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 3,
+          "match_number": 2,
+          "match_id": "R3M2",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 3
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 4
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 3,
+          "match_number": 3,
+          "match_id": "R3M3",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 5
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 6
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 3,
+          "match_number": 4,
+          "match_id": "R3M4",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 7
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 8
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 3,
+          "match_number": 5,
+          "match_id": "R3M5",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 9
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 10
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 3
+          },
+          "is_final": false
+        },
+        {
+          "round": 3,
+          "match_number": 6,
+          "match_id": "R3M6",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 11
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 12
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 3
+          },
+          "is_final": false
+        },
+        {
+          "round": 3,
+          "match_number": 7,
+          "match_id": "R3M7",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 13
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 14
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 4
+          },
+          "is_final": false
+        },
+        {
+          "round": 3,
+          "match_number": 8,
+          "match_id": "R3M8",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 15
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 16
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 4
+          },
+          "is_final": false
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "round_label": "QF",
+      "matches": [
+        {
+          "round": 4,
+          "match_number": 1,
+          "match_id": "R4M1",
+          "source_top": {
+            "type": "match",
+            "round": 3,
+            "match_number": 1
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 3,
+            "match_number": 2
+          },
+          "destination": {
+            "type": "match",
+            "round": 5,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 4,
+          "match_number": 2,
+          "match_id": "R4M2",
+          "source_top": {
+            "type": "match",
+            "round": 3,
+            "match_number": 3
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 3,
+            "match_number": 4
+          },
+          "destination": {
+            "type": "match",
+            "round": 5,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 4,
+          "match_number": 3,
+          "match_id": "R4M3",
+          "source_top": {
+            "type": "match",
+            "round": 3,
+            "match_number": 5
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 3,
+            "match_number": 6
+          },
+          "destination": {
+            "type": "match",
+            "round": 5,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 4,
+          "match_number": 4,
+          "match_id": "R4M4",
+          "source_top": {
+            "type": "match",
+            "round": 3,
+            "match_number": 7
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 3,
+            "match_number": 8
+          },
+          "destination": {
+            "type": "match",
+            "round": 5,
+            "match_number": 2
+          },
+          "is_final": false
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "round_label": "SF",
+      "matches": [
+        {
+          "round": 5,
+          "match_number": 1,
+          "match_id": "R5M1",
+          "source_top": {
+            "type": "match",
+            "round": 4,
+            "match_number": 1
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 4,
+            "match_number": 2
+          },
+          "destination": {
+            "type": "match",
+            "round": 6,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 5,
+          "match_number": 2,
+          "match_id": "R5M2",
+          "source_top": {
+            "type": "match",
+            "round": 4,
+            "match_number": 3
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 4,
+            "match_number": 4
+          },
+          "destination": {
+            "type": "match",
+            "round": 6,
+            "match_number": 1
+          },
+          "is_final": false
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "round_label": "FINAL",
+      "matches": [
+        {
+          "round": 6,
+          "match_number": 1,
+          "match_id": "R6M1",
+          "source_top": {
+            "type": "match",
+            "round": 5,
+            "match_number": 1
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 5,
+            "match_number": 2
+          },
+          "destination": {
+            "type": "champion",
+            "position": "WINNER"
+          },
+          "is_final": true
+        }
+      ]
+    }
+  ],
+  "bye_advancements": [
+    {
+      "bye_slot_number": 5,
+      "advancing_player_slot_number": 6,
+      "opening_match": {
+        "round": 1,
+        "match_number": 3
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 2,
+        "input_side": "top"
+      }
+    },
+    {
+      "bye_slot_number": 17,
+      "advancing_player_slot_number": 18,
+      "opening_match": {
+        "round": 1,
+        "match_number": 9
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 5,
+        "input_side": "top"
+      }
+    },
+    {
+      "bye_slot_number": 31,
+      "advancing_player_slot_number": 32,
+      "opening_match": {
+        "round": 1,
+        "match_number": 16
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 8,
+        "input_side": "bottom"
+      }
+    },
+    {
+      "bye_slot_number": 46,
+      "advancing_player_slot_number": 45,
+      "opening_match": {
+        "round": 1,
+        "match_number": 23
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 12,
+        "input_side": "top"
+      }
+    },
+    {
+      "bye_slot_number": 58,
+      "advancing_player_slot_number": 57,
+      "opening_match": {
+        "round": 1,
+        "match_number": 29
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 15,
+        "input_side": "top"
+      }
+    }
+  ],
+  "champion_position": {
+    "label": "WINNER",
+    "source": {
+      "type": "match",
+      "round": 6,
+      "match_number": 1
+    },
+    "winner_name": null
+  },
+  "notes": "Fresh fictional hold-out test draw; no scores or match winners printed. Paths follow adjacent numbered entrant pairs.",
+  "scan_properties": {
+    "dpi": 135,
+    "source_pixel_dimensions": [
+      2233,
+      3158
+    ],
+    "scan_pixel_dimensions": [
+      2339,
+      3286
+    ],
+    "skew_deg": -0.38
+  },
+  "validation": {
+    "slot_and_match_graph": "PASS",
+    "vector_source_connector_geometry": "PASS",
+    "physical_pdf_page_check": "PASS",
+    "scan_text_layer_check": "PASS",
+    "source_drawn_connector_segments": 190,
+    "verified_drawn_connector_segments": 190,
+    "checked_entrant_name_labels": 59,
+    "checked_bye_labels": 5,
+    "image_readability_raster_check": "PASS"
+  }
+}

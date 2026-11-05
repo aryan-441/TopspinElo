@@ -1,0 +1,255 @@
+{
+  "raw_ocr_lines": [
+    {
+      "text": "Fernwick Racquets | Singles Qualification",
+      "confidence": 0.985,
+      "page": 1,
+      "x": 112.0,
+      "y": 71.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "DRAW SHEET / OPEN SINGLES",
+      "confidence": 0.952,
+      "page": 1,
+      "x": 118.0,
+      "y": 144.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "QF",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 629.0,
+      "y": 224.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "FINAL",
+      "confidence": 0.99,
+      "page": 1,
+      "x": 861.0,
+      "y": 224.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "SF",
+      "confidence": 0.991,
+      "page": 1,
+      "x": 755.0,
+      "y": 225.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "WINNER",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 1021.0,
+      "y": 225.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "01 Kieran Osbourne",
+      "confidence": 0.966,
+      "page": 1,
+      "x": 113.0,
+      "y": 347.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "Gideon Goodwin",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 175.0,
+      "y": 518.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "02",
+      "confidence": 0.998,
+      "page": 1,
+      "x": 117.0,
+      "y": 520.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "03 Millie Hallowell",
+      "confidence": 0.951,
+      "page": 1,
+      "x": 114.0,
+      "y": 687.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "BYE",
+      "confidence": 0.997,
+      "page": 1,
+      "x": 175.0,
+      "y": 855.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "04",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 115.0,
+      "y": 858.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "Theo Gibbons",
+      "confidence": 0.995,
+      "page": 1,
+      "x": 157.0,
+      "y": 1021.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "05",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 117.0,
+      "y": 1029.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "Rafael Neville",
+      "confidence": 0.988,
+      "page": 1,
+      "x": 150.0,
+      "y": 1192.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "06",
+      "confidence": 0.999,
+      "page": 1,
+      "x": 117.0,
+      "y": 1196.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "07 Heath Breckland",
+      "confidence": 0.991,
+      "page": 1,
+      "x": 115.0,
+      "y": 1365.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "08 Wyatt Redfern",
+      "confidence": 0.956,
+      "page": 1,
+      "x": 114.0,
+      "y": 1533.0,
+      "width": 1191,
+      "height": 1684
+    },
+    {
+      "text": "Umpire:",
+      "confidence": 0.993,
+      "page": 1,
+      "x": 114.0,
+      "y": 1719.0,
+      "width": 1191,
+      "height": 1684
+    }
+  ],
+  "structureDraft": {
+    "format": "Knockout",
+    "bracketSlots": [
+      "Kieran Osbourne",
+      "Gideon Goodwin",
+      "Millie Hallowell",
+      null,
+      "Theo Gibbons",
+      "Rafael Neville",
+      "Heath Breckland",
+      "Wyatt Redfern"
+    ],
+    "byeSlotNumbers": [
+      4
+    ],
+    "entries": [
+      {
+        "name": "Kieran Osbourne",
+        "slot": 1,
+        "confidence": 0.966
+      },
+      {
+        "name": "Gideon Goodwin",
+        "slot": 2,
+        "confidence": 0.998
+      },
+      {
+        "name": "Millie Hallowell",
+        "slot": 3,
+        "confidence": 0.951
+      },
+      {
+        "name": "Theo Gibbons",
+        "slot": 5,
+        "confidence": 0.999
+      },
+      {
+        "name": "Rafael Neville",
+        "slot": 6,
+        "confidence": 0.999
+      },
+      {
+        "name": "Heath Breckland",
+        "slot": 7,
+        "confidence": 0.991
+      },
+      {
+        "name": "Wyatt Redfern",
+        "slot": 8,
+        "confidence": 0.956
+      }
+    ],
+    "openingMatches": [
+      [
+        "Kieran Osbourne",
+        "Gideon Goodwin"
+      ],
+      [
+        "Millie Hallowell",
+        null
+      ],
+      [
+        "Theo Gibbons",
+        "Rafael Neville"
+      ],
+      [
+        "Heath Breckland",
+        "Wyatt Redfern"
+      ]
+    ],
+    "review": {
+      "missingSlots": [],
+      "duplicateSlots": [],
+      "requiresReview": true,
+      "notes": [
+        "Map names to registered app entrants and confirm every BYE and match before applying.",
+        "Later-round connector paths are not inferred by this model."
+      ]
+    }
+  }
+}

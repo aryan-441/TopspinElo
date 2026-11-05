@@ -1,0 +1,37 @@
+const { chromium } = require(process.env.RALLYDESK_PLAYWRIGHT_PATH || 'playwright');
+const fs=require('fs');
+(async()=>{
+ const browser=await chromium.launch({executablePath:process.env.RALLYDESK_BROWSER_EXECUTABLE,headless:true});
+ const page=await browser.newPage({viewport:{width:1440,height:1000}});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:5173/?demo',{waitUntil:'networkidle'});
+ await page.getByRole('button',{name:'Statistics',exact:true}).click();
+ await page.getByRole('heading',{name:'Where are points won?'}).waitFor();
+ await page.screenshot({path:'.test-tmp/statistics-desktop.png',fullPage:true,animations:'disabled'});
+ await page.getByRole('button',{name:'Tournaments',exact:true}).click();
+ await page.getByText('Harbour Club Cup',{exact:true}).first().click();
+ await page.getByRole('tab',{name:'Draw & matches',exact:true}).click();
+ await page.getByRole('button',{name:'Edit group tables · Open singles',exact:true}).click();
+ await page.getByRole('button',{name:'Remove Asha Mehta',exact:true}).click();
+ const dialog=page.getByRole('dialog');
+ const selects=dialog.locator('select');
+ await selects.nth(1).selectOption('demo-0');
+ await page.screenshot({path:'.test-tmp/group-editor.png',animations:'disabled'});
+ await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'Exports & recovery',exact:true}).click();
+ const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Download workspace JSON',exact:true}).click()]);
+ const backup=JSON.parse(fs.readFileSync(await download.path(),'utf8'));
+ if(backup.workspace.players.length!==8||backup.workspace.matches.length!==12)throw Error('Incomplete exported workspace');
+ await page.getByRole('button',{name:'Settings',exact:true}).click();
+ await page.locator('input[type=file]').setInputFiles({name:'review-backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(backup))});
+ await page.getByRole('button',{name:'Restore workspace',exact:true}).click();
+ await page.getByText('Backup restored to this browser.',{exact:true}).waitFor();
+ await page.setViewportSize({width:390,height:844});
+ await page.getByRole('button',{name:'Open navigation',exact:true}).click();
+ await page.getByRole('button',{name:'Statistics',exact:true}).click();
+ await page.screenshot({path:'.test-tmp/statistics-mobile.png',fullPage:true,animations:'disabled'});
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth);
+ console.log(JSON.stringify({errors,overflow,exportPlayers:backup.workspace.players.length,exportMatches:backup.workspace.matches.length,restore:'passed',groupEdit:'passed'}));
+ await browser.close();if(errors.length||overflow)process.exitCode=1;
+})().catch(e=>{console.error(e);process.exitCode=1});
+

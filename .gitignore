@@ -15,3 +15,9 @@ credentials.*
 *.pem
 *.p12
 *.pfx
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+cv_service/.paddlex-cache/
+cv_service/.hf-cache/
+cv_service/.modelscope-cache/

@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-04T05:45:50.841Z",
+  "results": [
+    {
+      "name": "browser-review",
+      "passed": true,
+      "output": "{\"errors\":[],\"overflow\":false,\"exportPlayers\":8,\"exportMatches\":12,\"restore\":\"passed\",\"groupEdit\":\"passed\"}\n"
+    },
+    {
+      "name": "new-requests-browser",
+      "passed": true,
+      "output": "NO REFEREE REQUIRED\n\nRecord a result\n\nZoe Tan vs Arjun Shah \u00c2\u00b7 Best of 3\n\nHow much detail?\nJust the winner\nOverall game score\nIndividual game scores\nWinner\nChoose winner\nZoe Tan\nArjun Shah\n\nWins and Elo update with any result. Game statistics need an overall score. Point totals need individual game scores. Service and pressure statistics need point-by-point scoring.\n\nCancel\nSave result\n{\"errors\":[],\"resultEntry\":\"passed\",\"refereeOption\":\"passed\",\"paletteSelection\":\"passed\",\"mobileOverflow\":false}\n"
+    },
+    {
+      "name": "schedule-selection-browser",
+      "passed": true,
+      "output": "{\"readyMatches\":8,\"eighthSelectable\":true,\"futureFinalDisabled\":true,\"errors\":[]}\n"
+    },
+    {
+      "name": "import-missing-browser",
+      "passed": true,
+      "output": "{\"csvFlow\":\"passed\",\"cancelUnchanged\":true,\"stagingUnchanged\":true,\"newPlayerDefaults\":\"null\",\"fixtures\":1,\"errors\":[]}\n"
+    },
+    {
+      "name": "import-loading-cancel-browser",
+      "passed": true,
+      "output": "{\"cancelStopsReview\":true,\"failureVisible\":true,\"errors\":[]}\n"
+    },
+    {
+      "name": "bracket-review-browser",
+      "passed": true,
+      "output": "LAYOUT { dialogTop: 22, dialogScroll: 0, headerTop: 43, scrimScroll: 0 }\n{\"loadingVisible\":true,\"occupiedSlotsSwapped\":true,\"reviewTableFits\":true,\"mobileOverflow\":false,\"saved\":true,\"errors\":[]}\n"
+    },
+    {
+      "name": "responsive-language-check",
+      "passed": true,
+      "output": "Edge: all pages fit 320/390/768/1440px; settings, guide, About copy passed\nWebKit: all pages fit 320/390/768/1440px; settings, guide, About copy passed\n"
+    },
+    {
+      "name": "core-workflows",
+      "passed": true,
+      "output": "UNDO_DIALOG CORRECTION\n\nUndo the last point?\n\nThis adds a correction to the match timeline and removes the most recent point from the score.\n\nReason for correction\nKeep point\nUndo point\n{\"playerEditArchiveRestore\":true,\"optionalAttributes\":true,\"refereeAddAssignRemove\":true,\"serviceRotation\":true,\"reasonedUndo\":true,\"scoringCompletionPersistence\":true,\"errors\":[]}\n"
+    },
+    {
+      "name": "backup-validation",
+      "passed": true,
+      "output": "{\"invalidBackupsRejected\":6,\"existingDataPreserved\":true,\"validRestore\":true,\"errors\":[]}\n"
+    }
+  ]
+}

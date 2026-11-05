@@ -1,0 +1,575 @@
+{
+  "filename": "tt_holdout_05_03_10players_16slots.pdf",
+  "page_count": 1,
+  "page_size": {
+    "name": "A3",
+    "width_pt": 841.89,
+    "height_pt": 1190.55
+  },
+  "orientation": "portrait",
+  "slot_count": 16,
+  "entrant_count": 10,
+  "bye_count": 6,
+  "draw_type": "single_elimination",
+  "document_status": "unplayed",
+  "title": "Cedarfield Games Association",
+  "visual_style": "photocopy_grey / raster scanned",
+  "layout": "ltr",
+  "slots": [
+    {
+      "slot_number": 1,
+      "slot_type": "PLAYER",
+      "player_name": "Florence Woodhouse",
+      "page": 1,
+      "opening_match_number": 1
+    },
+    {
+      "slot_number": 2,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 1
+    },
+    {
+      "slot_number": 3,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 2
+    },
+    {
+      "slot_number": 4,
+      "slot_type": "PLAYER",
+      "player_name": "Remy Ainsley",
+      "page": 1,
+      "opening_match_number": 2
+    },
+    {
+      "slot_number": 5,
+      "slot_type": "PLAYER",
+      "player_name": "Rafael Ludlow",
+      "page": 1,
+      "opening_match_number": 3
+    },
+    {
+      "slot_number": 6,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 3
+    },
+    {
+      "slot_number": 7,
+      "slot_type": "PLAYER",
+      "player_name": "Elodie Calloway",
+      "page": 1,
+      "opening_match_number": 4
+    },
+    {
+      "slot_number": 8,
+      "slot_type": "PLAYER",
+      "player_name": "Quinn Truscott",
+      "page": 1,
+      "opening_match_number": 4
+    },
+    {
+      "slot_number": 9,
+      "slot_type": "PLAYER",
+      "player_name": "Lara Maddock",
+      "page": 1,
+      "opening_match_number": 5
+    },
+    {
+      "slot_number": 10,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 5
+    },
+    {
+      "slot_number": 11,
+      "slot_type": "PLAYER",
+      "player_name": "Quinn Corbett",
+      "page": 1,
+      "opening_match_number": 6
+    },
+    {
+      "slot_number": 12,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 6
+    },
+    {
+      "slot_number": 13,
+      "slot_type": "PLAYER",
+      "player_name": "Molly Woodhouse",
+      "page": 1,
+      "opening_match_number": 7
+    },
+    {
+      "slot_number": 14,
+      "slot_type": "PLAYER",
+      "player_name": "Poppy Parrish",
+      "page": 1,
+      "opening_match_number": 7
+    },
+    {
+      "slot_number": 15,
+      "slot_type": "BYE",
+      "player_name": null,
+      "page": 1,
+      "opening_match_number": 8
+    },
+    {
+      "slot_number": 16,
+      "slot_type": "PLAYER",
+      "player_name": "Alma Barnett",
+      "page": 1,
+      "opening_match_number": 8
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "round_label": "R1",
+      "matches": [
+        {
+          "round": 1,
+          "match_number": 1,
+          "match_id": "R1M1",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 1
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 2
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 2,
+          "match_id": "R1M2",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 3
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 4
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 3,
+          "match_id": "R1M3",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 5
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 6
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 4,
+          "match_id": "R1M4",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 7
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 8
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 5,
+          "match_id": "R1M5",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 9
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 10
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 3
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 6,
+          "match_id": "R1M6",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 11
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 12
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 3
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 7,
+          "match_id": "R1M7",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 13
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 14
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 4
+          },
+          "is_final": false
+        },
+        {
+          "round": 1,
+          "match_number": 8,
+          "match_id": "R1M8",
+          "source_top": {
+            "type": "slot",
+            "slot_number": 15
+          },
+          "source_bottom": {
+            "type": "slot",
+            "slot_number": 16
+          },
+          "destination": {
+            "type": "match",
+            "round": 2,
+            "match_number": 4
+          },
+          "is_final": false
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "round_label": "QF",
+      "matches": [
+        {
+          "round": 2,
+          "match_number": 1,
+          "match_id": "R2M1",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 1
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 2
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 2,
+          "match_id": "R2M2",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 3
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 4
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 3,
+          "match_id": "R2M3",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 5
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 6
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 2
+          },
+          "is_final": false
+        },
+        {
+          "round": 2,
+          "match_number": 4,
+          "match_id": "R2M4",
+          "source_top": {
+            "type": "match",
+            "round": 1,
+            "match_number": 7
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 1,
+            "match_number": 8
+          },
+          "destination": {
+            "type": "match",
+            "round": 3,
+            "match_number": 2
+          },
+          "is_final": false
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "round_label": "SF",
+      "matches": [
+        {
+          "round": 3,
+          "match_number": 1,
+          "match_id": "R3M1",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 1
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 2
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 1
+          },
+          "is_final": false
+        },
+        {
+          "round": 3,
+          "match_number": 2,
+          "match_id": "R3M2",
+          "source_top": {
+            "type": "match",
+            "round": 2,
+            "match_number": 3
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 2,
+            "match_number": 4
+          },
+          "destination": {
+            "type": "match",
+            "round": 4,
+            "match_number": 1
+          },
+          "is_final": false
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "round_label": "FINAL",
+      "matches": [
+        {
+          "round": 4,
+          "match_number": 1,
+          "match_id": "R4M1",
+          "source_top": {
+            "type": "match",
+            "round": 3,
+            "match_number": 1
+          },
+          "source_bottom": {
+            "type": "match",
+            "round": 3,
+            "match_number": 2
+          },
+          "destination": {
+            "type": "champion",
+            "position": "WINNER"
+          },
+          "is_final": true
+        }
+      ]
+    }
+  ],
+  "bye_advancements": [
+    {
+      "bye_slot_number": 2,
+      "advancing_player_slot_number": 1,
+      "opening_match": {
+        "round": 1,
+        "match_number": 1
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 1,
+        "input_side": "top"
+      }
+    },
+    {
+      "bye_slot_number": 3,
+      "advancing_player_slot_number": 4,
+      "opening_match": {
+        "round": 1,
+        "match_number": 2
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 1,
+        "input_side": "bottom"
+      }
+    },
+    {
+      "bye_slot_number": 6,
+      "advancing_player_slot_number": 5,
+      "opening_match": {
+        "round": 1,
+        "match_number": 3
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 2,
+        "input_side": "top"
+      }
+    },
+    {
+      "bye_slot_number": 10,
+      "advancing_player_slot_number": 9,
+      "opening_match": {
+        "round": 1,
+        "match_number": 5
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 3,
+        "input_side": "top"
+      }
+    },
+    {
+      "bye_slot_number": 12,
+      "advancing_player_slot_number": 11,
+      "opening_match": {
+        "round": 1,
+        "match_number": 6
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 3,
+        "input_side": "bottom"
+      }
+    },
+    {
+      "bye_slot_number": 15,
+      "advancing_player_slot_number": 16,
+      "opening_match": {
+        "round": 1,
+        "match_number": 8
+      },
+      "advances_to": {
+        "type": "match",
+        "round": 2,
+        "match_number": 4,
+        "input_side": "bottom"
+      }
+    }
+  ],
+  "champion_position": {
+    "label": "WINNER",
+    "source": {
+      "type": "match",
+      "round": 4,
+      "match_number": 1
+    },
+    "winner_name": null
+  },
+  "notes": "Fresh fictional hold-out test draw; no scores or match winners printed. Paths follow adjacent numbered entrant pairs.",
+  "scan_properties": {
+    "dpi": 145,
+    "source_pixel_dimensions": [
+      1696,
+      2398
+    ],
+    "scan_pixel_dimensions": [
+      1802,
+      2514
+    ],
+    "skew_deg": 1.0
+  },
+  "validation": {
+    "slot_and_match_graph": "PASS",
+    "vector_source_connector_geometry": "PASS",
+    "physical_pdf_page_check": "PASS",
+    "scan_text_layer_check": "PASS",
+    "source_drawn_connector_segments": 46,
+    "verified_drawn_connector_segments": 46,
+    "checked_entrant_name_labels": 10,
+    "checked_bye_labels": 6,
+    "image_readability_raster_check": "PASS"
+  }
+}

@@ -1,0 +1,166 @@
+/* TopspinElo court materials and interaction styles */
+:root {
+  --azure: #3283be;
+  --slate: #5c7c94;
+  --paper: #fefdfe;
+  --paper-alt: #f1f6fb;
+  --orange: #fd614b;
+  --orange-light: #ffe9e5;
+  --pine-deep: #132f47;
+  --pine: #23587e;
+  --ink: #172f43;
+  --line: #c7d7e2;
+  --scrollbar-thumb: #819db1;
+  --scrollbar-track: #edf4f9;
+  --scrollbar-hover: #517994;
+  --scrollbar-active: var(--azure);
+  --glass: linear-gradient(125deg, #fffffff5, #f5faffc9);
+  --rim: inset 0 1px 0 white, 0 8px 28px -16px #20486559;
+  --ease-out: cubic-bezier(.2,.75,.25,1);
+}
+@media screen {
+  .main-column, .scoring-screen {
+    background: radial-gradient(ellipse 75% 540px at 100% 0%, #bfdcee 0%, transparent 81%),
+                linear-gradient(150deg, #eff6fa, #fefdfe 68%, #e3edf5);
+  }
+  .sidebar {
+    background: linear-gradient(155deg, #214e70, #133149 52%, #0c263c);
+    box-shadow: inset -1px 0 0 #ffffff20;
+  }
+  .nav-item { color: #d2e0eb; }
+  .nav-item--active, .nav-item--active:hover {
+    color: white; background: linear-gradient(105deg, #3984b7aa, #32658870);
+    box-shadow: inset 3px 0 var(--orange), inset 0 1px 0 #ffffff35;
+  }
+  .nav-item--active svg { color: #ffa08f; }
+  .topbar, .dialog, .player-filter-popover, .today-board-side {
+    background: var(--glass);
+    backdrop-filter: blur(18px) saturate(135%);
+    -webkit-backdrop-filter: blur(18px) saturate(135%);
+    box-shadow: var(--rim);
+  }
+  .topbar { background: #fefdfedb; border-color: #ffffffd9; transition: box-shadow .2s; }
+  html[data-scrolled] .topbar { box-shadow: 0 5px 22px #143e5a25; }
+  .dialog { border: 1px solid #fff; box-shadow: inset 0 1px white, 0 20px 80px #122e4c40; }
+  .page-intro, .welcome-line, .tournament-detail-hero, .about-hero, .today-board-main {
+    background-color: #deedf7;
+    background-image: linear-gradient(115deg, #f8fbfd 12%, #e6f2f9ec 55%, #c4e0f2a6 79%, transparent),
+      linear-gradient(145deg, transparent 78%, #ffffffc9 78.1% 78.45%, transparent 78.55%),
+      linear-gradient(35deg, transparent 80%, #ffffffbb 80.1% 80.45%, transparent 80.55%),
+      linear-gradient(145deg, #deedf7 64%, #96c4e3 64.15%, #a5cce6);
+  }
+  .page-intro, .welcome-line, .tournament-detail-hero, .about-hero {
+    border: 1px solid #bdd4e3; border-radius: 16px; padding: clamp(16px,2.4vw,32px);
+    box-shadow: var(--rim);
+  }
+  .page-intro h2, .welcome-line h2 { letter-spacing: -.055em; line-height: 1.06; }
+  .today-board { border-radius: 16px; overflow: hidden; }
+  .stats-section, .stats-ribbon, .settings-panel, .referee-roster, .referee-assignments,
+  .utility-card, .about-card, .standings-block, .schedule-row, .principles-banner, .bottom-strip {
+    background: var(--glass); border-color: var(--line); border-radius: 12px; box-shadow: var(--rim);
+  }
+  .performance-bar-win, .rating-track i { background: var(--azure); }
+  .performance-bar-loss { background: var(--orange); }
+  .button-primary, .today-board .button-board {
+    border-radius: 8px; color: #381a17; background: var(--orange);
+    box-shadow: inset 0 1px 0 #ffffff70, 0 3px 7px #be523228;
+  }
+  .button-primary:hover { background: #ff806d; color: #381a17; }
+  .point-button { background: #e5f1fa; border-color: #a6cce4; }
+  .point-button--orange { background: #ffe7e1; border-color: #f7b2a6; }
+  .point-button b { color: var(--ink); }
+  .point-button small { color: #486277; }
+  .button-primary, .point-button, .button-board { position: relative; overflow: hidden; }
+  :is(.button-primary,.point-button,.button-board)::after {
+    content: ''; pointer-events: none; position: absolute; inset: 0;
+    background: radial-gradient(circle at var(--press-x,50%) var(--press-y,50%), #fff9, transparent 65%);
+    opacity: 0; transition: opacity .26s;
+  }
+  :is(.button-primary,.point-button,.button-board):active:not(:disabled)::after { opacity: 1; transition-duration: .04s; }
+  :where(button, [href], select, input, summary):focus-visible { outline: 3px solid #176aab; outline-offset: 3px; }
+  .feedback-switch { display:flex; align-items:center; gap:10px; padding-top:12px; font-weight:600; cursor:pointer; }
+  .feedback-switch input { width:18px; height:18px; accent-color:var(--pine); }
+}
+@media (prefers-reduced-motion:no-preference) {
+  button, summary { transition: background-color .18s, color .18s, box-shadow .2s, scale .18s var(--ease-out); }
+  button:not(:disabled):active { scale: .975; }
+  .page-content { animation: court-arrive .25s var(--ease-out); }
+  .point-score { animation: tally-in .26s var(--ease-out); }
+  :is(.quiet-link,.side-link,.text-action,.bottom-strip-action,.nav-item,.schedule-row) svg { transition: translate .2s var(--ease-out); }
+  .performance-bar-track i, .rating-track i { transform-origin:left; animation: reveal-bar .36s var(--ease-out); }
+  @media (hover:hover) {
+    :is(.quiet-link,.side-link,.text-action,.bottom-strip-action,.nav-item,.schedule-row):hover svg { translate: 3px 0; }
+    :is(.icon-button,.topbar-icon):hover { scale: 1.07; }
+    .button-outline:hover { box-shadow: inset 0 -2px var(--azure); }
+  }
+}
+@keyframes court-arrive { from { opacity:.65; translate:0 4px; } }
+@keyframes tally-in { from { opacity:.45; transform:translateY(3px) scale(.92); } }
+@keyframes reveal-bar { from { transform:scaleX(0); } }
+/* Hierarchy: page title, task area, supporting detail. */
+@media screen {
+  .mobile-page-title { display:none; }
+  .page-toolbar { justify-content:flex-end; padding-block:10px; }
+  .page-intro, .welcome-line {
+    background:transparent; border:0; border-radius:0; box-shadow:none;
+    padding:8px 0 24px; border-bottom:1px solid var(--line); margin-bottom:24px;
+  }
+  .page-intro h2, .welcome-line h2 { font-size:clamp(30px,4vw,46px); font-weight:700; }
+  .page-intro p:not(.eyebrow), .welcome-sub { font-size:14px; max-width:62ch; line-height:1.65; }
+  .eyebrow { font-size:10px; letter-spacing:.12em; color:var(--slate); }
+  .section-head h3 { font-size:21px; }
+  .section-head h3::before { display:none; }
+  .principles-banner { box-shadow:none; background:transparent; border:0; padding:0 0 12px; }
+  .principles-mark { display:none; }
+  .principles-banner b { font-size:12px; font-weight:500; }
+  .principles-banner div span { display:none; }
+  .stats-section, .settings-panel, .about-card, .standings-block { box-shadow:0 3px 12px #173c5108; background:#fefdfee8; }
+  .today-board { border-top:0; box-shadow:var(--rim); }
+  .today-board-main { background:#dcecf7; }
+  .today-board-side { background:#fefdfe; }
+  .toolbar-row { padding-block:14px; }
+  .data-table th { font-size:10px; font-weight:700; background:#eaf1f6; color:#38546b; }
+  .data-table td { padding-block:15px; }
+  .row-actions .button { background:transparent; border:1px solid var(--line); box-shadow:none; }
+  .referee-person small { white-space:normal; line-height:1.6; color:#486277; }
+}
+@media screen {
+  .principles-banner div b, .club-promise {
+    display:block; color:var(--pine-deep); font:800 clamp(22px,3vw,38px)/1.1 var(--display);
+    letter-spacing:-.05em; margin:8px 0 14px;
+  }
+  .availability-control { grid-column:1/-1; display:flex; gap:9px; align-items:center; flex-wrap:wrap; padding:10px 0; }
+  .availability-control strong { margin-right:auto; color:#25526b; font-size:13px; }
+  .availability-control input { min-width:0; max-width:100%; border:1px solid var(--line); border-radius:6px; padding:8px; }
+  .roll-window { display:inline-flex; overflow:hidden; vertical-align:bottom; }
+  .roll-window > span { display:inline-block; }
+  .filter-tabs, .tournament-tabs { position:relative; }
+  .sliding-line { pointer-events:none; position:absolute; bottom:0; left:0; height:3px; border-radius:3px; background:var(--orange); }
+  .tournament-tab--active { border-bottom-color:transparent; }
+  .swap-flight { position:fixed; z-index:10000; pointer-events:none; padding:8px; background:#d3ebfc; color:var(--ink); border-radius:6px; font:600 13px var(--body); box-shadow:0 5px 15px #173c5133; }
+  .assigned-avatar { display:grid; place-items:center; border-radius:50%; width:31px; height:31px; background:#d4e8f6; color:#234761; font-size:11px; }
+  .match-receipt { position:fixed; z-index:100; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:12px; align-items:center; width:max-content; max-width:92vw; border:1px solid #56768d; border-radius:14px; padding:14px 18px; background:#153950; color:white; box-shadow:0 8px 26px #173c5138; pointer-events:none; }
+  .match-receipt small,.match-receipt strong { display:block; }
+  .match-receipt svg { flex:none; color:#ff9d87; }
+  .advance-path { height:2px; width:35px; background:var(--orange); transform-origin:left; }
+  [data-more-left], [data-more-right] {
+    mask-image:linear-gradient(to right,transparent,black var(--left-edge,0px),black calc(100% - var(--right-edge,0px)),transparent);
+  }
+  [data-more-left] { --left-edge:14px; }
+  [data-more-right] { --right-edge:14px; }
+  [data-table-scrolling] { scrollbar-color:var(--azure) var(--scrollbar-track); }
+}
+@media (prefers-reduced-motion:no-preference) {
+  .sliding-line { transition:transform .26s var(--ease-out),width .26s var(--ease-out); }
+  .expand-field { animation:field-unfold .24s var(--ease-out); transform-origin:top; }
+  .assigned-avatar, .advance-name { animation:handoff .38s var(--ease-out); }
+  .timeline-event--correction:first-child { animation:restore-event .45s var(--ease-out); }
+  .advance-path { animation:reveal-bar .4s var(--ease-out); }
+  .advance-name { animation-delay:.16s; animation-fill-mode:backwards; }
+  .draw-trophy * { stroke-dasharray:80; animation:trace-cup .8s ease-out; }
+  .draw-trophy + div strong { animation:handoff .38s .3s backwards; }
+}
+@keyframes field-unfold { from { opacity:0; transform:scaleY(.75) translateY(-5px); } }
+@keyframes handoff { from { opacity:0; transform:translateX(-16px) scale(.85); } }
+@keyframes restore-event { from { background:#ffcfbf; transform:translateX(12px); } }
+@keyframes trace-cup { from { stroke-dashoffset:80; } to { stroke-dashoffset:0; } }

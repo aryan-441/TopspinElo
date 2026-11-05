@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#3283BE"><link rel="icon" href="data:,"><title>Rally Room · TopspinElo design studio</title>
+<style>
+:root{--blue:#3283BE;--snow:#FEFDFE;--quiet:#5C7C94;--ink:#142e40;--accent:#FD614B;--on-accent:#32160e;--board:#ffffffc9;--ease:cubic-bezier(.18,.78,.21,1);font-family:"Aptos","Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--snow)}
+*{box-sizing:border-box}body{margin:0}button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}button:focus-visible,summary:focus-visible{outline:3px solid #163b56;outline-offset:4px}button{transition:background .35s,transform .23s var(--ease),box-shadow .23s;color:inherit}button:active:not(:disabled){transform:translateY(2px) scale(.96)}button:disabled{cursor:default;opacity:.56}
+.frame{width:min(1256px,92vw);margin:auto}.mast{display:flex;align-items:center;justify-content:space-between;min-height:74px;gap:14px}.brand{display:flex;align-items:center;gap:9px;font:800 24px/1 "Aptos Display",Arial,sans-serif;letter-spacing:-1.6px}.brand svg{width:31px;height:32px}.divider{width:1px;height:23px;background:#ccd6dc;margin:0 10px}.mono,.meta,.label,small,kbd{font:600 10.5px/1.45 Consolas,"SFMono-Regular",monospace;letter-spacing:1.25px;text-transform:uppercase}.meta{display:inline-flex;align-items:center;gap:8px;color:#405c70}.tag{background:#f0f4f7;border:1px solid #d9e3e9;padding:6px 10px;border-radius:5px}.tag:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--blue)}.broadcast{background:#e0ebf3;background:linear-gradient(148deg,#dceaf5,#eaf2f7 65%,#c8dfed);border:1px solid #b3ccdc;border-radius:22px;position:relative;isolation:isolate;overflow:hidden;padding:clamp(22px,3.4vw,48px);box-shadow:0 8px 32px #183b5412}.stage{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;z-index:-1}.court{position:absolute;width:68%;height:94%;right:-1.5%;top:-7%;overflow:visible}.intro{position:relative;width:46%;min-height:clamp(222px,21vw,290px);padding-bottom:26px;pointer-events:none}.line{display:flex;align-items:center;gap:9px;color:#304e63}.line:before{content:"";height:3px;width:22px;background:var(--accent);transition:background .4s}.intro h1{font:800 clamp(58px,6.7vw,102px)/.87 "Aptos Display","Helvetica Neue",Arial,sans-serif;letter-spacing:-.075em;margin:20px 0 17px}.intro h1 em{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.09em}.intro p{font-size:15px;line-height:1.5;margin:0;max-width:255px;color:#354e62}.board{position:relative;display:grid;grid-template-columns:1.1fr 1fr 1fr;align-items:stretch;background:var(--board);backdrop-filter:blur(19px) saturate(125%);-webkit-backdrop-filter:blur(19px) saturate(125%);border:1px solid #fff;border-radius:15px;box-shadow:inset 0 1px 0 #fff,0 9px 30px #0f38591c;transition:background .4s,box-shadow .4s}.solid{--board:#FEFDFE}.solid .board{backdrop-filter:none;-webkit-backdrop-filter:none}.board>div{padding:17px clamp(12px,1.8vw,26px)}.match-info{display:flex;flex-direction:column;justify-content:center;align-items:flex-start}.match-info strong{font-size:clamp(17px,1.65vw,24px);letter-spacing:-.05em}.match-info .label{color:#3e6075;margin-bottom:4px}.undo{border:0;background:transparent;font-size:13px;padding:7px 0;text-decoration:underline;text-underline-offset:3px}.player{border-left:1px solid #69879e38;display:grid;grid-template-columns:1fr auto;align-items:center;gap:7px}.name{font-weight:700;font-size:16px;letter-spacing:-.02em}.score{font:700 clamp(35px,3.7vw,55px)/1 "Aptos Display",Arial,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.07em}.point{position:relative;overflow:hidden;isolation:isolate;grid-column:1/-1;border:1px solid #53728a55;background:#fefdfeb0;border-radius:7px;padding:8px 13px;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:13px}.lead{background:var(--accent);color:var(--on-accent);border-color:transparent}.point b{font-size:18px;line-height:16px}.wave{pointer-events:none;position:absolute;border-radius:50%;width:12px;height:12px;background:currentColor;opacity:0;animation:ripple .48s ease-out}.board output{display:block}.swatch-panel{padding:30px 0 24px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px}.title h2{font:700 clamp(25px,2.8vw,39px)/1.12 "Aptos Display",Arial,sans-serif;letter-spacing:-.06em;margin:4px 0 0}.glass{display:flex;align-items:center;gap:10px;background:none;border:0;padding:9px 0;font-size:14px;font-weight:650}.track{display:inline-flex;align-items:center;padding:3px;width:37px;height:22px;border-radius:18px;background:#899eac;transition:background .25s}.track:after{content:"";width:16px;height:16px;border-radius:50%;background:white;box-shadow:0 2px 4px #19354b38;transition:transform .32s var(--ease)}.glass[aria-checked=true] .track{background:#27699b}.glass[aria-checked=true] .track:after{transform:translateX(15px)}.options{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:17px}.choice{border:1px solid #cbd7df;border-radius:10px;text-align:left;position:relative;background:white;padding:13px 15px;color:var(--ink)}.choice[aria-pressed=true]{border-color:#2d678e;background:#f0f6fa;box-shadow:inset 0 0 0 1px #2d678e}.choice .strip{display:flex;gap:3px;height:7px;margin:9px 0 11px}.strip i{border-radius:3px;background:var(--blue);flex:4}.strip i:nth-child(2){flex:3;background:var(--quiet)}.strip i:nth-child(3){flex:2;background:#FEFDFE;box-shadow:inset 0 0 0 1px #cfdae1}.strip i:last-child{flex:1.5;background:var(--chip)}.choice strong{font-size:17px;letter-spacing:-.035em}.check{float:right;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;color:transparent;border:1px solid #b2c3cf;font-size:11px}.choice[aria-pressed=true] .check{background:var(--ink);color:white;border-color:var(--ink)}.choice small{color:#456076}.foot{border-top:1px solid #d3dee5;padding:15px 0 30px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;color:#455d70;font-size:13px}summary{cursor:pointer;font-weight:650}details p{max-width:65ch;line-height:1.55}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.rubber,.ballskin{transition:fill .45s}.face{transform-box:fill-box;transform-origin:center;animation:settle .8s var(--ease) both}.ballmove{transform-box:fill-box;transform-origin:center}.hit{animation:flight .62s var(--ease)}.pulse{animation:score .36s var(--ease)}.newgame{border:0;border-radius:5px;background:var(--ink);color:white;padding:6px 10px;font-size:12px} [hidden]{display:none!important}
+@keyframes ripple{from{transform:translate(-50%,-50%) scale(0);opacity:.24}to{transform:translate(-50%,-50%) scale(36);opacity:0}}@keyframes flight{0%,100%{transform:translate(0,0)}35%{transform:translate(-105px,-46px) scale(.76)}72%{transform:translate(-49px,14px) scale(.91)}}@keyframes settle{from{opacity:0;transform:translateY(12px) rotate(-3deg)}to{opacity:1;transform:none}}@keyframes score{0%{opacity:.25;transform:translateY(6px) scale(.9)}60%{transform:translateY(-2px) scale(1.08)}100%{opacity:1;transform:none}}
+@media(hover:hover){.point:hover:not(:disabled),.choice:hover{transform:translateY(-2px);box-shadow:0 5px 14px #23476221}.undo:hover:not(:disabled){color:#246c9d}}
+@media(max-width:790px){.board{grid-template-columns:1fr 1fr}.match-info{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #69879e38}.match-info .label{margin:0}.board .match-info{padding:9px 15px}.board .player:nth-child(2){border-left:0}.court{width:70%;top:-12%}.intro h1{font-size:66px}.intro{min-height:220px}.choice{padding:10px}.mast{min-height:62px}}
+@media(max-width:560px){.frame{width:94vw}.mast .divider,.mast .studio{display:none}.broadcast{padding:20px 13px 13px;border-radius:16px}.intro{padding:3px 0 0 4px;min-height:233px;width:56%}.intro h1{font-size:56px;margin:17px 0 12px}.intro p{font-size:13px;max-width:150px}.intro .label{font-size:9px}.court{width:76%;height:235px;top:2%;right:-6%}.stage{mask-image:linear-gradient(90deg,transparent 23%,#000 54%)}.board>div{padding:12px}.board .match-info{flex-wrap:wrap}.name{font-size:14px}.score{font-size:33px}.options{grid-template-columns:1fr;gap:8px}.choice{display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:3px 12px;padding:11px 13px}.choice small{grid-column:1;grid-row:1}.choice strong{grid-column:1;grid-row:2}.choice .strip{grid-row:1/3;grid-column:2;margin:0;height:10px}.check{grid-column:3;grid-row:1/3}.foot{flex-wrap:wrap}.swatch-panel{padding:22px 2px}.section-head{align-items:center}.board .match-info strong{font-size:15px}.match-info .label{font-size:9px}.tag{font-size:9px}.mono{font-size:9px}}
+.board {
+  isolation: isolate;
+  background: linear-gradient(132deg, #ffffffd9, #f6fbff94 55%, #ffffffbe);
+  box-shadow: inset 0 1px 1px white, inset 0 -1px 1px #98b7ce88, 0 12px 30px #173b5620;
+}
+.board::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  pointer-events: none; opacity: 0; transition: opacity .3s;
+  background: radial-gradient(220px circle at var(--shine-x, 50%) var(--shine-y, 50%), #ffffffec, transparent);
+}
+.solid .board { background: var(--snow); }
+.preview-tools { display: flex; align-items: center; gap: 14px; }
+.sound {
+  display: inline-flex; gap: 7px; align-items: center; background: transparent;
+  border: 0; padding: 10px 6px; font-size: 13px; font-weight: 650;
+}
+.sound svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+.sound[aria-pressed=false] .sound-waves, .sound[aria-pressed=true] .mute-cross { display: none; }
+.sound[aria-pressed=true] { color: #24618b; }
+.front-bat { transform-box: fill-box; transform-origin: 51% 93%; }
+.swing { animation: bat-swing .44s var(--ease); }
+@keyframes bat-swing { 22% { transform: rotate(-7deg) } 54% { transform: rotate(4deg) } }
+.choice[aria-pressed=true] .check { animation: check-in .3s var(--ease); }
+@keyframes check-in { from { transform: scale(.68) } 70% { transform: scale(1.12) } }
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  body:not(.solid) .board:hover::before { opacity: .9; }
+}
+@media (max-width:360px) { .preview-tools .tag { display: none; } }
+@media (max-width:420px) {
+  .preview-tools { gap: 5px; }
+  .preview-tools .tag { letter-spacing: .6px; }
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head><body><header class="frame mast"><div class="brand"><svg viewBox="0 0 36 36" aria-hidden="true"><g fill="#3283BE" transform="skewX(-12)"><rect x="8" y="6" width="9" height="24" rx="2"/><rect x="20" y="6" width="9" height="16" rx="2"/></g><circle cx="28" cy="27" r="4.1" fill="var(--accent)"/></svg>TopspinElo<span class="divider"></span><span class="meta studio">Design studio</span></div><div class="preview-tools">
+<button type="button" class="sound" aria-pressed="false" aria-label="Court sounds">
+  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 8h3l4-4v12l-4-4H2z"/><path class="mute-cross" d="m13 8 4 4m0-4-4 4"/><path class="sound-waves" d="M12 7q3 3 0 6m2-9q6 6 0 12"/></svg>
+  <span>Sound off</span>
+</button>
+<span class="meta tag">Private preview</span></div></header>
+<main class="frame"><section class="broadcast" aria-label="Interactive match preview"><div class="stage" aria-hidden="true"><svg class="court" viewBox="0 0 740 400" preserveAspectRatio="xMidYMid meet"><defs>
+<linearGradient id="surface" x2="1" y2=".9" gradientUnits="objectBoundingBox"><stop stop-color="#4597CE"/><stop offset="1" stop-color="#216496"/></linearGradient>
+<linearGradient id="wood" x2="1" y2=".1"><stop stop-color="#ac754b"/><stop offset=".24" stop-color="#f3d6a8"/><stop offset=".55" stop-color="#d6ab7b"/><stop offset=".74" stop-color="#efd0a0"/><stop offset="1" stop-color="#a7734d"/></linearGradient>
+<linearGradient id="sheen" x2=".8" y2=".9"><stop stop-color="white" stop-opacity=".21"/><stop offset=".44" stop-color="white" stop-opacity="0"/><stop offset="1" stop-color="#431b16" stop-opacity=".23"/></linearGradient>
+<pattern id="pips" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".75" fill="white" opacity=".37"/><circle cx="2" cy="2" r=".75" fill="#163143" opacity=".28"/></pattern>
+<radialGradient id="ball" cx=".33" cy=".24" r=".8"><stop stop-color="#fff"/><stop offset=".52" stop-color="#fefdfb"/><stop offset=".85" stop-color="#d0d9e0"/><stop offset="1" stop-color="#9daebb"/></radialGradient>
+<filter id="shadow" x="-.5" y="-.5" width="2" height="2"><feGaussianBlur stdDeviation="8"/></filter></defs>
+<path d="M-50 385 530 2 890 143 310 540Z" fill="#194d71"/><path d="M-50 375 530 -8 890 133 310 530Z" fill="url(#surface)" stroke="#f0f7fa" stroke-width="3"/><path d="M126 451 710 62" fill="none" stroke="#d5e8f3" stroke-width="2"/>
+<g class="face"><g transform="translate(335 128) rotate(46)"><ellipse cy="57" rx="88" ry="93" fill="#123f62" opacity=".29" filter="url(#shadow)"/><path d="M-15 54 -13 119 -17 198 Q0 208 17 198 L13 119 15 54Z" fill="url(#wood)" stroke="#9f7958" stroke-width="2"/><path d="M-4 68 -4 197 5 198 4 68Z" fill="#235777"/><ellipse cy="7" rx="82" ry="93" fill="#ccb08f"/><ellipse cy="2" rx="82" ry="92" fill="#184768"/><ellipse cy="2" rx="81" ry="91" fill="url(#pips)"/></g>
+<g transform="translate(475 129) rotate(-41)"><g class="front-bat"><ellipse cx="9" cy="66" rx="103" ry="110" fill="#12354d" opacity=".36" filter="url(#shadow)"/><path d="M-20 66 Q-14 116 -19 222 Q-3 235 19 224 Q14 128 20 66Z" fill="url(#wood)" stroke="#ab815b" stroke-width="2"/><path d="M-8 90 -6 226 4 227 5 89Z" fill="#244b60"/><path d="M8 88 10 227" stroke="#faf0d7" stroke-width="2"/><ellipse cy="8" rx="97" ry="105" fill="#856c54"/><ellipse cy="5" rx="97" ry="105" fill="#f1d9ae"/><ellipse cy="1" rx="97" ry="105" fill="#33485a"/><ellipse cy="-2" rx="97" ry="105" class="rubber" fill="var(--accent)"/><ellipse cy="-2" rx="96" ry="104" fill="url(#sheen)"/><ellipse cy="-2" rx="96" ry="104" fill="url(#pips)"/><g fill="white" opacity=".84"><path d="M-19 68h7l-6 12h-7zm10 0h7l-4 8h-7z"/><text x="2" y="77" font-size="8" letter-spacing="1" font-family="monospace">RD / 01</text></g></g></g></g>
+<g class="ballmove"><ellipse cx="274" cy="193" rx="20" ry="6" fill="#133c5c" opacity=".37" filter="url(#shadow)"/><circle cx="273" cy="159" r="19" fill="url(#ball)"/></g></svg></div>
+<div class="intro"><div class="line label">Court study &nbsp;/&nbsp; 01</div><h1>Rally<br><em>Room.</em></h1><p>A courtside colour study.<br>Pick a palette and play a point.</p></div>
+<div class="board"><div class="match-info"><span class="label">Table 01 · Singles</span><strong id="match">Practice game</strong><button class="undo" disabled>Undo point</button><button class="newgame" hidden>New game</button></div>
+<div class="player"><span class="name">Isla Norwood</span><output class="score" aria-label="Isla’s points">7</output><button class="point lead" aria-label="Award Isla a point">Point to Isla <b>+</b></button></div>
+<div class="player"><span class="name">Zoe Fenwick</span><output class="score" aria-label="Zoe’s points">6</output><button class="point" aria-label="Award Zoe a point">Point to Zoe <b>+</b></button></div></div></section>
+<section class="swatch-panel" aria-labelledby="paletteTitle"><div class="section-head"><div class="title"><span class="label">Material library &nbsp;/&nbsp; 03 accents</span><h2 id="paletteTitle">Choose your accent.</h2></div><button class="glass" role="switch" aria-checked="true" aria-label="Frosted glass"><span class="track"></span> Frosted glass</button></div>
+<div class="options" role="group" aria-label="Accent colour"></div></section>
+<footer class="foot"><details><summary>Colour notes</summary><p>Azure <b>#3283BE</b> and snowy white <b>#FEFDFE</b> stay fixed. Harbour slate <b>#5C7C94</b> uses 40% of the blue’s original HSL saturation. Coral is the hand-picked accent; raspberry and citron turn the blue hue by +137.5° and −137.5° respectively, keeping its saturation and lightness.</p></details><span class="mono">TopspinElo &nbsp;/&nbsp; Independent design study</span></footer><p class="sr" role="status" id="status"></p></main>
+<script>
+const $=s=>document.querySelector(s), all=s=>[...document.querySelectorAll(s)];
+const colours=[['Original','Coral','#FD614B','#32160e'],['+137.5°','Raspberry','#BE325A','#ffffff'],['−137.5°','Citron','#ACBE32','#25300b']];
+function choose(i){const c=colours[i];document.documentElement.style.setProperty('--accent',c[2]);document.documentElement.style.setProperty('--on-accent',c[3]);all('.choice').forEach((b,k)=>b.setAttribute('aria-pressed',k===i));$('#status').textContent=c[1]+' selected.'}
+colours.forEach(([note,name,hex],i)=>{const b=document.createElement('button');b.className='choice';b.style.setProperty('--chip',hex);b.setAttribute('aria-label',name+' '+hex);b.innerHTML='<small>'+note+' · '+hex+'</small><span aria-hidden="true" class="check">✓</span><span aria-hidden="true" class="strip"><i></i><i></i><i></i><i></i></span><strong>'+name+'</strong>';b.addEventListener('click',()=>choose(i));$('.options').append(b)});choose(0);
+$('.glass').onclick=e=>{const solid=document.body.classList.toggle('solid');e.currentTarget.setAttribute('aria-checked',!solid)};
+const points=all('.point'),nums=all('.score'),names=['Isla','Zoe'];let scores=[7,6],history=[];
+function restartAnimation(el,cls){el.classList.remove(cls);el.getBoundingClientRect();el.classList.add(cls)}
+function render(){const done=Math.max(...scores)>=11&&Math.abs(scores[0]-scores[1])>=2;nums.forEach((n,i)=>n.textContent=scores[i]);points.forEach(b=>b.disabled=done);$('.undo').disabled=!history.length;$('.newgame').hidden=!done;$('#match').textContent=done?names[Number(scores[1]>scores[0])]+' wins':'Practice game';$('#status').textContent=names[0]+' '+scores[0]+', '+names[1]+' '+scores[1]+'. '+$('#match').textContent}
+points.forEach((b,i)=>b.onclick=e=>{history.push(i);scores[i]++;render();restartAnimation(nums[i],'pulse');restartAnimation($('.ballmove'),'hit');if(!matchMedia('(prefers-reduced-motion: reduce)').matches){const r=document.createElement('span'),box=b.getBoundingClientRect();r.className='wave';r.style.left=(e.detail?e.clientX-box.left:box.width/2)+'px';r.style.top=(e.detail?e.clientY-box.top:box.height/2)+'px';b.append(r);r.onanimationend=()=>r.remove();setTimeout(()=>r.remove(),600)}});$('.undo').onclick=()=>{if(!history.length)return;const i=history.pop();scores[i]--;render();restartAnimation(nums[i],'pulse')};$('.newgame').onclick=()=>{scores=[0,0];history=[];render();points[0].focus()};
+const board = document.querySelector('.board');
+const soundSwitch = document.querySelector('.sound');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let audioContext;
+
+board.addEventListener('pointermove', event => {
+  if (event.pointerType !== 'mouse' || reducedMotion.matches || document.body.classList.contains('solid')) return;
+  const bounds = board.getBoundingClientRect();
+  board.style.setProperty('--shine-x', (event.clientX - bounds.left) + 'px');
+  board.style.setProperty('--shine-y', (event.clientY - bounds.top) + 'px');
+});
+
+function courtTap(frequency) {
+  if (!audioContext || audioContext.state !== 'running') return;
+  const tone = audioContext.createOscillator();
+  const volume = audioContext.createGain();
+  const now = audioContext.currentTime;
+  tone.frequency.setValueAtTime(frequency, now);
+  tone.frequency.exponentialRampToValueAtTime(frequency * .48, now + .055);
+  volume.gain.setValueAtTime(.001, now);
+  volume.gain.exponentialRampToValueAtTime(.11, now + .002);
+  volume.gain.exponentialRampToValueAtTime(.001, now + .068);
+  tone.connect(volume).connect(audioContext.destination);
+  tone.onended = () => { tone.disconnect(); volume.disconnect(); };
+  tone.start(now);
+  tone.stop(now + .07);
+}
+
+soundSwitch.addEventListener('click', async () => {
+  const enabled = soundSwitch.getAttribute('aria-pressed') === 'false';
+  soundSwitch.setAttribute('aria-pressed', String(enabled));
+  soundSwitch.querySelector('span').textContent = enabled ? 'Sound on' : 'Sound off';
+  if (!enabled) return;
+  try {
+    const AudioEngine = window.AudioContext || window.webkitAudioContext;
+    audioContext ??= new AudioEngine();
+    await audioContext.resume();
+    if (soundSwitch.getAttribute('aria-pressed') === 'true') courtTap(860);
+  } catch {
+    soundSwitch.setAttribute('aria-pressed', 'false');
+    soundSwitch.querySelector('span').textContent = 'Sound unavailable';
+    soundSwitch.disabled = true;
+  }
+});
+
+points.forEach((button, index) => button.addEventListener('click', () => {
+  restartAnimation(document.querySelector('.front-bat'), 'swing');
+  if (soundSwitch.getAttribute('aria-pressed') === 'true') courtTap(index === 0 ? 920 : 730);
+}));
+</script></body></html>
