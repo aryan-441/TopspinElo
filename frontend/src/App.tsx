@@ -6,7 +6,7 @@ import { replayRatings, recordedPointsWon } from './services/resultEntry';
 import { qualifierDraw } from './services/qualifierDraw';
 import { matchAvailability } from './services/matchAvailability';
 import { recognisePdf } from './services/pdfImport';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Image, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { demoMode, assignSeededGroups, createMatch, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, recordWorkspaceChanges, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
@@ -16,7 +16,8 @@ import { MatchCenter, LiveScoring } from './views/MatchCenter';
 import { PlayersView } from './views/PlayersView';
 import { RefereesView } from './views/RefereesView';
 import { TournamentsView } from './views/TournamentsView';
-import { StatisticsView } from './views/StatisticsView';
+import './views/statistics.css';
+const StatisticsView = lazy(() => import('./views/StatisticsView').then(module => ({ default: module.StatisticsView })));
 import { ClubGuide, AboutView, ExportsView, SettingsView } from './views/UtilityViews';
 import { Dialog } from './components/Dialog';
 
@@ -357,7 +358,7 @@ export default function App() {
           {page === 'players' && <PlayersView workspace={workspace} query={query} onQuery={setQuery} selectedId={selectedPlayerId} onSelect={setSelectedPlayerId} onAdd={() => setCreateDialog('player')} onMatch={(id) => { setSelectedPlayerId(null); setCreateDialog('match'); if (id) setToast('Choose this player in the match setup.'); }} onUpdatePlayer={(id, changes) => update((current) => ({ ...current, players: current.players.map((player) => player.id === id ? { ...player, ...changes } : player) }))} />}
           {page === 'referees' && <RefereesView workspace={workspace} onChange={replaceWorkspace} toast={setToast} />}
           {page === 'tournaments' && <TournamentsView workspace={workspace} players={playerById} selectedId={selectedTournamentId} onSelect={setSelectedTournamentId} onCreate={openTournamentSetup} onOpenMatch={openMatch} onChange={(next) => replaceWorkspace(next)} onSaveMatch={saveScoredMatch} onDeleteMatch={deleteMatch} toast={setToast} />}
-          {page === 'statistics' && <StatisticsView workspace={workspace} onOpenMatch={openMatch} />}
+          {page === 'statistics' && <Suspense fallback={<div className="page-content stats-loading" role="status" aria-label="Loading statistics"><span className="sr-only">Loading your statistics</span><div className="skeleton skeleton-title"/><div className="insight-kpis">{[0,1,2,3].map(i=><div className="skeleton skeleton-card" key={i}/>)}</div><div className="insight-grid"><div className="skeleton skeleton-chart"/><div className="skeleton skeleton-chart"/></div></div>}><StatisticsView workspace={workspace} onOpenMatch={openMatch} /></Suspense>}
           {page === 'exports' && <ExportsView workspace={workspace} onToast={setToast} />}
           {page === 'settings' && <SettingsView workspace={workspace} clubName={workspace.clubName ?? ''} onSaveClubName={(name) => { update((current) => ({ ...current, clubName: name })); setToast(name ? `${name} saved` : 'Club name cleared'); }} onImportWorkspace={replaceWorkspace} onReset={reset} />}
           {page === 'about' && <AboutView />}{page === 'guide' && <ClubGuide navigate={setPage} />}
