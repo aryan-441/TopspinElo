@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 
-const dir = await mkdtemp(join(tmpdir(), 'rallydesk-doubles-'));
+const dir = await mkdtemp(join(tmpdir(), 'topspinelo-doubles-'));
 try {
   const bundle = await build({ entryPoints: ['src/services/doublesMetrics.ts'], bundle: true, platform: 'node', format: 'cjs', write: false });
   const path = join(dir, 'metrics.cjs');

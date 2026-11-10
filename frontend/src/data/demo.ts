@@ -48,7 +48,7 @@ export function demoWorkspace(): Workspace {
     p.recent=rows.slice(-5).reverse().map(m=>m.winnerId===p.id?'W':'L');
     p.pointsWon=rows.flatMap(m=>m.events).filter(e=>e.winnerId===p.id).length;
   }
-  return {clubName:'Harbour Club · demo',players,matches,referees:[{id:'demo-ref',name:'Taylor Reed',active:true}],activityLog:[],
+  return {clubName:'Harbour Club',players,matches,referees:[{id:'demo-ref',name:'Taylor Reed',active:true}],activityLog:[],
     tournaments:[{id:'demo-cup',name:'Harbour Club Cup',date:'20 Oct 2026',venue:'Club hall',format:'Group stage',status:'Running',tableCount:2,
       entrantIds:players.map(p=>p.id),matchIds:matches.map(m=>m.id),completed:11,rounds:3,progressPaused:false,tieBreaks:['Wins','Game difference','Point difference'],standings:[],audit:[],
       categories:[{id:'demo-singles',name:'Open singles',kind:'Singles',format:'Group stage',entries:players.map(p=>({id:p.id,name:p.name,playerIds:[p.id]})),

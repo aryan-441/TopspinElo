@@ -1,5 +1,5 @@
-const {chromium,webkit}=require(process.env.RALLYDESK_PLAYWRIGHT_PATH || 'playwright');
-(async()=>{const browser=await (process.env.QA_WEBKIT?webkit:chromium).launch({...(process.env.QA_WEBKIT?{}:{executablePath:process.env.RALLYDESK_BROWSER_EXECUTABLE}),headless:true});try{
+const {chromium,webkit}=require(process.env.TOPSPINELO_PLAYWRIGHT_PATH || 'playwright');
+(async()=>{const browser=await (process.env.QA_WEBKIT?webkit:chromium).launch({...(process.env.QA_WEBKIT?{}:{executablePath:process.env.TOPSPINELO_BROWSER_EXECUTABLE}),headless:true});try{
 const page=await browser.newPage({viewport:{width:820,height:850}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
 await page.goto('http://127.0.0.1:5173/?demo');
 await page.evaluate(()=>{const w=JSON.parse(localStorage.getItem('rallydesk-demo-v1'));w.matches=[];const t=w.tournaments[0];t.matchIds=[];t.completed=0;t.status='Upcoming';t.format='Knockout';t.categories[0].format='Knockout';delete t.categories[0].groupStage;localStorage.setItem('rallydesk-demo-v1',JSON.stringify(w))});

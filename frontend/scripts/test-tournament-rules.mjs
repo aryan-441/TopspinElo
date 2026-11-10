@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { build } from 'esbuild';
 
-const tempDir = await mkdtemp(join(tmpdir(), 'rallydesk-rules-'));
+const tempDir = await mkdtemp(join(tmpdir(), 'topspinelo-rules-'));
 try {
   const bundle = await build({ entryPoints: ['src/services/store.ts'], bundle: true, platform: 'node', format: 'cjs', write: false });
   const bundlePath = join(tempDir, 'store.cjs');

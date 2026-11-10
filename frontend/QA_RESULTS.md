@@ -1,4 +1,4 @@
-# Rallydesk frontend acceptance results
+# TopspinElo frontend acceptance results
 
 Updated 29 October 2026. These checks used fresh, isolated browser profiles against the local Vite preview; they did not modify the user's browser data.
 
@@ -26,7 +26,7 @@ Updated 29 October 2026. These checks used fresh, isolated browser profiles agai
 - Overview and Matches set distinct browser document titles; the global thin scrollbar token is present in the rendered app.
 - A rendered contrast scan of all eight core pages found no remaining text pairs below the WCAG AA 4.5:1 normal-text / 3:1 large-text thresholds after the shared palette correction.
 - Edge accessibility-tree inspection found no unnamed button, link, textbox, combobox, checkbox, or tab controls across the eight core pages (144 controls inspected). This is semantic-tree evidence, not a substitute for an actual screen-reader session.
-- Desktop visual inspection at 1440px showed one clear Rallydesk page title and a separate “Your club desk” section heading with no page-level overflow.
+- Desktop visual inspection at 1440px showed one clear TopspinElo page title and a separate “Your club desk” section heading with no page-level overflow.
 - No browser page errors occurred in the feature-flow checks.
 - `pnpm run build` passes (`tsc -b && vite build`); strict premium audit reports zero findings; required native-dialog/semantic-click searches are clean; `git diff --check` passes.
 

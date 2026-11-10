@@ -9,9 +9,10 @@ import { recognisePdf } from './services/pdfImport';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Image, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { demoMode, assignSeededGroups, createMatch, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, recordWorkspaceChanges, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
+import { assignSeededGroups, createMatch, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, recordWorkspaceChanges, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
 import type { CategoryEntry, CategoryKind, Match, PageId, Player, Standing, TeamSystem, Tournament, TournamentCategory, TournamentGroup, Workspace } from './types';
 import { Overview } from './views/Overview';
+import { HomeView } from './views/HomeView';
 import { MatchCenter, LiveScoring } from './views/MatchCenter';
 import { PlayersView } from './views/PlayersView';
 import { RefereesView } from './views/RefereesView';
@@ -23,6 +24,7 @@ import { Dialog } from './components/Dialog';
 
 type NavItem = { id: PageId; label: string; icon: LucideIcon };
 const mainNav: NavItem[] = [
+  { id: 'home', label: 'Home', icon: Table2 },
   { id: 'overview', label: 'Overview', icon: Table2 },
   { id: 'matches', label: 'Matches', icon: CircleDot },
   { id: 'tournaments', label: 'Tournaments', icon: Trophy },
@@ -37,14 +39,14 @@ const workspaceNav: NavItem[] = [
   { id: 'about', label: 'About TopspinElo', icon: Info },
 ];
 const pageTitles: Record<PageId, string> = {
-  overview: brand.name, matches: 'Matches', tournaments: 'Tournaments', players: 'Players', referees: 'Referees', statistics: 'Statistics', exports: 'Exports & recovery', settings: 'Settings', about: `About ${brand.name}`, guide: 'Club guide',
+  home: 'Home', overview: 'Overview', matches: 'Matches', tournaments: 'Tournaments', players: 'Players', referees: 'Referees', statistics: 'Statistics', exports: 'Exports & recovery', settings: 'Settings', about: `About ${brand.name}`, guide: 'Club guide',
 };
 
 type CreateDialog = 'player' | 'match' | 'tournament' | null;
 
 export default function App() {
   const [workspace, setWorkspace] = useState<Workspace>(loadWorkspace);
-  const [page, setPage] = useState<PageId>('overview');
+  const [page, setPage] = useState<PageId>('home');
   const [createDialog, setCreateDialog] = useState<CreateDialog>(null);
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
@@ -61,6 +63,14 @@ export default function App() {
   const setRole = (role: 'organiser' | 'referee') => { setWorkspaceRole(role); try { localStorage.setItem('rallydesk-view', role); } catch { /* The view remains usable when storage is unavailable. */ } };
   const visibleNav = workspaceRole === 'referee' ? mainNav.filter((item) => item.id === 'matches' || item.id === 'statistics') : mainNav;
   const activePlayers = workspace.players.filter((player) => !player.archivedAt);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('demo')) {
+      url.searchParams.delete('demo'); url.searchParams.set('sample', '');
+      window.history.replaceState(window.history.state, '', url);
+    }
+  }, []);
 
   const receivedWorkspace = useRef<Workspace | null>(null);
   useEffect(() => {
@@ -318,7 +328,7 @@ export default function App() {
   return (
     <div className="app-frame"><MatchReceipt workspace={workspace}/>
       {mobileNav && <button className="nav-scrim" aria-label="Close navigation" onClick={() => setMobileNav(false)} />}
-      <aside ref={sidebarRef} id="rallydesk-sidebar" aria-label="Primary navigation" className={`sidebar ${mobileNav ? 'sidebar--open' : ''}`}>
+      <aside ref={sidebarRef} id="topspinelo-sidebar" aria-label="Primary navigation" className={`sidebar ${mobileNav ? 'sidebar--open' : ''}`}>
         <div className="brand-lockup"><img className="brand-symbol" src="/topspinelo-mark.svg" alt="" /><span>{brand.name}<small>{brand.tagline.toUpperCase()}</small></span><button ref={mobileCloseRef} className="mobile-close icon-button" onClick={() => setMobileNav(false)} aria-label="Close navigation"><X size={18} /></button></div>
         <div className="role-switch" aria-label="Choose workspace interface"><span className="role-switch-label">WORKSPACE VIEW</span><div role="group" aria-label="Workspace interface"><button type="button" aria-pressed={workspaceRole === 'organiser'} className={workspaceRole === 'organiser' ? 'role-switch-active' : ''} onClick={() => { setRole('organiser'); if (page === 'matches') setPage('overview'); }}>Organiser</button><button type="button" aria-pressed={workspaceRole === 'referee'} className={workspaceRole === 'referee' ? 'role-switch-active' : ''} onClick={() => { setRole('referee'); setPage('matches'); }}>Referee</button></div></div>
         <button className="club-switcher" onClick={() => setPage('settings')}><span className="club-monogram">{workspace.clubName?.trim().charAt(0).toUpperCase() || '＋'}</span><span><b>{workspace.clubName || 'Add your club name'}</b><small>Workspace settings</small></span><span className="switch-caret">⌄</span></button>
@@ -335,10 +345,10 @@ export default function App() {
 
       <div className="main-column">
         <header className="topbar">
-          <button ref={mobileMenuRef} className="mobile-menu icon-button" onClick={() => setMobileNav(true)} aria-label="Open navigation" aria-expanded={mobileNav} aria-controls="rallydesk-sidebar"><Menu size={20} /></button>
+          <button ref={mobileMenuRef} className="mobile-menu icon-button" onClick={() => setMobileNav(true)} aria-label="Open navigation" aria-expanded={mobileNav} aria-controls="topspinelo-sidebar"><Menu size={20} /></button>
           <div className="breadcrumb"><span>{workspace.clubName || 'TopspinElo'}</span><span className="breadcrumb-slash">/</span><b>{pageTitles[page]}</b></div>
           <div className="topbar-right">
-            <span className="preview-pill"><span /> {demoMode ? 'Demo · sample records' : 'Local preview'}</span>
+            <span className="preview-pill"><span /> Saved on this device</span>
             <button className="topbar-icon icon-button" aria-label="Notifications" onClick={() => setToast('You’re all caught up')}><Bell size={18} /></button>
           </div>
         </header>
@@ -353,6 +363,7 @@ export default function App() {
             </div>}
           </div>
 
+          {page === 'home' && <HomeView workspace={workspace} navigate={setPage} />}
           {page === 'overview' && <Overview workspace={workspace} players={playerById} onOpenMatch={openMatch} onPage={setPage} onNewMatch={openMatchSetup} onNewTournament={openTournamentSetup} onNewPlayer={() => setCreateDialog('player')} />}
           {page === 'matches' && <MatchCenter workspace={workspace} players={playerById} referees={workspace.referees ?? []} onUpdateWorkspace={replaceWorkspace} refereeDesk={workspaceRole === 'referee'} query={query} onQuery={setQuery} onOpenMatch={openMatch} onCreate={openMatchSetup} onSaveMatch={saveScoredMatch} onDeleteMatch={deleteMatch} />}
           {page === 'players' && <PlayersView workspace={workspace} query={query} onQuery={setQuery} selectedId={selectedPlayerId} onSelect={setSelectedPlayerId} onAdd={() => setCreateDialog('player')} onMatch={(id) => { setSelectedPlayerId(null); setCreateDialog('match'); if (id) setToast('Choose this player in the match setup.'); }} onUpdatePlayer={(id, changes) => update((current) => ({ ...current, players: current.players.map((player) => player.id === id ? { ...player, ...changes } : player) }))} />}
@@ -363,7 +374,7 @@ export default function App() {
           {page === 'settings' && <SettingsView workspace={workspace} clubName={workspace.clubName ?? ''} onSaveClubName={(name) => { update((current) => ({ ...current, clubName: name })); setToast(name ? `${name} saved` : 'Club name cleared'); }} onImportWorkspace={replaceWorkspace} onReset={reset} />}
           {page === 'about' && <AboutView />}{page === 'guide' && <ClubGuide navigate={setPage} />}
         </main>
-        <footer className="app-footer"><span>TopspinElo</span><span>© Aryan Arora 2026</span></footer>
+        <footer className="app-footer"><span>TopspinElo</span><a href={`mailto:${brand.supportEmail}`}>Contact support</a><span>© Aryan Arora 2026</span></footer>
       </div>
 
       {organiserResult && <ResultEntryDialog match={organiserResult} workspace={workspace} onClose={()=>setOrganiserResult(null)} onSave={next=>{saveScoredMatch(next);setOrganiserResult(null)}}/>}

@@ -1,4 +1,4 @@
-# Rallydesk / Table Tennis Manager — Comprehensive QA Report
+# TopspinElo / Table Tennis Manager — Comprehensive QA Report
 
 Historical report. See [4 November 2026 verification](docs/QA_2026-11-04.md) for the current executed checks, fixes, and readiness gaps. Earlier missing-dependency and unimplemented-OCR statements below describe the earlier run.
 

@@ -90,7 +90,7 @@ The 27 Python application tests and frontend rule/analytics checks passed. They 
 - `frontend/scripts/qa/draw-creation-matrix.cjs`: twelve actual draw-creation configurations.
 - `frontend/scripts/qa/structured-imports.cjs`: four applied import paths.
 - `frontend/scripts/qa/interface-boundaries.cjs`: local role and latest interface requirements.
-- `frontend/scripts/qa/production-smoke.cjs`: compiled preview checks; expects the preview server on 5174 unless `RALLYDESK_BASE_URL` is supplied.
+- `frontend/scripts/qa/production-smoke.cjs`: compiled preview checks; expects the preview server on 5174 unless `TOPSPINELO_BASE_URL` is supplied.
 - The visible completed PDF test remains in the demo browser workspace; its export is in Downloads.
 
 Passing these checks establishes the specific outcomes above. It does not establish every possible score history, arbitrary PDF layout, public-security boundary or requirement that is explicitly listed as incomplete.

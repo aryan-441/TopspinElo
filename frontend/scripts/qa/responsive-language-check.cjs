@@ -1,4 +1,4 @@
-const { chromium, webkit } = require(process.env.RALLYDESK_PLAYWRIGHT_PATH || 'playwright');
+const { chromium, webkit } = require(process.env.TOPSPINELO_PLAYWRIGHT_PATH || 'playwright');
 
 async function audit(browserType, executablePath, engine) {
   const browser = await browserType.launch({ ...(executablePath ? { executablePath } : {}), headless: true });
@@ -8,7 +8,7 @@ async function audit(browserType, executablePath, engine) {
       const page = await browser.newPage({ viewport: { width, height: 844 }, isMobile: width < 768, hasTouch: width < 768 });
       page.on('pageerror', error => failures.push(`${width}: ${error.message}`));
       await page.goto('http://127.0.0.1:5173/?demo');
-      for (const name of process.env.QA_PAGE ? [process.env.QA_PAGE] : ['Overview', 'Matches', 'Tournaments', 'Players', 'Referees', 'Statistics', 'Exports & recovery', 'Settings', 'Club guide', 'About Rallydesk']) {
+      for (const name of process.env.QA_PAGE ? [process.env.QA_PAGE] : ['Overview', 'Matches', 'Tournaments', 'Players', 'Referees', 'Statistics', 'Exports & recovery', 'Settings', 'Club guide', 'About TopspinElo']) {
         if (width <= 950) await page.getByRole('button', { name: 'Open navigation' }).click();
         await page.getByRole('button', { name, exact: true }).click();
         await page.waitForTimeout(60);
@@ -22,7 +22,7 @@ async function audit(browserType, executablePath, engine) {
           if (breadcrumb.includes('Workspace settings')) failures.push(`${width}: duplicate settings label`);
         }
         if (name === 'Club guide' && await page.getByText('Explore the colour palette samples').count()) failures.push(`${width}: palette link remains`);
-        if (name === 'About Rallydesk' && await page.getByText('practise', { exact: false }).count()) failures.push(`${width}: old about wording remains`);
+        if (name === 'About TopspinElo' && await page.getByText('practise', { exact: false }).count()) failures.push(`${width}: old about wording remains`);
       }
       if (width === 390) await page.screenshot({ path: '.test-tmp/about-phone.png', animations: 'disabled' });
       await page.close();
@@ -33,7 +33,7 @@ async function audit(browserType, executablePath, engine) {
 }
 
 (async () => {
-  await audit(chromium, process.env.RALLYDESK_BROWSER_EXECUTABLE, 'Edge');
+  await audit(chromium, process.env.TOPSPINELO_BROWSER_EXECUTABLE, 'Edge');
   try { await audit(webkit, undefined, 'WebKit'); }
   catch (error) { if (/Executable doesn't exist|browserType\.launch: Executable/i.test(String(error))) console.log('WebKit browser binary unavailable: native Safari remains unverified'); else throw error; }
 })().catch(error => { console.error(error); process.exitCode = 1; });

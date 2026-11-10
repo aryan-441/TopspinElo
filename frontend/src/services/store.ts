@@ -3,7 +3,7 @@ import { initialWorkspace } from '../data/seed';
 import type { CategoryEntry, GroupStageConfig, Match, Player, TeamSystem, Tournament, TournamentCategory, Workspace } from '../types';
 import { teamMatchSequence } from './tableTennisRules';
 
-export const demoMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('demo');
+export const demoMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('sample') || typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('demo');
 export const STORAGE_KEY = demoMode ? 'rallydesk-demo-v1' : 'rallydesk-workspace-v2';
 
 export function loadWorkspace(): Workspace {
@@ -29,7 +29,7 @@ export function normalizeWorkspace(parsed: Workspace): Workspace {
       const category = tournament?.categories.find((item) => item.id === match.categoryId || item.name === match.category) ?? (tournament?.categories.length === 1 ? tournament.categories[0] : undefined);
       return { ...match, categoryId: match.categoryId ?? category?.id, sideOneId: match.sideOneId ?? match.playerOneId, sideTwoId: match.sideTwoId ?? match.playerTwoId, sideOnePlayerIds: match.sideOnePlayerIds ?? [match.playerOneId], sideTwoPlayerIds: match.sideTwoPlayerIds ?? [match.playerTwoId] };
     });
-    return { ...parsed, matches, referees: parsed.referees ?? [], tournaments, activityLog: Array.isArray(parsed.activityLog) ? parsed.activityLog : [] };
+    return { ...parsed, clubName: parsed.clubName === 'Harbour Club · demo' ? 'Harbour Club' : parsed.clubName, matches, referees: parsed.referees ?? [], tournaments, activityLog: Array.isArray(parsed.activityLog) ? parsed.activityLog : [] };
 }
 
 export function recordWorkspaceChanges(before: Workspace, after: Workspace): Workspace {
