@@ -1,3 +1,4 @@
+import { validGameScore } from './tableTennisRules';
 import type { Match, Workspace } from '../types';
 
 export function enterResult(match: Match, detail: 'winner' | 'match-score' | 'game-scores', input: string, winnerSide = ''): Match {
@@ -23,8 +24,7 @@ export function enterResult(match: Match, detail: 'winner' | 'match-score' | 'ga
     if (!pairs.length) throw new Error('Enter the individual game scores.');
     for (const [a,b] of pairs) {
       if (gamesWon[one] === match.gamesToWin || gamesWon[two] === match.gamesToWin) throw new Error('Remove games entered after the match was won.');
-      const high = Math.max(a,b), low = Math.min(a,b);
-      if (high < match.pointsPerGame || high-low < 2 || (high > match.pointsPerGame && high-low !== 2)) throw new Error('Each game must finish at the target with a two-point lead, or two clear after deuce.');
+      if (!validGameScore(a,b,match.pointsPerGame,match.goldenPoint)) throw new Error(match.goldenPoint ? `Golden-point games finish at ${match.pointsPerGame}; a one-point winning margin is allowed.` : 'Each game must finish at the target with a two-point lead, or two clear after deuce.');
       const winner = a>b ? one : two;
       gamesWon[winner]++;
       gameResults.push({one:a,two:b,winnerId:winner});

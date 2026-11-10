@@ -1,4 +1,4 @@
-import { refereeAvailability } from '../services/refereeAvailability';
+import { matchIncludesReferees, refereeAvailability } from '../services/refereeAvailability';
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { CircleDot, Plus, Shield, Trash2, UserRound } from 'lucide-react';
@@ -8,7 +8,7 @@ export function RefereesView({ workspace, onChange, toast }: { workspace: Worksp
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const referees = workspace.referees ?? [];
-  const matches = useMemo(() => [...workspace.matches].filter((match) => match.status === 'Scheduled' || match.status === 'In progress').filter(match => workspace.tournaments.find(t => t.id === match.tournamentId)?.includeReferees !== false).sort((a, b) => a.startsAt.localeCompare(b.startsAt)), [workspace.matches]);
+  const matches = useMemo(() => [...workspace.matches].filter((match) => match.status === 'Scheduled' || match.status === 'In progress').filter(match => matchIncludesReferees(match,workspace)).sort((a, b) => a.startsAt.localeCompare(b.startsAt)), [workspace.matches,workspace.tournaments]);
   const addReferee = (event: FormEvent) => {
     event.preventDefault();
     const trimmed = name.trim();

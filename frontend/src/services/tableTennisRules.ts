@@ -1,5 +1,11 @@
 import type { TeamSystem } from '../types';
 
+export function validGameScore(one: number, two: number, target: number, golden = false): boolean {
+  if (![one, two].every(n => Number.isSafeInteger(n) && n >= 0) || one === two) return false;
+  const high = Math.max(one, two), low = Math.min(one, two);
+  return golden ? high === target && low < target : (high === target && low <= target - 2) || (high > target && high - low === 2);
+}
+
 export const teamMatchSequences: Record<TeamSystem, { sides: [number[], number[]][]; doublesAt?: number }> = {
   new_swaythling: { sides: [[[0],[0]],[[1],[1]],[[2],[2]],[[0],[1]],[[1],[0]]] },
   corbillon: { sides: [[[0],[0]],[[1],[1]],[[0,1],[0,1]],[[0],[1]],[[1],[0]]], doublesAt: 2 },

@@ -1,3 +1,5 @@
+import { StandaloneMatchDialog } from './components/StandaloneMatchDialog';
+import { refereeAvailability } from './services/refereeAvailability';
 import { MatchReceipt } from './components/MatchReceipt';
 import { brand } from './brand';
 import { STORAGE_KEY } from './services/store';
@@ -7,9 +9,9 @@ import { qualifierDraw } from './services/qualifierDraw';
 import { matchAvailability } from './services/matchAvailability';
 import { recognisePdf } from './services/pdfImport';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Image, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
+import { ArrowRight, Bell, ChartNoAxesCombined, CircleDot, ClipboardList, Download, Image, Info, Menu, Plus, Settings2, Table2, Trophy, UserRound, Users, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { assignSeededGroups, createMatch, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, recordWorkspaceChanges, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
+import { assignSeededGroups, createPlayer, createTournament, generateCategoryRoundFixtures, generateTournamentFixtures, loadWorkspace, normalizeWorkspace, recordWorkspaceChanges, resetWorkspace, resolveTeamTie, saveWorkspace } from './services/store';
 import type { CategoryEntry, CategoryKind, Match, PageId, Player, Standing, TeamSystem, Tournament, TournamentCategory, TournamentGroup, Workspace } from './types';
 import { Overview } from './views/Overview';
 import { HomeView } from './views/HomeView';
@@ -134,9 +136,9 @@ export default function App() {
     if (next.teamTieId) {
       const event = current.tournaments.find((tournament) => tournament.id === next.tournamentId);
       const category = event?.categories.find((item) => item.id === next.categoryId);
-      if (category?.kind === 'Team') {
-        const tied = matches.filter((match) => match.teamTieId === next.teamTieId);
-        const resolution = resolveTeamTie(tied, category.teamSystem ?? 'new_swaythling');
+      if (category?.kind === 'Team' || next.standaloneTeamSystem) {
+        const tied = matches.filter((match) => match.teamTieId === next.teamTieId).map(m=>next.standaloneTeamSystem && m.status==='Not played'?{...m,status:'Scheduled' as const}:m);
+        const resolution = resolveTeamTie(tied, next.standaloneTeamSystem ?? category?.teamSystem ?? 'new_swaythling');
         const resolvedById = new Map(resolution.matches.map((match) => [match.id, match]));
         matches = matches.map((match) => resolvedById.get(match.id) ?? match);
       }
@@ -292,15 +294,11 @@ export default function App() {
     setPage('players');
     setToast(`${player.name} added to the player list`);
   };
-  const createNewMatch = (input: Pick<Match, 'playerOneId' | 'playerTwoId' | 'format' | 'pointsPerGame' | 'gamesToWin' | 'tournamentId' | 'table'>) => {
-    if (input.playerOneId === input.playerTwoId) { setToast('Choose two different players'); return; }
-    const match = createMatch(input, workspace.players);
-    const tournament = workspace.tournaments.find((item) => item.id === input.tournamentId);
-    if (tournament) match.tournamentName = tournament.name;
-    update((current) => ({ ...current, matches: [match, ...current.matches], tournaments: current.tournaments.map((item) => item.id === input.tournamentId ? { ...item, matchIds: [match.id, ...item.matchIds] } : item) }));
-    setCreateDialog(null);
-    setActiveMatchId(match.id);
-    setToast('Match created. Confirm the toss and first server to begin.');
+  const createNewMatch = (fixtures: Match[]) => {
+    if (fixtures.some(m => m.refereeId && !workspace.referees.some(r => r.id === m.refereeId && refereeAvailability(r,workspace) === 'Available'))) throw new Error('Choose an available referee or assign one later.');
+    update(current => ({...current,matches:[...fixtures,...current.matches]}));
+    setCreateDialog(null); setPage('matches'); setToast('Standalone match created');
+    if (fixtures.length === 1 && !fixtures[0].includeReferees) setOrganiserResult(fixtures[0]);
   };
   const createNewTournament = (input: Pick<Tournament, 'name' | 'format' | 'date' | 'venue' | 'entrantIds'> & { categories: TournamentCategory[]; tableCount: number; includeReferees?: boolean }) => {
     const tournament = createTournament(input);
@@ -379,7 +377,7 @@ export default function App() {
 
       {organiserResult && <ResultEntryDialog match={organiserResult} workspace={workspace} onClose={()=>setOrganiserResult(null)} onSave={next=>{saveScoredMatch(next);setOrganiserResult(null)}}/>}
       {createDialog === 'player' && <PlayerDialog onClose={() => setCreateDialog(null)} onCreate={createNewPlayer} />}
-      {createDialog === 'match' && <MatchDialog players={activePlayers} tournaments={workspace.tournaments} onClose={() => setCreateDialog(null)} onCreate={createNewMatch} />}
+      {createDialog === 'match' && <StandaloneMatchDialog players={activePlayers} referees={workspace.referees} onClose={() => setCreateDialog(null)} onCreate={createNewMatch} />}
       {createDialog === 'tournament' && <TournamentDialog players={activePlayers} onClose={() => setCreateDialog(null)} onCreate={createNewTournament} />}
       {toast && <div className="toast" role="status"><span className="toast-dot" />{toast}</div>}
     </div>
@@ -401,19 +399,6 @@ function PlayerDialog({ onClose, onCreate }: { onClose: () => void; onCreate: (n
     <div className="form-row"><label className="field"><span>Playing hand</span><select value={hand ?? ''} onChange={(event) => setHand(event.target.value ? event.target.value as Player['hand'] : null)}><option value="">Not specified</option><option>Right</option><option>Left</option></select></label><label className="field"><span>Grip</span><select value={grip ?? ''} onChange={(event) => setGrip(event.target.value ? event.target.value as Player['grip'] : null)}><option value="">Not specified</option><option>Shakehand</option><option>Penhold</option></select></label></div>
     <label className="field"><span>Playing style</span><select value={style ?? ''} onChange={(event) => setStyle(event.target.value || null)}><option value="">Not specified</option>{['Attacker', 'Defender', 'All-rounder', 'Counter-attacker', 'Chopper'].map((value) => <option key={value}>{value}</option>)}</select></label>
     <div className="dialog-actions"><button className="button button-quiet" type="button" onClick={onClose}>Cancel</button><button className="button button-primary" type="submit" disabled={!name.trim()}>Add player <ArrowRight size={15} /></button></div>
-  </form></Dialog>;
-}
-
-function MatchDialog({ players, tournaments, onClose, onCreate }: { players: Player[]; tournaments: Tournament[]; onClose: () => void; onCreate: (input: Pick<Match, 'playerOneId' | 'playerTwoId' | 'format' | 'pointsPerGame' | 'gamesToWin' | 'tournamentId' | 'table'>) => void }) {
-  const [one, setOne] = useState(''); const [two, setTwo] = useState(''); const [format, setFormat] = useState('Best of 5'); const [points, setPoints] = useState<11 | 21>(11); const [tournamentId, setTournamentId] = useState(''); const [table, setTable] = useState('Table 01');
-  const tableOptions = Array.from({ length: tournaments.find((item) => item.id === tournamentId)?.tableCount ?? 4 }, (_, index) => `Table ${String(index + 1).padStart(2, '0')}`);
-  const gamesToWin = format === 'One game' ? 1 : format === 'Best of 3' ? 2 : format === 'Best of 5' ? 3 : 4;
-  return <Dialog title="Set up a match" eyebrow="MATCH SETUP" onClose={onClose}><form className="form-stack" noValidate onSubmit={(event) => { event.preventDefault(); if (one && two && one !== two) onCreate({ playerOneId: one, playerTwoId: two, format, pointsPerGame: points, gamesToWin, tournamentId: tournamentId || undefined, table }); }}>
-    <div className="match-pick-row"><label className="field"><span>Player one</span><select value={one} onChange={(event) => setOne(event.target.value)} required><option value="">Choose player</option>{players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label><span className="versus">VS</span><label className="field"><span>Player two</span><select value={two} onChange={(event) => setTwo(event.target.value)} required><option value="">Choose player</option>{players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label></div>
-    <div className="form-row"><label className="field"><span>Match format</span><select value={format} onChange={(event) => setFormat(event.target.value)}>{['One game', 'Best of 3', 'Best of 5', 'Best of 7'].map((value) => <option key={value}>{value}</option>)}</select></label><label className="field"><span>Points per game</span><select value={points} onChange={(event) => setPoints(Number(event.target.value) as 11 | 21)}><option value={11}>11 points · deuce</option><option value={21}>21 points · deuce</option></select></label></div>
-    <div className="form-row"><label className="field"><span>Tournament <small>Optional</small></span><select value={tournamentId} onChange={(event) => { setTournamentId(event.target.value); setTable('Table 01'); }}><option value="">Friendly match</option>{tournaments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="field"><span>Table</span><select value={table} onChange={(event) => setTable(event.target.value)}>{tableOptions.map((value) => <option key={value}>{value}</option>)}</select></label></div>
-    <p className="form-note"><Activity size={15} /> Match settings: win by 2 at deuce. Toss and first server are confirmed on the scoring screen.</p>
-    <div className="dialog-actions"><button className="button button-quiet" type="button" onClick={onClose}>Cancel</button><button className="button button-primary" type="submit" disabled={!one || !two || one === two}>Create match <ArrowRight size={15} /></button></div>
   </form></Dialog>;
 }
 

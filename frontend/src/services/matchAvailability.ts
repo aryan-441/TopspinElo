@@ -4,6 +4,7 @@ import type { Match, Workspace } from '../types';
 export function matchAvailability(match: Match, workspace: Workspace): { ready: boolean; reason?: string } {
   if (match.status === 'Completed') return { ready: true };
   if (match.status === 'Postponed' || match.status === 'Not played') return { ready: false, reason: 'Change this match’s status before playing it.' };
+  if (match.standaloneTeamSystem && workspace.matches.some(m=>m.teamTieId===match.teamTieId && (m.teamTieOrder??0)<(match.teamTieOrder??0) && m.status!=='Completed')) return {ready:false,reason:'Finish the earlier individual matches in this team encounter first.'};
   const known = new Set(workspace.players.map((player) => player.id));
   if (!known.has(match.playerOneId) || !known.has(match.playerTwoId) || match.playerOneId === match.playerTwoId || [match.sideOneLabel, match.sideTwoLabel].some((label) => label && /^(TBD|to be decided|winner of|\?)\b/i.test(label.trim()))) {
     return { ready: false, reason: 'Waiting for both players to be known.' };

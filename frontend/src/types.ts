@@ -20,6 +20,10 @@ export type Player = {
 export type PointEvent = { reversedEvent?: PointEvent; serverId?: string; game?: number; reason?: string; reversedEventId?: string; recordedAt?: string; id: string; winnerId: string; score: string; time: string; kind: 'Point' | 'Fault' | 'Let' | 'Correction' };
 
 export type Match = {
+  playedOn?: string;
+  includeReferees?: boolean;
+  goldenPoint?: boolean;
+  standaloneTeamSystem?: TeamSystem;
   resultDetail?: 'winner' | 'match-score' | 'game-scores' | 'point-by-point';
   resultNote?: string;
   startRatings?: Record<string, number>;
