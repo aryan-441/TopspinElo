@@ -1,9 +1,9 @@
-const {chromium}=require(process.env.RALLYDESK_PLAYWRIGHT_PATH || 'playwright');
+const {chromium}=require(process.env.TOPSPINELO_PLAYWRIGHT_PATH || 'playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 
 (async()=>{
-  const browser=await chromium.launch({executablePath:process.env.RALLYDESK_BROWSER_EXECUTABLE,headless:true});
+  const browser=await chromium.launch({executablePath:process.env.TOPSPINELO_BROWSER_EXECUTABLE,headless:true});
   const results=[];
   const modes=[{name:'random knockout'},{name:'seeded knockout',seeded:true},{name:'typed names',manual:true},
     {name:'snake uneven groups',distribution:'snake',groups:3},

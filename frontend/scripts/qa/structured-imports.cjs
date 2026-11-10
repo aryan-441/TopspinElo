@@ -1,8 +1,8 @@
-const {chromium}=require(process.env.RALLYDESK_PLAYWRIGHT_PATH||'playwright');
+const {chromium}=require(process.env.TOPSPINELO_PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 (async()=>{
- const browser=await chromium.launch({executablePath:process.env.RALLYDESK_BROWSER_EXECUTABLE,headless:true});const results=[];
+ const browser=await chromium.launch({executablePath:process.env.TOPSPINELO_BROWSER_EXECUTABLE,headless:true});const results=[];
  try{
   for(const group of [false,true])for(const format of ['csv','json']){
    const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage();

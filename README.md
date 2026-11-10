@@ -131,8 +131,12 @@ The approved product context and phased requirements for optional player attribu
 
 TopspinElo is a free product for clubs, with no advertisements. The repository is available for source inspection and evaluation under the proprietary terms in [LICENSE](LICENSE). Reusing, modifying, deploying, redistributing, or incorporating its code requires the copyright owner's written permission. Request permission by contacting the owner through [GitHub](https://github.com/aryan-441/TopspinElo).
 
-## Recovery and demo
+## Recovery and example records
 
-Open the app with ?demo to use sample records in a separate browser storage key. The demo contains eight fictional players and a group-stage cup with point histories. Production workspace records use a different key.
+Open the app with ?sample to use sample records in a separate browser storage key. The example workspace contains eight fictional players and a group-stage cup with point histories. Production workspace records use a different key.
 
 After qualification, organisers can override the qualifiers with a reason, review or regenerate the random draw, or import it. Rewind qualification removes the downstream draw, keeps group results, and pauses progression for corrections. Before/after match records remain in the exportable change journal. Complete tournament data and workspace JSON exports both contain a restorable workspace. The guide describes every main screen and these recovery steps.
+
+## Support
+
+For questions, feedback or help, email [topspinelosupport@gmail.com](mailto:topspinelosupport@gmail.com).

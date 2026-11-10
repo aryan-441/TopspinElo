@@ -1,4 +1,5 @@
 import { RollingNumber, SlidingTabs } from '../components/CourtMotion';
+import { brand } from '../brand';
 import { AvailabilityControl } from '../components/AvailabilityControl';
 
 import { ResultEntryDialog } from '../components/ResultEntryDialog';
@@ -233,7 +234,7 @@ export function LiveScoring({ match, players, canNominateDoubles = true, onBack,
       </aside>
       <button className="mobile-timeline-fab" onClick={() => setMobileActions(true)}><Timer size={16} /> Match timeline <span>{match.events.length}</span></button>
     </main>
-    <footer className="app-footer scoring-footer"><span>TopspinElo</span><a href="https://github.com/aryan-441/TopspinElo">Support on GitHub</a><span>© Aryan Arora 2026</span></footer>
+    <footer className="app-footer scoring-footer"><span>TopspinElo</span><a href={`mailto:${brand.supportEmail}`}>Support · {brand.supportEmail}</a><span>© Aryan Arora 2026</span></footer>
     {undoOpen && <UndoDialog onClose={() => setUndoOpen(false)} onConfirm={undoPoint} />}
     {helpOpen && <ScoringHelpDialog onClose={() => setHelpOpen(false)} />}
   </div>;

@@ -1,4 +1,4 @@
-export type PageId = 'overview' | 'matches' | 'tournaments' | 'players' | 'referees' | 'statistics' | 'exports' | 'settings' | 'about' | 'guide';
+export type PageId = 'home' | 'overview' | 'matches' | 'tournaments' | 'players' | 'referees' | 'statistics' | 'exports' | 'settings' | 'about' | 'guide';
 export type MatchStatus = 'In progress' | 'Scheduled' | 'Completed' | 'Postponed' | 'Not played';
 
 export type Player = {

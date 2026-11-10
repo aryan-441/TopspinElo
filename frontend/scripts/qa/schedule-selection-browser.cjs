@@ -1,6 +1,6 @@
-const {chromium}=require(process.env.RALLYDESK_PLAYWRIGHT_PATH || 'playwright');
+const {chromium}=require(process.env.TOPSPINELO_PLAYWRIGHT_PATH || 'playwright');
 (async()=>{
- const browser=await chromium.launch({executablePath:process.env.RALLYDESK_BROWSER_EXECUTABLE,headless:true});
+ const browser=await chromium.launch({executablePath:process.env.TOPSPINELO_BROWSER_EXECUTABLE,headless:true});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:1000}});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));

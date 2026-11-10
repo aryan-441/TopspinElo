@@ -1,5 +1,5 @@
-const {chromium}=require(process.env.RALLYDESK_PLAYWRIGHT_PATH || 'playwright');
-(async()=>{const browser=await chromium.launch({executablePath:process.env.RALLYDESK_BROWSER_EXECUTABLE,headless:true});try{
+const {chromium}=require(process.env.TOPSPINELO_PLAYWRIGHT_PATH || 'playwright');
+(async()=>{const browser=await chromium.launch({executablePath:process.env.TOPSPINELO_BROWSER_EXECUTABLE,headless:true});try{
 const page=await browser.newPage({viewport:{width:1100,height:800}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:5173/?demo');
 await page.evaluate(()=>{const w=JSON.parse(localStorage.getItem('rallydesk-demo-v1'));w.matches=[];const t=w.tournaments[0];t.matchIds=[];t.completed=0;t.format='Knockout';t.categories[0].format='Knockout';delete t.categories[0].groupStage;localStorage.setItem('rallydesk-demo-v1',JSON.stringify(w))});
 let calls=0;await page.route('**/api/draw/recognize',async route=>{calls++;if(calls===1){await new Promise(r=>setTimeout(r,1200));try{await route.fulfill({status:200,contentType:'application/json',body:'{}'})}catch{}}else await route.fulfill({status:422,contentType:'application/json',body:JSON.stringify({detail:'The sample scan could not be recognised.'})})});
